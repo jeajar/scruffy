@@ -8,24 +8,34 @@
       <mj-section padding="0px"></mj-section>
     </mj-attributes>
   </mj-head>
+
   <mj-body>
     <mj-section>
       <mj-column>
-        <mj-image src="./scruffy.png" alt="JustJensen Logo" align="center" width="150px"></mj-image>
+        <mj-image src="https://s3.ca-central-1.wasabisys.com/public-jmax/scruffy.png" alt="Scruffy logo" align="center" width="150px"></mj-image>
         <mj-text font-size="24px" align="left" font-weight="800" line-height="24px">Scruffy's going to delete some pictures mmhmm</mj-text>
       </mj-column>
     </mj-section>
+    
     <mj-section>
-      <mj-column width="100%" background-color="#f3f3f3" border-radius="4px" padding-top="15px" padding-bottom="15px">
-      <mj-text>Hello friend,</mj-text>
-      <mj-text>This is a WIP email template</mj-text>
+      <mj-column width="100%" background-color="#e45630" border-radius="18px" padding-top="30px" padding-bottom="30px">
+      <mj-text align="center" font-weight="600" font-size="16px">Hello friend,</mj-text>
+      <mj-text align="center">Scruffy is going to delete this stuff, watchlist it in plex if you want to keep it before it's too late! </mj-text>
       </mj-column>
     </mj-section>
+
+      <mj-section>
+        <mj-column width="100%" background-color="#f3f3f3" border-radius="18px" padding-top="30px" padding-bottom="30px">
+        <mj-text>Title goes here</mj-text>
+        <mj-text>Description of some shit</mj-text>
+        </mj-column>
+      </mj-section>
+
     <mj-section>
       <mj-column>
-        <mj-text>Manage requests here:</mj-text>
-      <mj-divider border-width="1px" border-color="#E0E0E0" padding-bottom=0 padding-top=0></mj-divider>
-      <mj-text font-size="14px" padding-top=0><a href="https://requests.jmax.tech" style="color:#6f4a8e">Overseerr</a></mj-text>
+          <mj-button font-family="Helvetica" background-color="#8d63ef" color="white" href="https://requests.jmax.tech">
+          Open Requests in Overseerr
+         </mj-button>
       </mj-column>
     </mj-section>
   </mj-body>

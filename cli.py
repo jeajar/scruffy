@@ -4,9 +4,9 @@ from apis.tautilli import tautulli
 from apis.sonarr import sonarr
 from apis.radarr import radarr
 from json import dumps
-from core.email import send_delete_email, send_test_email
+from core.email import send_email
 from loguru import logger
-from core.config import config
+from core.settings import settings
 import emails
 
 from schemas.emails import EmailValidation
@@ -41,7 +41,8 @@ def debug():
 
 @app.command()
 def email():
-    send_test_email()
+    movies = janitor.process_movie_requests()
+    send_email(to_emails=["jeanmaxim.desjardins@gmail.com"], subject_template="hello", data=movies)
 
 
 @app.command()

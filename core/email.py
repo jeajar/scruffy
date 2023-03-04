@@ -1,52 +1,55 @@
 from loguru import logger
 
-import emails
-from emails.template import JinjaTemplate
+import smtplib
+from email.utils import formataddr
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.header import Header
+from email.utils import formataddr
+
+from pathlib import Path
+import jinja2
+
 from pathlib import Path
 from typing import Any, Dict
 
 from core.config import config
 from core.settings import settings
 
-from schemas.emails import EmailContent, EmailValidation
+
+def _render_template(data):
+    ''' renders a Jinja template into HTML '''
+    templateLoader = jinja2.FileSystemLoader(settings.EMAIL_TEMPLATES_DIR)
+    templateEnv = jinja2.Environment(loader=templateLoader)
+    templ = templateEnv.get_template("delete_notification.html.j2")
+    return templ.render(data=data)
 
 def send_email(
-        email_to: str,
+        to_emails: list = [],
         subject_template: str = "",
-        html_template: str = "",
-        environment: Dict[str, Any] = {},
+        data: Dict[str, Any] = {},
     ) -> None:
-    assert config['email'], logger.error('Email configuration missing')
-    message = emails.Message(
-        subject=JinjaTemplate(subject_template),
-        html=JinjaTemplate(html_template),
-        mail_from=(config['email']['from_name'].get(), config['email']['from'].get())
-    )
-    smtp_options = {
-        "host": config['email']['host'].get(),
-        "port": config['email']['port'].get(),
-    }
-    if config['email']['tls'].get():
-        smtp_options['tls'] = config['email']['tls'].get()
-    if config['email']['user'].get():
-        smtp_options['user'] = config['email']['user'].get()
-    if config['email']['password'].get():
-        smtp_options['password'] = config['email']['password'].get()
-    print(smtp_options, email_to, environment)
-    
-    response = message.send(to=email_to, render=environment, smtp=smtp_options)
-    logger.info(f"send email result: {response}")
+    msg = MIMEMultipart('alternative')
+    msg['From']    = formataddr((settings.EMAIL_FROM_NAME, settings.EMAIL_FROM_EMAIL))
+    msg['Subject'] = subject_template
+    msg['Bcc']      = ','.join(to_emails)
+    msg.attach(MIMEText(_render_template(data), 'html'))
+    mailserver = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+    mailserver.ehlo("scruffy")
+    mailserver.starttls()
+    mailserver.ehlo("scruffy")
+    mailserver.login(settings.EMAIL_USER, settings.EMAIL_PASSWORD)
+    try:
+        logger.info('sending email...')
+        mailserver.sendmail(
+            settings.EMAIL_FROM_EMAIL,
+            to_emails, msg.as_string())
+    except Exception as err:
+        logger.error('Error sending email')
+        logger.exception(str(err))
+    finally:
+        mailserver.quit()
 
-def send_delete_email(data: EmailValidation) -> None:
-    subject = f"{data.subject}"
-    with open(Path(settings.EMAIL_TEMPLATES_DIR) / "delete_notification.html") as f:
-        template_str = f.read()
-    send_email(
-        email_to=data.email,
-        subject_template=subject,
-        html_template=template_str,
-        environment=data.delete_data
-    )
 
 def send_test_email() -> None:
     with open(Path(settings.EMAIL_TEMPLATES_DIR) / "delete_notification.html") as f:
