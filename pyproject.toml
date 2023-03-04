@@ -14,6 +14,7 @@ httpx = "^0.23.3"
 arrapi = "^1.4.2"
 plexapi = "^4.13.2"
 loguru = "^0.6.0"
+celery = {extras = ["redis"], version = "^5.2.7"}
 
 
 [build-system]

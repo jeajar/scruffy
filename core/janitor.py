@@ -41,7 +41,7 @@ class Janitor(object):
                 logger.info(f"Title: {title}")
             except Exception as err:
                 logger.error(f"TV Show not available in Radarr, deleting request in Overseer: {str(err)}")
-                overseerr.delete_request(request['id'])
+                #overseerr.delete_request(request['id'])
             must_watch_users = [request['requestedBy'].get('plexId')]
             requester_id = must_watch_users[0]
             request_rating_id = request['media'].get('ratingKey')
@@ -110,7 +110,7 @@ class Janitor(object):
                 logger.info(f"Title: {title}")
             except Exception as err:
                 logger.error(f"TV Show not available in Sonarr, deleting request in Overseer: {str(err)}")
-                overseerr.delete_request(request['id'])
+                #overseerr.delete_request(request['id'])
                 continue
             must_watch_users = [request['requestedBy'].get('plexId')]
             requester_id = must_watch_users[0]
