@@ -1,0 +1,24 @@
+app:
+  # cron scedule to send notificaions
+  notification_on: 7
+  # Number of days after the notification_schedule to trigger a delete
+  delete_on: 14
+connectors:
+  sonarr:
+    url: https://sonarr.domain.com
+    api_key: changeme
+  radarr:
+    url: https://radarr.domain.com
+    api_key: changeme
+  overseerr:
+    url: https://requests.domain.com/api/v1
+    api_key: changeme
+  tautulli:
+    url: https://tautulli.domain.com
+    api_key: changeme
+  plex:
+    url: http://plex:32400
+    token: changeme
+notificaions:
+  email:
+  telegram:
