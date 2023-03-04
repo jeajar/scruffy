@@ -1,0 +1,25 @@
+app:
+  # cron scedule to send notificaions
+  notification_schedule: 
+  # Number of days after the notification_schedule to trigger a delete
+  delete_after: 7
+connectors:
+  sonarr:
+    url: https://sonarr.jmax.tech
+    api_key: 1ac17ef7b69b4ea4b0b0ae88564c3c2a
+  radarr:
+    url: https://radarr.jmax.tech
+    api_key: 48b14bc1736a47e3bfe209cc7cc97f3b
+  overseerr:
+    url: https://requests.jmax.tech/api/v1
+    api_key: MTY2MTg4MDU5NzAwOWM0Njk3YWIyLTg2Y2MtNDFiYy1iZmNlLTc2YWM2YzY0ODJhNSk=
+  tautulli:
+    url: https://tautulli.jmax.tech
+    api_key: 07d48a02ca1a4c4381d28e1afdf9a254
+  plex:
+    url: http://192.168.1.30:32400
+    token: QG3Fh7MzSxPubccXiafV
+notificaions:
+  email:
+  telegram:
+  

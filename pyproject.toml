@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "scruffy"
+version = "0.1.0"
+description = ""
+authors = ["Jean-Maxim Desjardins <jm@jmaxpost.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+typer = "^0.7.0"
+confuse = "^2.0.0"
+sqlalchemy = "^2.0.4"
+httpx = "^0.23.3"
+arrapi = "^1.4.2"
+plexapi = "^4.13.2"
+loguru = "^0.6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
