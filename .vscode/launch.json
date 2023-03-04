@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["toute"],
+            "args": ["email"],
             "console": "integratedTerminal",
             "justMyCode": true
         },

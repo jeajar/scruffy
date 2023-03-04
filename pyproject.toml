@@ -15,6 +15,9 @@ arrapi = "^1.4.2"
 plexapi = "^4.13.2"
 loguru = "^0.6.0"
 celery = {extras = ["redis"], version = "^5.2.7"}
+mjml = "^0.8.0"
+emails = "^0.6"
+pydantic = {extras = ["email"], version = "^1.10.5"}
 
 
 [build-system]

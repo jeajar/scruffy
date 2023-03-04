@@ -4,7 +4,12 @@ from apis.tautilli import tautulli
 from apis.sonarr import sonarr
 from apis.radarr import radarr
 from json import dumps
+from core.email import send_delete_email, send_test_email
 from loguru import logger
+from core.config import config
+import emails
+
+from schemas.emails import EmailValidation
 
 app = typer.Typer()
 janitor = Janitor()
@@ -27,11 +32,16 @@ def debug():
     #     for s, w in t.items():
     #         print(w['watch'])
 
-    watch =  [[v['watch'] for _, v in t.items()][0] for t in things2]
-    users =  [[v['users'] for _, v in t.items()][0] for t in things2]
-    print(watch, users)
-    print(all(watch))
-    print(all(not len(others) for others in users))
+    # watch =  [[v['watch'] for _, v in t.items()][0] for t in things2]
+    # users =  [[v['users'] for _, v in t.items()][0] for t in things2]
+    # print(watch, users)
+    # print(all(watch))
+    # print(all(not len(others) for others in users))
+
+
+@app.command()
+def email():
+    send_test_email()
 
 
 @app.command()
