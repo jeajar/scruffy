@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="./email_template/scruffy.png">
+  <img src="./email_templates/scruffy.png">
 </p>
 
 # Scruffy, the Janitor
