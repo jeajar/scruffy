@@ -17,23 +17,23 @@ from core.config import config
 from core.settings import settings
 
 
-def _render_template(data):
+def _render_template(movie_data):
     ''' renders a Jinja template into HTML '''
     templateLoader = jinja2.FileSystemLoader(settings.EMAIL_TEMPLATES_DIR)
     templateEnv = jinja2.Environment(loader=templateLoader)
     templ = templateEnv.get_template("delete_notification.html.j2")
-    return templ.render(data=data)
+    return templ.render(movie_data=movie_data)
 
 def send_email(
         to_emails: list = [],
         subject_template: str = "",
-        data: Dict[str, Any] = {},
+        movie_data: Dict[str, Any] = {},
     ) -> None:
     msg = MIMEMultipart('alternative')
     msg['From']    = formataddr((settings.EMAIL_FROM_NAME, settings.EMAIL_FROM_EMAIL))
     msg['Subject'] = subject_template
     msg['Bcc']      = ','.join(to_emails)
-    msg.attach(MIMEText(_render_template(data), 'html'))
+    msg.attach(MIMEText(_render_template(movie_data), 'html'))
     mailserver = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
     mailserver.ehlo("scruffy")
     mailserver.starttls()

@@ -175,3 +175,18 @@ class Janitor(object):
         logger.info(f"Requests to keep: {len(self._tv_keep_requests)}")
 
         return {"delete": self._tv_delete_requests, "keep": self._tv_keep_requests}
+
+    def make_movie_email_data(self):
+        """Prepare consumable data to use in email notifications
+        Return:
+            List: a list of objects:
+                open_in_overseerr_url: list
+                watched_by_requester: bool
+                have_to_watch: int (the number of people )
+        """
+        pass
+
+    def make_tv_email_data(self):
+        """
+        """
+        pass

@@ -16,20 +16,64 @@
         <mj-text font-size="24px" align="left" font-weight="800" line-height="24px">Scruffy's going to delete some pictures mmhmm</mj-text>
       </mj-column>
     </mj-section>
-    
     <mj-section>
-      <mj-column width="100%" background-color="#e45630" border-radius="18px" padding-top="30px" padding-bottom="30px">
-      <mj-text align="center" font-weight="600" font-size="16px">Hello friend,</mj-text>
-      <mj-text align="center">Scruffy is going to delete this stuff, watchlist it in plex if you want to keep it before it's too late! </mj-text>
+      <mj-column width="100%" background-color="#ff463b" border-radius="18px" padding-top="30px" padding-bottom="30px" >
+      <mj-text align="center" font-weight="600" font-size="16px" color="white">Hello friend,</mj-text>
+      <mj-text align="center" color="white">Scruffy is going to delete some stuff, watchlist in plex if you want to keep it. </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section>
+      <mj-column>
+        <mj-divider border-width="1px" border-style="none" />
       </mj-column>
     </mj-section>
 
-      <mj-section>
-        <mj-column width="100%" background-color="#f3f3f3" border-radius="18px" padding-top="30px" padding-bottom="30px">
-        <mj-text>Title goes here</mj-text>
-        <mj-text>Description of some shit</mj-text>
-        </mj-column>
-      </mj-section>
+
+    <mj-section>
+      <mj-column width="100%" background-color="#0088f3" border-radius="18px" padding-top="0px" padding-bottom="0px">
+      <mj-text align="center" font-size="24px" font-weight="800" color="white">Movies</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section>
+      <mj-column>
+        <mj-divider border-width="1px" border-style="none" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column width="100%" background-color="#f3f3f3" border-radius="18px" padding-top="30px" padding-bottom="30px">
+      <mj-text>Title goes here</mj-text>
+      <mj-text>Description of some shit</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section>
+      <mj-column>
+        <mj-divider border-width="1px" border-style="none" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column width="100%" background-color="#ffbc34" border-radius="18px" padding-top="0px" padding-bottom="0px">
+      <mj-text align="center" font-size="24px" font-weight="800" color="white">TV Shows</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section>
+      <mj-column>
+        <mj-divider border-width="1px" border-style="none" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section>
+      <mj-column width="100%" background-color="#f3f3f3" border-radius="18px" padding-top="30px" padding-bottom="30px">
+      <mj-text>Title goes here</mj-text>
+      <mj-text>Description of some shit</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section>
+      <mj-column>
+        <mj-divider border-width="1px" border-style="none" />
+      </mj-column>
+    </mj-section>
 
     <mj-section>
       <mj-column>

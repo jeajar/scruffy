@@ -42,7 +42,13 @@ def debug():
 @app.command()
 def email():
     movies = janitor.process_movie_requests()
-    send_email(to_emails=["jeanmaxim.desjardins@gmail.com"], subject_template="hello", data=movies)
+    simple_data = []
+    for movie in movies['delete']:
+        title = radarr.get_movie(movie['request']['media'].get('externalServiceId')).title
+        over_id = movie['request']['media'].get('tmdbId')
+        url = f"https://requests.jmax.tech/movie/{over_id}"
+        simple_data.append({"title": title, "url": url})
+    send_email(to_emails=["jeanmaxim.desjardins@gmail.com"], subject_template="hello", movie_data=simple_data)
 
 
 @app.command()
@@ -51,6 +57,7 @@ def tau():
     #print(dumps(tautulli._get_all_plexids(), indent=4))
     print(dumps(tautulli._get_season_rating_keys(81685), indent=4))
 
+    
 @app.command()
 def tv():
     tv_shows = janitor.process_tv_requests()
