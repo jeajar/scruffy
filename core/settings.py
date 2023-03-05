@@ -11,4 +11,6 @@ class Settings(BaseSettings):
     EMAIL_FROM_NAME: str = config['email']['from_name'].get()
     EMAIL_FROM_EMAIL: EmailStr = config['email']['from'].get()
 
+    LOG_LEVEL: str = config['app']['log_level'].get()
+
 settings = Settings()

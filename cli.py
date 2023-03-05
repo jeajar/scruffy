@@ -1,42 +1,17 @@
 import typer
-from core.janitor import Janitor
-from apis.tautilli import tautulli
 from apis.sonarr import sonarr
 from apis.radarr import radarr
-from json import dumps
-from core.email import send_email
-from loguru import logger
-from core.settings import settings
-import emails
 
-from schemas.emails import EmailValidation
+from core.email import send_email
+from core.janitor import Janitor
+
+from rich import print
+from rich.console import Console
+from rich.table import Table
+
 
 app = typer.Typer()
 janitor = Janitor()
-
-@app.command()
-def debug():
-    things = [
-        {1: {"watch": True, "users": ["dude", "dudette", "Mario", "Yves"]}},
-        {2: {"watch": False, "users": ["dude", "dudette", "Mario"]}},
-        {3: {"watch": True, "users": ["dude", "dudette"]}},
-    ]
-    things2 = [
-        {1: {"watch": True, "users": []}},
-        {2: {"watch": True, "users": []}},
-        {3: {"watch": True, "users": []}},
-    ]
-    # if all(season["watch"] for season in [thing.values() for thing in things]):
-    #     print("yeah")
-    # for t in things:
-    #     for s, w in t.items():
-    #         print(w['watch'])
-
-    # watch =  [[v['watch'] for _, v in t.items()][0] for t in things2]
-    # users =  [[v['users'] for _, v in t.items()][0] for t in things2]
-    # print(watch, users)
-    # print(all(watch))
-    # print(all(not len(others) for others in users))
 
 
 @app.command()
@@ -50,119 +25,115 @@ def email():
         simple_data.append({"title": title, "url": url})
     send_email(to_emails=["jeanmaxim.desjardins@gmail.com"], subject_template="hello", movie_data=simple_data)
 
-
-@app.command()
-def tau():
-    # history = tautulli._get_children_metadata(81382)
-    #print(dumps(tautulli._get_all_plexids(), indent=4))
-    print(dumps(tautulli._get_season_rating_keys(81685), indent=4))
-
     
 @app.command()
-def tv():
+def tv(
+    show_all: bool = typer.Option(False, "-all", "-", help="Show all requests")
+):
     tv_shows = janitor.process_tv_requests()
-
-    for series in tv_shows["keep"]:
-        sonarr_series = sonarr.get_series(series['request']['media'].get('externalServiceId'))
-        print("########### 👀 KEEP SERIES 👀 #############")
-        print(sonarr_series.title)
-        for data in series['seasons_data']:
-            for k, v in data.items():
-                print(f"Season {k}:")
-                if v['requester_watched']:
-                    print("🟢 Watched by Requester")
-                else:
-                    print("🔴 Watched by Requester")
-                have_to = len(v['have_to_watch'])
-                if have_to > 0:
-                    print(f"🔴 {have_to} users have to watch the series")
-                elif have_to == 0:
-                    print(f"🟢 All users have watched the series")
-                print('\n')
-        #print(series['seasons_data'])
+    table = Table(title="Delete TV Series")
+    table.add_column("Title", justify="left", style="cyan")
+    table.add_column("Delete?", justify="center", style="cyan")
+    table.add_column("Requester Watched", justify="center")
+    table.add_column("Others Watched?", justify="center")
+    if show_all:
+        for series in tv_shows["keep"]:
+            sonarr_series = sonarr.get_series(series['request']['media'].get('externalServiceId'))
+            title = sonarr_series.title
+            delete = "[bold red]NO[/bold red]"
+            for data in series['seasons_data']:
+                for k, v in data.items():
+                    title += f" - season: {k}"
+                    if v['requester_watched']:
+                        requester_watched = "[bold green]YES[/bold green]"
+                    else:
+                        requester_watched = "[bold red]NO[/bold red]"
+                    have_to = len(v['have_to_watch'])
+                    if have_to > 0:
+                        if len(v['have_to_watch']) == 1:
+                            others = f"[bold red]{have_to} user(s) have to watch[/bold red]"
+                        else:
+                            others = f"[bold red]{have_to} user(s) have to watch[/bold red]"
+                    elif have_to == 0:
+                        others = f"[bold green]YES[/bold green]"
+                table.add_row(title, delete, requester_watched, others)
 
     for series in tv_shows["delete"]:
         sonarr_series = sonarr.get_series(series['request']['media'].get('externalServiceId'))
-        print("########### 🧹 DELETE SERIES 🧹 #############")
-        print(sonarr_series.title)
+        title = sonarr_series.title
+        delete = "[bold green]YES[/bold green]"
         for data in series['seasons_data']:
             for k, v in data.items():
-                print(f"Season: {k}")
-                print("🟢 Watched by Requester")
-                print(f"🟢 All users have watched the series")
-                print('\n')
+                title += f" - season: {k}"
+                if v['requester_watched']:
+                    requester_watched = "[bold green]YES[/bold green]"
+                else:
+                    requester_watched = "[bold red]NO[/bold red]"
+                have_to = len(v['have_to_watch'])
+                if have_to > 0:
+                    if len(v['have_to_watch']) == 1:
+                        others = f"[bold red]{have_to} user(s) have to watch[/bold red]"
+                    else:
+                        others = f"[bold red]{have_to} user(s) have to watch[/bold red]"
+                elif have_to == 0:
+                    others = f"[bold green]YES[/bold green]"
+            table.add_row(title, delete, requester_watched, others)
+
+    console = Console()
+    console.print(table)
 
 
 @app.command()
-def movies():
+def movies(
+    show_all: bool = typer.Option(False, "--all", "-a", help="Show all requests")
+    ):
     movies = janitor.process_movie_requests()
-    for movie in movies["keep"]:
-        radarr_movie = radarr.get_movie(movie['request']['media'].get('externalServiceId'))
-        print("########### KEEP MOVIE #############")
-        print(radarr_movie.title)
-        if movie['requester_watched']:
-            print("🟢 Watched by Requester")
-        else:
-            print("🔴 Watched by Requester")
 
-        have_to = len(movie['have_to_watch'])
-        if have_to > 0:
-            print(f"🔴 {have_to} users have to watch the series")
-        elif have_to == 0:
-            print(f"🟢 All users have watched the series")
-        print('\n')
+    table = Table(title="Delete Movies")
+    table.add_column("Title", justify="left", style="cyan")
+    table.add_column("Delete?", justify="center", style="cyan")
+    table.add_column("Requester Watched", justify="center")
+    table.add_column("Others Watched (Watchlisted)?", justify="center")
+    if show_all:
+        for movie in movies["keep"]:
+            radarr_movie = radarr.get_movie(movie['request']['media'].get('externalServiceId'))
+            title = radarr_movie.title
+            delete = "[bold red]NO[/bold red]"
+            if movie['requester_watched']:
+                requester_watched = "[bold green]YES[/bold green]"
+            else:
+                requester_watched = "[bold red]NO[/bold red]"
+            have_to = len(movie['have_to_watch'])
+            if have_to > 0:
+                if len(movie['have_to_watch']) == 1:
+                    others = f"[bold red]{have_to} user(s) have to watch[/bold red]"
+                else:
+                    others = f"[bold red]{have_to} user(s) have to watch[/bold red]"
+            elif have_to == 0:
+                others = f"[bold green]YES[/bold green]"
+            table.add_row(title, delete, requester_watched, others)
 
     for movie in movies["delete"]:
         radarr_movie = radarr.get_movie(movie['request']['media'].get('externalServiceId'))
-        print("########### DELETE MOVIE #############")
-        print(radarr_movie.title)
+        title = radarr_movie.title
+        delete = "[bold green]YES[/bold green]"
         if movie['requester_watched']:
-            print("🟢 Watched by Requester")
+            requester_watched = "[bold green]YES[/bold green]"
         else:
-            print("🔴 Watched by Requester")
-
+            requester_watched = "[bold red]NO[/bold red]"
         have_to = len(movie['have_to_watch'])
         if have_to > 0:
-            print(f"🔴 {have_to} users have to watch the series")
+            if len(movie['have_to_watch']) == 1:
+                others = f"[bold red]{have_to} user(s) have to watch[/bold red]"
+            else:
+                others = f"[bold red]{have_to} user(s) have to watch[/bold red]"
         elif have_to == 0:
-            print(f"🟢 All users have watched the series")
-        print('\n')
+            others = f"[bold green]YES[/bold green]"
+        table.add_row(title, delete, requester_watched, others)
 
-@app.command()
-def toute():
-    movies = janitor.process_movie_requests()
-    for movie in movies["keep"]:
-        radarr_movie = radarr.get_movie(movie['request']['media'].get('externalServiceId'))
-        print("########### KEEP MOVIE #############")
-        print(radarr_movie.title)
-        if movie['requester_watched']:
-            print("🟢 Watched by Requester")
-        else:
-            print("🔴 Watched by Requester")
 
-        have_to = len(movie['have_to_watch'])
-        if have_to > 0:
-            print(f"🔴 {have_to} users have to watch the series")
-        elif have_to == 0:
-            print(f"🟢 All users have watched the series")
-        print('\n')
-
-    for movie in movies["delete"]:
-        radarr_movie = radarr.get_movie(movie['request']['media'].get('externalServiceId'))
-        print("########### DELETE MOVIE #############")
-        print(radarr_movie.title)
-        if movie['requester_watched']:
-            print("🟢 Watched by Requester")
-        else:
-            print("🔴 Watched by Requester")
-
-        have_to = len(movie['have_to_watch'])
-        if have_to > 0:
-            print(f"🔴 {have_to} users have to watch the series")
-        elif have_to == 0:
-            print(f"🟢 All users have watched the series")
-        print('\n')
-
+    console = Console()
+    console.print(table)
 
 if __name__ == "__main__":
     app()

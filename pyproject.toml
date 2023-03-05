@@ -18,6 +18,7 @@ celery = {extras = ["redis"], version = "^5.2.7"}
 mjml = "^0.8.0"
 emails = "^0.6"
 pydantic = {extras = ["email"], version = "^1.10.5"}
+rich = "^13.3.2"
 
 
 [build-system]
