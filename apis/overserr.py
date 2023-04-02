@@ -2,7 +2,7 @@ import httpx
 from core.config import config
 from loguru import logger
 
- 
+
 class OverseerrAPI(object):
     def __init__(self) -> None:
         self.url = config['connectors']['overseerr']['url'].get()
@@ -30,6 +30,12 @@ class OverseerrAPI(object):
         
     def get_media_watch_data(self, media_id):
         return self.client.get(f"/media/{media_id}/watch_data").json()
+        
+    def get_tv(self, tv_id):
+        return self.client.get(f"/tv/{tv_id}").json()
+        
+    def get_movie(self, movie_id):
+        return self.client.get(f"/movie/{movie_id}").json()
 
     def get_watchlisted_media(self):
         """Build a dictionarry of watchlisted plex users for a tmdbId

@@ -9,7 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "args": ["email"],
+            "args": ["delete-tv", "210905"],
             "console": "integratedTerminal",
             "justMyCode": true
         },
@@ -26,3 +26,5 @@
         }
     ]
 }
+
+tv_entity['mediaInfo']['requests'][0]

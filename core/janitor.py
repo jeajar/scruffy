@@ -5,6 +5,10 @@ from apis.tautilli import tautulli
 from loguru import logger
 
 
+class JanitorException(Exception):
+    pass
+
+
 class Janitor(object):
     """The Janitor class is uses the business logic to build list of media entities to delete from Overseerr, Radarr
     Sonarr and from storage, via the *arr APIs.
@@ -41,7 +45,7 @@ class Janitor(object):
                 logger.info(f"Title: {title}")
             except Exception as err:
                 logger.error(f"TV Show not available in Radarr, deleting request in Overseer: {str(err)}")
-                #overseerr.delete_request(request['id'])
+                overseerr.delete_request(request['id'])
             must_watch_users = [request['requestedBy'].get('plexId')]
             requester_id = must_watch_users[0]
             request_rating_id = request['media'].get('ratingKey')
@@ -110,8 +114,7 @@ class Janitor(object):
                 logger.info(f"Title: {title}")
             except Exception as err:
                 logger.error(f"TV Show not available in Sonarr, deleting request in Overseer: {str(err)}")
-                #overseerr.delete_request(request['id'])
-                continue
+                overseerr.delete_request(request['id'])
             must_watch_users = [request['requestedBy'].get('plexId')]
             requester_id = must_watch_users[0]
             request_rating_id = request['media'].get('ratingKey')
@@ -175,6 +178,93 @@ class Janitor(object):
         logger.info(f"Requests to keep: {len(self._tv_keep_requests)}")
 
         return {"delete": self._tv_delete_requests, "keep": self._tv_keep_requests}
+    
+    def process_series(self, tv_id: int):
+        """Process a single tv series id. returns simple dict to delete entity
+        Args:
+            tv_id (int): Overseer tv_id
+
+        Returns:
+            dict: simple dict to process with delete_serie
+        """
+        entity = overseerr.get_tv(tv_id)
+        data = {
+            "name": entity["name"],
+            "request": {
+                "id": None,
+                "type": entity["mediaInfo"]["mediaType"],
+                "media": {
+                    "externalServiceId": entity["mediaInfo"]["externalServiceId"]
+                }
+            }
+        }
+        if len(entity["mediaInfo"]["requests"]) > 0:
+            data["request"].update({"id": entity["mediaInfo"]["requests"][0]["id"]})
+
+        return data
+    
+    def process_movie(self, movie_id: int):
+        """Process a single movie id. returns simple dict to delete entity
+        Args:
+            movie_id (int): Overseer tv_id
+
+        Returns:
+            dict: simple dict to process with delete_movie
+        """
+        entity = overseerr.get_movie(movie_id)
+        data = {
+            "name": entity["name"],
+            "request": {
+                "id": None,
+                "type": entity["mediaInfo"]["mediaType"],
+                "media": {
+                    "externalServiceId": entity["mediaInfo"]["externalServiceId"]
+                }
+            }
+        }
+        if len(entity["mediaInfo"]["requests"]) > 0:
+            data["request"].update({"id": entity["mediaInfo"]["requests"][0]["id"]})
+
+        return data
+
+    @staticmethod
+    def delete_movie(movie: dict):
+        """Delete a movie from overseer, radarr and media on filesystem
+
+        Args:
+            movie (dict): a dict representing a movie
+        """
+        if movie["request"]["type"] != "movie":
+            raise Janitor("The request is not a movie")
+        radarr_id = movie["request"]["media"]["externalServiceId"]
+        title = radarr.get_movie(radarr_id).title
+        radarr.delete_movie(movie_id=radarr_id, deleteFiles=True)
+        logger.info(f"deleted movie: '{title}' from radarr and the filesystem!")
+
+        delete_response = overseerr.delete_request(request_id=movie["request"]["id"])
+        logger.info(f"Delete request: '{title}' from overseer: {delete_response}")
+
+    @staticmethod
+    def delete_series(series: dict):
+        """Delete a series from overseer, radarr and media on filesystem
+
+        Args:
+            movie (dict): a dict representing a movie
+        """
+        logger.debug(series)
+        if series["request"]["type"] != "tv":
+            raise Janitor("The request is not a movie")
+        try:
+            sonarr_id = series["request"]["media"]["externalServiceId"]
+            title = sonarr.get_series(sonarr_id).title
+            sonarr.delete_series(series_id=sonarr_id, deleteFiles=True)
+            logger.info(f"deleted series: '{title}' from sonarr and the filesystem!")
+        except:
+            logger.warning("Not found in sonarr")
+            title = series
+
+        delete_response = overseerr.delete_request(request_id=series["request"]["id"])
+        logger.info(f"Delete request: '{title}' from overseer: {delete_response}")
 
     def make_movie_email_data(self):
         """Prepare consumable data to use in email notifications
