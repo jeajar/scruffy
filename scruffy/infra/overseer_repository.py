@@ -2,7 +2,7 @@ from typing import Optional
 
 import httpx
 
-from scruffy.infra.data_transfer_objects import Request
+from scruffy.infra.data_transfer_objects import RequestDTO
 
 
 class OverseerRepository:
@@ -13,19 +13,46 @@ class OverseerRepository:
         self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
 
     async def get_requests(
-        self, take: int = 10, skip: int = 0, filter_status: Optional[str] = None
-    ) -> dict:
-        """Fetch media requests from Overseerr."""
-        async with httpx.AsyncClient() as client:
-            params = {"take": take, "skip": skip}
-            if filter_status:
-                params["filter"] = filter_status
+        self, take: int = 100, skip: int = 0, filter_status: Optional[str] = None
+    ) -> list[RequestDTO]:
+        """Fetch all media requests from Overseerr using pagination.
 
-            response = await client.get(
-                f"{self.base_url}/api/v1/request", headers=self.headers, params=params
-            )
-            response.raise_for_status()
-            return response.json()
+        Args:
+            take: Number of items per page (default 100)
+            skip: Starting offset (default 0)
+            filter_status: Optional status filter
+
+        Returns:
+            List of all RequestDTO objects
+        """
+        total_requests = await self.get_request_count(filter_status)
+        all_requests = []
+
+        while skip < total_requests:
+            async with httpx.AsyncClient() as client:
+                params = {"take": take, "skip": skip}
+                if filter_status:
+                    params["filter"] = filter_status
+
+                response = await client.get(
+                    f"{self.base_url}/api/v1/request",
+                    headers=self.headers,
+                    params=params,
+                )
+                response.raise_for_status()
+
+                page_results = [
+                    RequestDTO.from_overseer_response(req)
+                    for req in response.json().get("results", [])
+                ]
+                all_requests.extend(page_results)
+
+                if len(page_results) < take:
+                    break
+
+                skip += take
+
+        return all_requests
 
     async def get_media_info(self, media_id: int) -> dict:
         """Fetch detailed media information."""
@@ -58,5 +85,4 @@ if __name__ == "__main__":
     base_url = "https://ineeddis.jmax.tech"
     repo = OverseerRepository(base_url, api_key)
     reqs = asyncio.run(repo.get_requests())
-    dtos = [Request.from_overseer_response(req) for req in reqs["results"]]
     pass
