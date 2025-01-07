@@ -20,3 +20,4 @@ show, they will have 30 days to watch all of it.
 * Scruffy doesn't care about watch data. You request it, you don't watch it? Too bad, it's gone after 30 days.
 * Scruffy is at least going to notify you by email a week before stuff gets deleted.
 * The user should be able to click a link to ask for an extension, at least once.
+* Scuffy should remain simple and run as a cron or sceduled job, no fancy UI.
