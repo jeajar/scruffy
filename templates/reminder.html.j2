@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<body>
+    <h2>Content Expiration Reminder</h2>
+    {% if media.type == 'tv' %}
+        <p>The following TV show seasons will be deleted in {{ days_left }} days:</p>
+        <p>{{ media.title }} (Seasons: {{ media.seasons|join(', ') }})</p>
+    {% else %}
+        <p>The following movie will be deleted in {{ days_left }} days:</p>
+        <p>{{ media.title }}</p>
+    {% endif %}
+    {% if media.poster %}
+        <img src="{{ media.poster }}" alt="Media Poster" style="max-width: 200px;">
+    {% endif %}
+</body>
+</html>
