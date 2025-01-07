@@ -1,6 +1,6 @@
 import httpx
 
-from scruffy.infra.data_transfer_objects import MovieInfoDTO
+from scruffy.infra.data_transfer_objects import MediaInfoDTO
 
 
 class RadarrRepository:
@@ -9,7 +9,7 @@ class RadarrRepository:
         self.api_key = api_key
         self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
 
-    async def get_movie(self, movie_id: int) -> MovieInfoDTO:
+    async def get_movie(self, movie_id: int) -> MediaInfoDTO:
         """Get detailed information about a movie by its Radarr ID.
 
         Args:
@@ -26,7 +26,7 @@ class RadarrRepository:
                 f"{self.base_url}/api/v3/movie/{movie_id}", headers=self.headers
             )
             response.raise_for_status()
-            return MovieInfoDTO.from_radarr_response(response.json())
+            return MediaInfoDTO.from_radarr_response(response.json())
 
     async def delete_movie(self, movie_id: int, delete_files: bool = True) -> None:
         """Delete a movie and optionally its files.
@@ -55,5 +55,5 @@ if __name__ == "__main__":
     base_url = "https://radarr.jmax.tech"
     repo = RadarrRepository(base_url, api_key)
     movie = asyncio.run(repo.get_movie(58))
-    movie_info_dto = MovieInfoDTO.from_radarr_response(movie)
+    movie_info_dto = MediaInfoDTO.from_radarr_response(movie)
     pass

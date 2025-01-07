@@ -2,7 +2,7 @@ from datetime import datetime
 
 import httpx
 
-from scruffy.infra.data_transfer_objects import TvInfoDTO
+from scruffy.infra.data_transfer_objects import MediaInfoDTO
 
 
 class SonarrRepository:
@@ -32,7 +32,7 @@ class SonarrRepository:
 
     async def get_series_info(
         self, series_id: int, season_list: list[int]
-    ) -> TvInfoDTO:
+    ) -> MediaInfoDTO:
         """Get detailed information about a series by its Sonarr ID.
 
         Args:
@@ -72,13 +72,13 @@ class SonarrRepository:
                 )
             total_size += sum(ep.get("episodeFile", {}).get("size") for ep in episodes)
 
-        return TvInfoDTO(
+        return MediaInfoDTO(
             title=series.get("title"),
             available=available,
             available_since=latest_date if available else None,
             size_on_disk=total_size,
             seasons=season_list,
-            series_id=series_id,
+            id=series_id,
         )
 
     async def get_episodes(self, series_id: int, season_number: int) -> list[dict]:

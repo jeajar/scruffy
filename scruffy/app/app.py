@@ -19,51 +19,36 @@ def main():
 
     # Get all requests from Overseerr
     requests = asyncio.run(overseer.get_requests())
+    requests_to_delete = []
+    reminders = []
 
     # Check only requests that are partially or fully available. Overseer is reporting
     # tv request as PARTIALLY_AVAILABLE when not all seasons are requested.
+    # We then need to check if the media is available for the requested seasons within
+    # Sonarr.
     to_check = [
         req
         for req in requests
         if req.media_status in [MediaStatus.PARTIALLY_AVAILABLE, MediaStatus.AVAILABLE]
     ]
 
-    tv_requests = [req for req in to_check if req.type == "tv"]
-    movie_requests = [req for req in to_check if req.type == "movie"]
+    # Check Requests with available media for age.
+    for req in to_check:
+        if req.type == "movie":
+            media_info = asyncio.run(radarr.get_movie(req.external_service_id))
+        elif req.type == "tv":
+            media_info = asyncio.run(
+                sonarr.get_series_info(req.external_service_id, req.seasons)
+            )
+        if media_info.available:
+            age = datetime.now(media_info.available_since.tzinfo) - req.updated_at
+            if age.days >= settings.RETENTION_DAYS:
+                requests_to_delete.append(req)
+            # Add to reminders if the request is about to expire so we can notify the user.
+            if settings.RETENTION_DAYS - age.days == settings.REMINDER_DAYS:
+                reminders.append(media_info)
 
-    # Check TV requests
-    for req in tv_requests:
-        series_info = asyncio.run(
-            sonarr.get_series_info(req.external_service_id, req.seasons)
-        )
-        if series_info.available:
-            age = (
-                datetime.now(series_info.available_since.tzinfo)
-                - series_info.available_since
-            )
-            print(
-                f"{len(req.seasons)} requested seasons of '{series_info.title}' have been [green]available[/green] for {age.days} days."
-            )
-        else:
-            print(
-                f"{len(req.seasons)} requested seasons of '{series_info.title}' are [red]not available[/red] yet."
-            )
-        # print(series_info)
-
-    # Check movie requests
-    for req in movie_requests:
-        movie_info = asyncio.run(radarr.get_movie(req.external_service_id))
-        if movie_info.available:
-            age = (
-                datetime.now(movie_info.available_since.tzinfo)
-                - movie_info.available_since
-            )
-            print(
-                f"'{movie_info.title}' has been [green]available[/green] for {age.days} days."
-            )
-        else:
-            print(f"'{movie_info.title}' is [red]not available[/red] yet")
-
+    print(reminders)
     pass
 
 
