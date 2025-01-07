@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     EMAIL_ENABLED: bool = False
     SMTP_HOST: str = "localhost"
     SMTP_PORT: int = 25
-    SMTP_USERNAME: str = "scruffy"
-    SMTP_PASSWORD: str = "thejanitor"
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: EmailStr = "scruffy@example.com"
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
