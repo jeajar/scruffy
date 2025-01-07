@@ -11,6 +11,15 @@ class SonarrRepository:
         self.api_key = api_key
         self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
 
+    @staticmethod
+    def _get_series_poster(images: list[dict]) -> str:
+        # Get poster URL from images
+        poster = next(
+            (img["remoteUrl"] for img in images if img.get("coverType") == "poster"),
+            None,
+        )
+        return poster
+
     async def get_series(self, series_id: int) -> dict:
         """Get detailed information about a series by its Sonarr ID.
 
@@ -29,14 +38,6 @@ class SonarrRepository:
             )
             response.raise_for_status()
             return response.json()
-
-    def _get_series_poster(self, images: list[dict]) -> str:
-        # Get poster URL from images
-        poster = next(
-            (img["remoteUrl"] for img in images if img.get("coverType") == "poster"),
-            None,
-        )
-        return poster
 
     async def get_series_info(
         self, series_id: int, season_list: list[int]
@@ -116,15 +117,43 @@ class SonarrRepository:
             response.raise_for_status()
             return response.json()
 
-    async def delete_series(self, series_id: int, delete_files: bool = True) -> None:
-        """Delete a series and optionally its files"""
-        async with httpx.AsyncClient() as client:
-            response = await client.delete(
-                f"{self.base_url}/api/v3/series/{series_id}",
-                headers=self.headers,
-                params={"deleteFiles": str(delete_files).lower()},
+    async def delete_series_seasons(
+        self, series_id: int, season_list: list[int]
+    ) -> None:
+        """
+        TODO: Check if no other seasons are monitored before unmonitoring, and
+        if so, delete the whole series.
+        """
+        await self.update_season_monitoring(series_id, season_list)
+        await self.delete_season_files(series_id, season_list)
+
+    async def delete_season_files(
+        self, series_id: int, season_list: list[int] = True
+    ) -> None:
+        """Delete specific seasons from a series and their files.
+
+        Args:
+            series_id: The Sonarr internal ID of the series
+            season_list: List of season numbers to delete
+
+        Raises:
+            httpx.HTTPError: If any API request fails
+        """
+        # Get and delete episodes for each season
+        episode_file_ids = []
+        for season in season_list:
+            episode_data = await self.get_episodes(series_id, season)
+            episode_file_ids.extend(
+                [
+                    ep.get("episodeFileId")
+                    for ep in episode_data
+                    if ep.get("episodeFileId")
+                ]
             )
-            response.raise_for_status()
+
+        # Delete episode files if any exist
+        if episode_file_ids:
+            await self.delete_episode_files(episode_file_ids)
 
     async def delete_episode_files(self, episode_file_ids: list[int]) -> None:
         """Delete episode files by their Sonarr internal IDs"""

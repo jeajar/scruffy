@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     RADARR_API_KEY: str
 
     RETENTION_DAYS: int = 30
-    REMINDER_DAYS: int = 26
+    REMINDER_DAYS: int = 7
 
 
 settings = Settings()

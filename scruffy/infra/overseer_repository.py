@@ -54,6 +54,14 @@ class OverseerRepository:
 
         return all_requests
 
+    async def delete_request(self, request_id: int) -> None:
+        """Delete a request by its ID."""
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(
+                f"{self.base_url}/api/v1/request/{request_id}", headers=self.headers
+            )
+            response.raise_for_status()
+
     async def get_media_info(self, media_id: int) -> dict:
         """Fetch detailed media information."""
         async with httpx.AsyncClient() as client:
