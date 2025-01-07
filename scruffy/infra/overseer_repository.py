@@ -83,6 +83,15 @@ class OverseerRepository:
             response.raise_for_status()
             return response.json()["total"]
 
+    async def get_main_settings(self) -> dict:
+        """Get main settings from Overseerr."""
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                f"{self.base_url}/api/v1/settings/main", headers=self.headers
+            )
+            response.raise_for_status()
+            return response.json()
+
 
 if __name__ == "__main__":
     import asyncio
@@ -93,4 +102,5 @@ if __name__ == "__main__":
     base_url = "https://ineeddis.jmax.tech"
     repo = OverseerRepository(base_url, api_key)
     reqs = asyncio.run(repo.get_requests())
+    info = asyncio.run(repo.get_main_settings())
     pass

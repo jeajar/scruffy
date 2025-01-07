@@ -3,8 +3,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    OVERSEER_URL: HttpUrl
-    OVERSEER_API_KEY: str
+    OVERSEERR_URL: HttpUrl
+    OVERSEERR_API_KEY: str
 
     SONARR_URL: HttpUrl
     SONARR_API_KEY: str
@@ -16,11 +16,12 @@ class Settings(BaseSettings):
     REMINDER_DAYS: int = 7
 
     # Email Settings
-    SMTP_HOST: str
-    SMTP_PORT: int
-    SMTP_USERNAME: str
-    SMTP_PASSWORD: str
-    SMTP_FROM_EMAIL: EmailStr
+    EMAIL_ENABLED: bool = False
+    SMTP_HOST: str = "localhost"
+    SMTP_PORT: int = 25
+    SMTP_USERNAME: str = "scruffy"
+    SMTP_PASSWORD: str = "thejanitor"
+    SMTP_FROM_EMAIL: EmailStr = "scruffy@example.com"
     SMTP_TLS: bool = True
     SMTP_SSL: bool = False
 

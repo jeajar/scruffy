@@ -8,6 +8,8 @@ from scruffy.infra import MediaInfoDTO, settings
 
 class EmailService:
     def __init__(self):
+        if not settings.EMAIL_ENABLED:
+            return
         self.conf = ConnectionConfig(
             MAIL_USERNAME=settings.SMTP_USERNAME,
             MAIL_PASSWORD=settings.SMTP_PASSWORD,

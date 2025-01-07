@@ -21,7 +21,9 @@ class Result:
 
 
 def check_requests() -> Result:
-    overseer = OverseerRepository(str(settings.OVERSEER_URL), settings.OVERSEER_API_KEY)
+    overseer = OverseerRepository(
+        str(settings.OVERSEERR_URL), settings.OVERSEERR_API_KEY
+    )
     sonarr = SonarrRepository(str(settings.SONARR_URL), settings.SONARR_API_KEY)
     radarr = RadarrRepository(str(settings.RADARR_URL), settings.RADARR_API_KEY)
 
