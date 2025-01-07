@@ -33,21 +33,18 @@ class RequestDTO:
 
 @dataclass(frozen=True)
 class MediaInfoDTO:
+    """
+    Returned Media information from Sonarr or Radarr API.
+    This dataclass is used to check the age and size of the media on disk
+    to determine if it should be removed or if the user should be reminded.
+
+    We also store Title and image url information to be used in notifications.
+    """
+
     available_since: Union[None, datetime]
     available: bool
     id: int
+    poster: str
     seasons: list[int]
     size_on_disk: int
     title: str
-
-    @classmethod
-    def from_radarr_response(cls, response: dict) -> "MediaInfoDTO":
-        added_at = response.get("movieFile", {}).get("dateAdded")
-        return cls(
-            title=response.get("title"),
-            available=response.get("hasFile"),
-            available_since=datetime.fromisoformat(added_at) if added_at else None,
-            size_on_disk=response.get("sizeOnDisk"),
-            id=response.get("id"),
-            seasons=[],
-        )

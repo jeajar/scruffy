@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import httpx
 
 from scruffy.infra.data_transfer_objects import MediaInfoDTO
@@ -8,6 +10,14 @@ class RadarrRepository:
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
         self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
+
+    def _get_movie_poster(self, images: list[dict]) -> str:
+        # Get poster URL from images
+        poster = next(
+            (img["remoteUrl"] for img in images if img.get("coverType") == "poster"),
+            None,
+        )
+        return poster
 
     async def get_movie(self, movie_id: int) -> MediaInfoDTO:
         """Get detailed information about a movie by its Radarr ID.
@@ -26,7 +36,18 @@ class RadarrRepository:
                 f"{self.base_url}/api/v3/movie/{movie_id}", headers=self.headers
             )
             response.raise_for_status()
-            return MediaInfoDTO.from_radarr_response(response.json())
+            data = response.json()
+            poster = self._get_movie_poster(data.get("images", []))
+            added_at = data.get("movieFile", {}).get("dateAdded")
+            return MediaInfoDTO(
+                title=data.get("title"),
+                available=data.get("hasFile"),
+                poster=poster,
+                available_since=datetime.fromisoformat(added_at) if added_at else None,
+                size_on_disk=data.get("sizeOnDisk"),
+                id=data.get("id"),
+                seasons=[],
+            )
 
     async def delete_movie(self, movie_id: int, delete_files: bool = True) -> None:
         """Delete a movie and optionally its files.
@@ -55,5 +76,4 @@ if __name__ == "__main__":
     base_url = "https://radarr.jmax.tech"
     repo = RadarrRepository(base_url, api_key)
     movie = asyncio.run(repo.get_movie(58))
-    movie_info_dto = MediaInfoDTO.from_radarr_response(movie)
     pass

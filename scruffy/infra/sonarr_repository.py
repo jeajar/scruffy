@@ -30,6 +30,14 @@ class SonarrRepository:
             response.raise_for_status()
             return response.json()
 
+    def _get_series_poster(self, images: list[dict]) -> str:
+        # Get poster URL from images
+        poster = next(
+            (img["remoteUrl"] for img in images if img.get("coverType") == "poster"),
+            None,
+        )
+        return poster
+
     async def get_series_info(
         self, series_id: int, season_list: list[int]
     ) -> MediaInfoDTO:
@@ -48,6 +56,7 @@ class SonarrRepository:
         available = True
         latest_date = None
         total_size = 0
+        poster = self._get_series_poster(series.get("images", []))
 
         for season_num in season_list:
             episodes = await self.get_episodes(series_id, season_num)
@@ -73,12 +82,13 @@ class SonarrRepository:
             total_size += sum(ep.get("episodeFile", {}).get("size") for ep in episodes)
 
         return MediaInfoDTO(
-            title=series.get("title"),
-            available=available,
             available_since=latest_date if available else None,
-            size_on_disk=total_size,
-            seasons=season_list,
+            available=available,
             id=series_id,
+            poster=poster,
+            seasons=season_list,
+            size_on_disk=total_size,
+            title=series.get("title"),
         )
 
     async def get_episodes(self, series_id: int, season_number: int) -> list[dict]:
