@@ -1,9 +1,11 @@
+import random
 from pathlib import Path
 
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
 from jinja2 import Environment, FileSystemLoader
 
 from scruffy.infra import MediaInfoDTO, settings
+from scruffy.quotes import scruffy_quotes
 
 
 class EmailService:
@@ -29,11 +31,16 @@ class EmailService:
         )
 
     async def send_deletion_notice(self, to_email: str, media: MediaInfoDTO) -> None:
-        template = self.template_env.get_template("delete.html.j2")
-        html = template.render(media=media)
+        template = self.template_env.get_template("base.html.j2")
+        html = template.render(
+            media=media,
+            days_left=0,
+            quote=random.choice(scruffy_quotes),
+            reminder=False,
+        )
 
         message = MessageSchema(
-            subject=f"Content Deletion Notice: {media.title}",
+            subject=f"Gone!: {media.title}",
             recipients=[to_email],
             body=html,
             subtype="html",
@@ -44,11 +51,16 @@ class EmailService:
     async def send_reminder_notice(
         self, to_email: str, media: MediaInfoDTO, days_left: int
     ) -> None:
-        template = self.template_env.get_template("reminder.html.j2")
-        html = template.render(media=media, days_left=days_left)
+        template = self.template_env.get_template("base.html.j2")
+        html = template.render(
+            media=media,
+            days_left=days_left,
+            quote=random.choice(scruffy_quotes),
+            reminder=True,
+        )
 
         message = MessageSchema(
-            subject=f"Content Expiration Reminder: {media.title}",
+            subject=f"Reminder: {media.title}",
             recipients=[to_email],
             body=html,
             subtype="html",

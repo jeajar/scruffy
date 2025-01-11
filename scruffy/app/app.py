@@ -98,4 +98,7 @@ if __name__ == "__main__":
         asyncio.run(
             dev_mail.send_reminder_notice("user@example.com", data.get("media_info"), 5)
         )
+        asyncio.run(
+            dev_mail.send_deletion_notice("user@example.com", data.get("media_info"))
+        )
         # print(data.get("media_info"))
