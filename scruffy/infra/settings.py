@@ -22,8 +22,8 @@ class Settings(BaseSettings):
     SMTP_USERNAME: str = ""
     SMTP_PASSWORD: str = ""
     SMTP_FROM_EMAIL: EmailStr = "scruffy@example.com"
-    SMTP_TLS: bool = True
-    SMTP_SSL: bool = False
+    SMTP_SSL_TLS: bool = True
+    SMTP_STARTTLS: bool = False
 
 
 settings = Settings()

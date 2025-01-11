@@ -10,15 +10,17 @@ class EmailService:
     def __init__(self):
         if not settings.EMAIL_ENABLED:
             return
+        use_credentials = bool(settings.SMTP_USERNAME and settings.SMTP_PASSWORD)
         self.conf = ConnectionConfig(
             MAIL_USERNAME=settings.SMTP_USERNAME,
             MAIL_PASSWORD=settings.SMTP_PASSWORD,
+            MAIL_FROM_NAME="Scruffy, the Janitor",
             MAIL_FROM=settings.SMTP_FROM_EMAIL,
             MAIL_PORT=settings.SMTP_PORT,
             MAIL_SERVER=settings.SMTP_HOST,
-            MAIL_TLS=settings.SMTP_TLS,
-            MAIL_SSL=settings.SMTP_SSL,
-            USE_CREDENTIALS=True,
+            MAIL_SSL_TLS=settings.SMTP_SSL_TLS,
+            MAIL_STARTTLS=settings.SMTP_STARTTLS,
+            USE_CREDENTIALS=use_credentials,
         )
 
         self.fastmail = FastMail(self.conf)
