@@ -8,6 +8,7 @@ from .constants import MediaStatus, RequestStatus
 @dataclass(frozen=True)
 class RequestDTO:
     user_id: int
+    user_email: str
     type: Literal["movie", "tv"]
     request_id: int
     request_status: RequestStatus
@@ -21,6 +22,7 @@ class RequestDTO:
         media: dict = response.get("media", {})
         return cls(
             user_id=response.get("requestedBy", {}).get("id"),
+            user_email=response.get("requestedBy", {}).get("email"),
             type=response["type"],
             request_id=response["id"],
             updated_at=datetime.fromisoformat(media["updatedAt"]),

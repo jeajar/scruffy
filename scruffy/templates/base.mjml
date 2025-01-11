@@ -1,3 +1,6 @@
+<!--
+Base mjml template for all emails.
+-->
 <mjml>
   <mj-body>
     <mj-section>

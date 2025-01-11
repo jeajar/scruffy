@@ -25,5 +25,8 @@ class Settings(BaseSettings):
     SMTP_SSL_TLS: bool = True
     SMTP_STARTTLS: bool = False
 
+    # Application settings
+    LOG_LEVEL: str = "INFO"
+
 
 settings = Settings()

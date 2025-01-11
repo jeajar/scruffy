@@ -1,7 +1,7 @@
 import asyncio
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
-from typing import Union
+from typing import List, Tuple
 
 from scruffy.infra import (
     MediaInfoDTO,
@@ -12,93 +12,131 @@ from scruffy.infra import (
     SonarrRepository,
     settings,
 )
+from scruffy.infra.logging import setup_logger
 from scruffy.services import EmailService
 
 
 @dataclass(frozen=True)
 class Result:
-    requests_to_delete: list[RequestDTO]
-    delete_to_notify: list[MediaInfoDTO]
-    reminders: list[MediaInfoDTO]
+    remind: bool
+    delete: bool
 
 
-def check_requests() -> dict[int : dict[str, Union[RequestDTO, MediaInfoDTO]]]:
-    """
-    Check each request from Overseerr and get the media information from Sonarr or Radarr.
-    The returned data can be used to apply the retention policy and/or send
-    notifications to the user.
+class MediaManager:
+    def __init__(
+        self,
+        overseer: OverseerRepository,
+        sonarr: SonarrRepository,
+        radarr: RadarrRepository,
+        email_service: EmailService,
+    ):
+        self.overseer = overseer
+        self.sonarr = sonarr
+        self.radarr = radarr
+        self.email_service = email_service
+        self.logger = setup_logger(__class__.__name__, settings.LOG_LEVEL)
 
-    Returns:
-        A dictionary with the request_id and the request and media information.
-    """
-    overseer = OverseerRepository(
-        str(settings.OVERSEERR_URL), settings.OVERSEERR_API_KEY
-    )
-    sonarr = SonarrRepository(str(settings.SONARR_URL), settings.SONARR_API_KEY)
-    radarr = RadarrRepository(str(settings.RADARR_URL), settings.RADARR_API_KEY)
+    async def check_requests(self) -> List[Tuple[RequestDTO, MediaInfoDTO]]:
+        """Check all media requests and return those needing attention."""
+        self.logger.info("Checking media requests from Overseerr")
+        requests = await self.overseer.get_requests()
 
-    # Get all requests from Overseerr
-    requests = asyncio.run(overseer.get_requests())
+        to_check = [
+            req
+            for req in requests
+            if req.media_status
+            in [MediaStatus.PARTIALLY_AVAILABLE, MediaStatus.AVAILABLE]
+        ]
 
-    # Note: Overseerr always reports tv requests as "partially available"
-    # when not all seasons were requested. We need to check in Sonarr for the full availability
-    # information.
-    to_check = [
-        req
-        for req in requests
-        if req.media_status in [MediaStatus.PARTIALLY_AVAILABLE, MediaStatus.AVAILABLE]
-    ]
+        self.logger.info(f"Found {len(to_check)} available media requests to check")
+        result = []
+        for req in to_check:
+            media_info = await self._get_media_info(req)
+            self.logger.debug("Got media info: %s", asdict(media_info))
+            result.append((req, media_info))
 
-    result = {}
-    # Check Requests with available media for age.
-    for req in to_check:
-        if req.type == "movie":
-            media_info = asyncio.run(radarr.get_movie(req.external_service_id))
-        elif req.type == "tv":
-            media_info = asyncio.run(
-                sonarr.get_series_info(req.external_service_id, req.seasons)
+        return result
+
+    async def _get_media_info(self, request: RequestDTO) -> MediaInfoDTO:
+        """Get media info from appropriate service."""
+        if request.type == "movie":
+            return await self.radarr.get_movie(request.external_service_id)
+        return await self.sonarr.get_series_info(
+            request.external_service_id, request.seasons
+        )
+
+    def _check_retention_policy(
+        self, request: RequestDTO, media_info: MediaInfoDTO
+    ) -> Result:
+        """Apply retention policy to media."""
+        if not media_info.available:
+            return Result(remind=False, delete=False)
+
+        age: int = datetime.now(media_info.available_since.tzinfo) - request.updated_at
+        remind: bool = settings.RETENTION_DAYS - age.days == settings.REMINDER_DAYS
+        delete: bool = age.days >= settings.RETENTION_DAYS
+
+        return Result(remind=remind, delete=delete)
+
+    async def process_media(self) -> None:
+        """Process all media requests and take appropriate actions."""
+        self.logger.info("Processing media requests")
+        results = await self.check_requests()
+
+        for request, media_info in results:
+            result = self._check_retention_policy(request, media_info)
+            if result.remind:
+                self.logger.info(
+                    "Sending reminder to %s for %s",
+                    request.user_email,
+                    media_info.title,
+                )
+            if result.delete:
+                self.logger.info(
+                    "Deleting %s and notify %s", media_info.title, request.user_email
+                )
+            await self._handle_result(request, media_info, result)
+
+    async def _handle_result(
+        self, request: RequestDTO, media_info: MediaInfoDTO, result: Result
+    ) -> None:
+        """Handle individual media result."""
+        if result.remind:
+            days_left = (
+                settings.RETENTION_DAYS
+                - (
+                    datetime.now(media_info.available_since.tzinfo) - request.updated_at
+                ).days
             )
-        result[req.request_id] = {"request": req, "media_info": media_info}
+            await self.email_service.send_reminder_notice(
+                request.user_email, media_info, days_left
+            )
 
-    return result
+        if result.delete:
+            await self._delete_media(request)
+            await self.overseer.delete_request(request.request_id)
+            await self.email_service.send_deletion_notice(
+                request.user_email, media_info
+            )
 
-
-def apply_retention_policy(requests: dict[RequestDTO, MediaInfoDTO]) -> Result:
-    # List of requests that have expired and need to be deleted on disk
-    requests_to_delete: list[RequestDTO] = []
-
-    # List of media that will be deleted on disk to notify the user
-    delete_to_notify: list[MediaInfoDTO] = []
-
-    # List of media that will expire soon and need to notify the user
-    reminders: list[MediaInfoDTO] = []
-    for req, media_info in requests.items():
-        if media_info.available:
-            age = datetime.now(media_info.available_since.tzinfo) - req.updated_at
-            if age.days >= settings.RETENTION_DAYS:
-                requests_to_delete.append(req)
-                delete_to_notify.append(media_info)
-
-            # Add to reminders if the request is about to expire so we can notify the user.
-            if settings.RETENTION_DAYS - age.days == settings.REMINDER_DAYS:
-                reminders.append(media_info)
-
-    return Result(
-        requests_to_delete=requests_to_delete,
-        delete_to_notify=delete_to_notify,
-        reminders=reminders,
-    )
+    async def _delete_media(self, request: RequestDTO) -> None:
+        """Delete media from appropriate service."""
+        if request.type == "movie":
+            await self.radarr.delete_movie(request.external_service_id)
+        else:
+            await self.sonarr.delete_series_seasons(
+                request.external_service_id, request.seasons
+            )
 
 
 if __name__ == "__main__":
-    dev_mail = EmailService()
-    result = check_requests()
+    manager = MediaManager(
+        overseer=OverseerRepository(
+            str(settings.OVERSEERR_URL), settings.OVERSEERR_API_KEY
+        ),
+        sonarr=SonarrRepository(str(settings.SONARR_URL), settings.SONARR_API_KEY),
+        radarr=RadarrRepository(str(settings.RADARR_URL), settings.RADARR_API_KEY),
+        email_service=EmailService(),
+    )
 
-    for req_it, data in result.items():
-        asyncio.run(
-            dev_mail.send_reminder_notice("user@example.com", data.get("media_info"), 5)
-        )
-        asyncio.run(
-            dev_mail.send_deletion_notice("user@example.com", data.get("media_info"))
-        )
-        # print(data.get("media_info"))
+    asyncio.run(manager.process_media())
