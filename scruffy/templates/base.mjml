@@ -1,0 +1,25 @@
+<mjml>
+  <mj-body>
+    <mj-section>
+      <mj-column>
+        <mj-image width="162px" src="https://s3.ca-central-1.wasabisys.com/public-jmax/scruffy.png"></mj-image>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#C1C7CC">
+      <mj-column width="200px">
+        <mj-image width="170px" src="https://critics.io/img/movies/poster-placeholder.png"></mj-image>
+      </mj-column>
+      <mj-column width="400px">
+        <mj-text font-weight="bold" align="justify" font-size="24px" color="#000" font-family="helvetica">{{ media.title }}</mj-text>
+        <mj-text align="justify" font-size="15px" color="#000" font-family="helvetica">Scruffy's gonna delete this in {{ days_left }} days. Mh-hmm.</mj-text>
+        <mj-button align="left" background-color="#8ccaca" border-radius="40px" font-family="helvetica" font-size="12px">I need more time!</mj-button>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#304D54">
+      <mj-column>
+        <mj-text align="justify" font-size="13px" color="#C1C7CC" font-style="italic" font-family="helvetica">"{{quote}}"</mj-text>
+        <mj-text align="right" font-size="13px" color="#C1C7CC" font-family="helvetica">-Scruffy, the Janitor</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
