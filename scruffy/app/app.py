@@ -12,7 +12,7 @@ from scruffy.infra import (
     SonarrRepository,
     settings,
 )
-from scruffy.infra.logging import setup_logger
+from scruffy.logging import setup_logger
 from scruffy.services import EmailService
 
 
