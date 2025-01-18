@@ -6,6 +6,12 @@
 
 # Scruffy, the Janitor
 ![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jeajar/c4d296c768b6156a0315ceca529b6d68/raw/coverage.json)
+![Python](https://img.shields.io/badge/python-3.13-blue.svg)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
+
+
 Scruffy, the janitor is responsible to delete media requested by users with Overseerr.
 For when your friends and family members are out of control.
 
