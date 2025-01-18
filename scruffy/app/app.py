@@ -1,4 +1,3 @@
-import asyncio
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import List, Tuple
@@ -127,16 +126,3 @@ class MediaManager:
             await self.sonarr.delete_series_seasons(
                 request.external_service_id, request.seasons
             )
-
-
-if __name__ == "__main__":
-    manager = MediaManager(
-        overseer=OverseerRepository(
-            str(settings.overseerr_url), settings.overseerr_api_key
-        ),
-        sonarr=SonarrRepository(str(settings.sonarr_url), settings.sonarr_api_key),
-        radarr=RadarrRepository(str(settings.radarr_url), settings.radarr_api_key),
-        email_service=EmailService(),
-    )
-
-    asyncio.run(manager.process_media())
