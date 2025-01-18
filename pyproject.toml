@@ -1,26 +1,27 @@
-[tool.poetry]
+[project]
 name = "scruffy"
 version = "0.1.0"
-description = ""
-authors = ["Jean-Maxim Desjardins <jm@jmaxpost.com>"]
+description = "An opiniated Media cleaner for Overseerr"
 readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi-mail>=1.4.2",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.7.1",
+    "pydantic>=2.10.4",
+    "rich>=13.9.4",
+    "typer>=0.15.1",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10"
-typer = "^0.7.0"
-confuse = "^2.0.0"
-sqlalchemy = "^2.0.4"
-httpx = "^0.23.3"
-arrapi = "^1.4.2"
-plexapi = "^4.13.2"
-loguru = "^0.6.0"
-celery = {extras = ["redis"], version = "^5.2.7"}
-mjml = "^0.8.0"
-emails = "^0.6"
-pydantic = {extras = ["email"], version = "^1.10.5"}
-rich = "^13.3.2"
-
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.uv]
+dev-dependencies = [
+    "pytest-asyncio>=0.25.2",
+    "pytest-cov>=6.0.0",
+    "pytest>=8.3.4",
+    "respx>=0.22.0",
+]
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = [
+    "asyncio: mark test as async"
+]
