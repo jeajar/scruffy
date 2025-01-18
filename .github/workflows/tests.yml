@@ -44,8 +44,13 @@ jobs:
       run: |
         uv run pytest --cov=scruffy --cov-report=xml --cov-report=term
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+    - name: Create Coverage Badge
+      uses: schneegans/dynamic-badges-action@v1.6.0
       with:
-        file: ./coverage.xml
-        fail_ci_if_error: true
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: c4d296c768b6156a0315ceca529b6d68
+        filename: coverage.json
+        label: coverage
+        message: ${{ env.COVERAGE }}
+        color: ${{ env.COLOR }}
+        namedLogo: python
