@@ -1,11 +1,10 @@
 
 
 <p align="center">
-  <img src="./email_templates/scruffy.png">
+  <img src="https://s3.ca-central-1.wasabisys.com/public-jmax/scruffy.png">
 </p>
 
 # Scruffy, the Janitor
-![Tests](https://github.com/jeajar/scruffy/actions/workflows/tests.yml/badge.svg)
 ![Coverage](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/jeajar/c4d296c768b6156a0315ceca529b6d68/raw/coverage.json)
 Scruffy, the janitor is responsible to delete media requested by users with Overseerr.
 For when your friends and family members are out of control.
