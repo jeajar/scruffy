@@ -156,14 +156,17 @@ class SonarrRepository:
             await self.delete_episode_files(episode_file_ids)
 
     async def delete_episode_files(self, episode_file_ids: list[int]) -> None:
-        """Delete episode files by their Sonarr internal IDs"""
+        """Delete episode files by their Sonarr internal IDs one at a time.
+        Note: We should use episodefile/bulk DETELE instead, but the json
+        arg needed for this endpoint is slightly more complex and problematic.
+        """
         async with httpx.AsyncClient() as client:
-            response = await client.delete(
-                f"{self.base_url}/api/v3/episodeFile/bulk",
-                headers=self.headers,
-                json={"episodeFileIds": episode_file_ids},
-            )
-            response.raise_for_status()
+            for episode_id in episode_file_ids:
+                response = await client.delete(
+                    f"{self.base_url}/api/v3/episodefile/{episode_id}",
+                    headers=self.headers,
+                )
+                response.raise_for_status()
 
     async def update_season_monitoring(
         self, series_id: int, seasons_to_unmonitor: list[int]
@@ -203,5 +206,7 @@ if __name__ == "__main__":
     api_key = os.getenv("SONARR_API_KEY")
     base_url = "https://sonarr.jmax.tech"
     repo = SonarrRepository(base_url, api_key)
-    series = asyncio.run(repo.get_episodes(12, 11))
+    series = asyncio.run(repo.get_episodes(43, 8))
+
+    asyncio.run(repo.delete_episode_files([8509]))
     pass
