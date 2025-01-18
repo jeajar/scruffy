@@ -29,3 +29,25 @@ show, they will have 30 days to watch all of it.
 * Scruffy is at least going to notify you by email a week before stuff gets deleted.
 * The user should be able to click a link to ask for an extension, at least once.
 * Scuffy should remain simple and run as a cron or sceduled job, no fancy UI.
+
+## Configuration
+
+| Environment Variable | Default Value | Description | Required |
+|---------------------|---------------|-------------|-----------|
+| `OVERSEERR_URL` | `http://localhost:5050` | Overseerr server URL | No |
+| `OVERSEERR_API_KEY` | `None` | API key for Overseerr authentication | Yes |
+| `SONARR_URL` | `http://localhost:8989` | Sonarr server URL | No |
+| `SONARR_API_KEY` | `None` | API key for Sonarr authentication | Yes |
+| `RADARR_URL` | `http://localhost:7878` | Radarr server URL | No |
+| `RADARR_API_KEY` | `None` | API key for Radarr authentication | Yes |
+| `RETENTION_DAYS` | `30` | Number of days to keep media before deletion | No |
+| `REMINDER_DAYS` | `7` | Days before deletion to send reminder | No |
+| `EMAIL_ENABLED` | `False` | Enable email notifications | No |
+| `SMTP_HOST` | `localhost` | SMTP server hostname | If email enabled |
+| `SMTP_PORT` | `25` | SMTP server port | If email enabled |
+| `SMTP_USERNAME` | `None` | SMTP authentication username | Optional |
+| `SMTP_PASSWORD` | `None` | SMTP authentication password | Optional |
+| `SMTP_FROM_EMAIL` | `scruffy@example.com` | Sender email address | If email enabled |
+| `SMTP_SSL_TLS` | `True` | Use SSL/TLS for SMTP connection | No |
+| `SMTP_STARTTLS` | `False` | Use STARTTLS for SMTP connection | No |
+| `LOG_LEVEL` | `INFO` | Application logging level | No |
