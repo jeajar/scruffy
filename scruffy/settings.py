@@ -6,13 +6,13 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     overseerr_url: HttpUrl = "http://localhost:5050"
-    overseerr_api_key: str
+    overseerr_api_key: Optional[str] = None
 
     sonarr_url: HttpUrl = "http://localhost:8989"
-    sonarr_api_key: str
+    sonarr_api_key: Optional[str] = None
 
     radarr_url: HttpUrl = "http://localhost:7878"
-    radarr_api_key: str
+    radarr_api_key: Optional[str] = None
 
     retention_days: int = 30
     reminder_days: int = 7

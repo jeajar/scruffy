@@ -15,7 +15,7 @@
 Scruffy, the janitor is responsible to delete media requested by users with Overseerr.
 For when your friends and family members are out of control.
 
-**Note** Current project status: Proof of concept
+**Note** Current project status: Very experimental and in proof of concept.
 
 ## The Problem
 Overseerr is an amazing request application but the project has decided, at least for the time being, that it is not responsible for deleting media even if it has API access to Plex, Radarr and Sonarr. We need a process to handle this externally.
