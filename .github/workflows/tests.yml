@@ -43,16 +43,8 @@ jobs:
     - name: Run tests with coverage
       run: |
         uv run pytest --cov=scruffy --cov-report=xml --cov-report=term
-        echo "COVERAGE=$(python -c 'import xml.etree.ElementTree as ET; print(ET.parse("coverage.xml").getroot().attrib["line-rate"])' | awk '{printf "%.0f%%", $1 * 100}')" >> $GITHUB_ENV
-        echo "COLOR=$(python -c 'import xml.etree.ElementTree as ET; cov=float(ET.parse("coverage.xml").getroot().attrib["line-rate"]); print("red" if cov < 0.5 else "yellow" if cov < 0.8 else "green")')" >> $GITHUB_ENV
 
-    - name: Create Coverage Badge
-      uses: schneegans/dynamic-badges-action@v1.6.0
+    - name: Generate coverage badge
+      uses: tj-actions/coverage-badge-py@v2
       with:
-        auth: ${{ secrets.GIST_SECRET }}
-        gistID: c4d296c768b6156a0315ceca529b6d68
-        filename: coverage.json
-        label: coverage
-        message: ${{ env.COVERAGE }}
-        color: ${{ env.COLOR }}
-        namedLogo: python
+        output: .github/coverage.svg
