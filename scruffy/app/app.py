@@ -10,10 +10,10 @@ from scruffy.infra import (
     RadarrRepository,
     RequestDTO,
     SonarrRepository,
-    settings,
 )
 from scruffy.logging import setup_logger
 from scruffy.services import EmailService
+from scruffy.settings import settings
 
 
 @dataclass(frozen=True)
@@ -34,7 +34,7 @@ class MediaManager:
         self.sonarr = sonarr
         self.radarr = radarr
         self.email_service = email_service
-        self.logger = setup_logger(__class__.__name__, settings.LOG_LEVEL)
+        self.logger = setup_logger(__class__.__name__, settings.log_level)
 
     async def check_requests(self) -> List[Tuple[RequestDTO, MediaInfoDTO]]:
         """Check all media requests and return those needing attention."""
@@ -73,8 +73,8 @@ class MediaManager:
             return Result(remind=False, delete=False)
 
         age: int = datetime.now(media_info.available_since.tzinfo) - request.updated_at
-        remind: bool = settings.RETENTION_DAYS - age.days == settings.REMINDER_DAYS
-        delete: bool = age.days >= settings.RETENTION_DAYS
+        remind: bool = settings.retention_days - age.days == settings.reminder_days
+        delete: bool = age.days >= settings.retention_days
 
         return Result(remind=remind, delete=delete)
 
@@ -103,7 +103,7 @@ class MediaManager:
         """Handle individual media result."""
         if result.remind:
             days_left = (
-                settings.RETENTION_DAYS
+                settings.retention_days
                 - (
                     datetime.now(media_info.available_since.tzinfo) - request.updated_at
                 ).days
@@ -132,10 +132,10 @@ class MediaManager:
 if __name__ == "__main__":
     manager = MediaManager(
         overseer=OverseerRepository(
-            str(settings.OVERSEERR_URL), settings.OVERSEERR_API_KEY
+            str(settings.overseerr_url), settings.overseerr_api_key
         ),
-        sonarr=SonarrRepository(str(settings.SONARR_URL), settings.SONARR_API_KEY),
-        radarr=RadarrRepository(str(settings.RADARR_URL), settings.RADARR_API_KEY),
+        sonarr=SonarrRepository(str(settings.sonarr_url), settings.sonarr_api_key),
+        radarr=RadarrRepository(str(settings.radarr_url), settings.radarr_api_key),
         email_service=EmailService(),
     )
 

@@ -66,14 +66,3 @@ class RadarrRepository:
                 params={"deleteFiles": str(delete_files).lower()},
             )
             response.raise_for_status()
-
-
-if __name__ == "__main__":
-    import asyncio
-    import os
-
-    api_key = os.getenv("RADARR_API_KEY")
-    base_url = "https://radarr.jmax.tech"
-    repo = RadarrRepository(base_url, api_key)
-    movie = asyncio.run(repo.get_movie(58))
-    pass

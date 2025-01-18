@@ -10,18 +10,21 @@ from scruffy.quotes import scruffy_quotes
 
 class EmailService:
     def __init__(self):
-        if not settings.EMAIL_ENABLED:
+        if not settings.email_enabled:
             return
-        use_credentials = bool(settings.SMTP_USERNAME and settings.SMTP_PASSWORD)
+        # Set empty strings if credentials not provided
+        username = settings.smtp_username or ""
+        password = settings.smtp_password or ""
+        use_credentials = bool(username and password)
         self.conf = ConnectionConfig(
-            MAIL_USERNAME=settings.SMTP_USERNAME,
-            MAIL_PASSWORD=settings.SMTP_PASSWORD,
+            MAIL_USERNAME=username,
+            MAIL_PASSWORD=password,
             MAIL_FROM_NAME="Scruffy, the Janitor",
-            MAIL_FROM=settings.SMTP_FROM_EMAIL,
-            MAIL_PORT=settings.SMTP_PORT,
-            MAIL_SERVER=settings.SMTP_HOST,
-            MAIL_SSL_TLS=settings.SMTP_SSL_TLS,
-            MAIL_STARTTLS=settings.SMTP_STARTTLS,
+            MAIL_FROM=settings.smtp_from_email,
+            MAIL_PORT=settings.smtp_port,
+            MAIL_SERVER=settings.smtp_host,
+            MAIL_SSL_TLS=settings.smtp_ssl_tls,
+            MAIL_STARTTLS=settings.smtp_starttls,
             USE_CREDENTIALS=use_credentials,
         )
 

@@ -196,17 +196,3 @@ class SonarrRepository:
                 json=series,
             )
             response.raise_for_status()
-
-
-if __name__ == "__main__":
-    import asyncio
-    import os
-
-    # Load Sonarr API key from environment variable
-    api_key = os.getenv("SONARR_API_KEY")
-    base_url = "https://sonarr.jmax.tech"
-    repo = SonarrRepository(base_url, api_key)
-    series = asyncio.run(repo.get_episodes(43, 8))
-
-    asyncio.run(repo.delete_episode_files([8509]))
-    pass
