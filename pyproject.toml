@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-settings>=2.7.1",
     "pydantic>=2.10.4",
     "rich>=13.9.4",
+    "sqlmodel>=0.0.22",
     "typer>=0.15.1",
 ]
 
