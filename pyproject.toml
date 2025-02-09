@@ -10,6 +10,7 @@ dependencies = [
     "pydantic-settings>=2.7.1",
     "pydantic>=2.10.4",
     "rich>=13.9.4",
+    "sqlmodel>=0.0.22",
     "typer>=0.15.1",
 ]
 
@@ -19,6 +20,8 @@ dev-dependencies = [
     "pytest-cov>=6.0.0",
     "pytest>=8.3.4",
     "respx>=0.22.0",
+    "ruff>=0.9.5",
+    "mypy>=1.15.0",
 ]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

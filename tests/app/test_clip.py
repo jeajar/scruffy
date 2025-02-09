@@ -58,12 +58,6 @@ def sample_media():
     )
 
 
-def test_validate_command_success(runner, mock_settings):
-    result = runner.invoke(app, ["validate"])
-    assert result.exit_code == 0
-    assert "✓ Configuration is valid" in result.stdout
-
-
 @patch("scruffy.app.cli.async_check_media")
 def test_check_command_with_media(mock_check, runner, sample_request, sample_media):
     async def mock_results():

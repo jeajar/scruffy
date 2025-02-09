@@ -10,6 +10,7 @@ from scruffy.infra import (
     MediaInfoDTO,
     OverseerRepository,
     RadarrRepository,
+    ReminderRepository,
     RequestDTO,
     SonarrRepository,
     settings,
@@ -17,7 +18,9 @@ from scruffy.infra import (
 from scruffy.services import EmailService
 
 app = typer.Typer()
-console = Console()
+
+
+console = Console(record=True)
 
 
 def create_manager() -> MediaManager:
@@ -27,6 +30,7 @@ def create_manager() -> MediaManager:
         ),
         sonarr=SonarrRepository(str(settings.sonarr_url), settings.sonarr_api_key),
         radarr=RadarrRepository(str(settings.radarr_url), settings.radarr_api_key),
+        reminder_repository=ReminderRepository(),
         email_service=EmailService(),
     )
 
@@ -59,6 +63,7 @@ def validate():
         "Retention Days": str(settings.retention_days),
         "Reminder Days": str(settings.reminder_days),
         "Log Level": settings.log_level,
+        "Data Directory": settings.data_dir,
     }
 
     for key, value in settings_to_show.items():

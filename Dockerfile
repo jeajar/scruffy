@@ -3,8 +3,17 @@ FROM python:3.13-slim
 # Set working directory
 WORKDIR /app
 
+RUN mkdir -p /data && \
+    chmod 777 /data
+
 # Install cron and curl
-RUN apt-get update && apt-get install -y cron curl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cron \
+    curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /data && \
+    chmod 777 /data && \
+    touch /var/log/cron.log
 
 # Download the latest installer
 ADD https://astral.sh/uv/install.sh /uv-installer.sh
@@ -22,30 +31,10 @@ COPY . .
 RUN uv venv
 RUN uv pip install -e .
 
-# Create healthcheck script
-RUN echo '#!/bin/sh\nuv run python -m scruffy.app.cli validate' > /healthcheck.sh
-RUN chmod +x /healthcheck.sh
+COPY scripts/entrypoint.sh /entrypoint.sh
 
-# Create entrypoint script
-RUN echo '#!/bin/sh\n\
-# Run validation check\n\
-/healthcheck.sh || exit 1\n\
-\n\
-# Setup cron schedule from env vars or defaults\n\
-PROCESS_SCHEDULE=${PROCESS_SCHEDULE:-"0 19 * * *"}\n\
-CHECK_SCHEDULE=${CHECK_SCHEDULE:-"0 */6 * * *"}\n\
-\n\
-# Create cron jobs\n\
-echo "$CHECK_SCHEDULE cd /app && uv run python -m scruffy.app.cli check >> /var/log/cron.log 2>&1" > /etc/cron.d/scruffy\n\
-echo "$PROCESS_SCHEDULE cd /app && uv run python -m scruffy.app.cli process >> /var/log/cron.log 2>&1" >> /etc/cron.d/scruffy\n\
-chmod 0644 /etc/cron.d/scruffy\n\
-\n\
-# Start cron and follow logs\n\
-cron && tail -f /var/log/cron.log' > /entrypoint.sh
-RUN chmod +x /entrypoint.sh
-
-# Create log file
-RUN touch /var/log/cron.log
+COPY scripts/healthcheck.sh /healthcheck.sh
+RUN chmod +x /healthcheck.sh /entrypoint.sh
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]

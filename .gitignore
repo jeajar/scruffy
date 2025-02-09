@@ -128,3 +128,15 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# VS Code
+.vscode/
+.tmp/
+
+# Ruff
+.ruff_cache/
+
+# Sqlite and data
+*.db
+.scruffy_data/
+.DS_Store
