@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from scruffy.app.app import MediaManager, Result
+from scruffy.app.app import MediaManager, RetentionResult
 from scruffy.infra.constants import MediaStatus, RequestStatus
 from scruffy.infra.data_transfer_objects import MediaInfoDTO, RequestDTO
 
@@ -135,7 +135,7 @@ async def test_check_requests_tv(
 
 def test_check_retention_policy(manager, sample_movie_request, sample_media_info):
     result = manager._check_retention_policy(sample_movie_request, sample_media_info)
-    assert isinstance(result, Result)
+    assert isinstance(result, RetentionResult)
     assert result.delete is True
     assert result.remind is False
 

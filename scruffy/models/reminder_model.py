@@ -1,4 +1,6 @@
-from sqlmodel import SQLModel
+from datetime import datetime, timezone
+
+from sqlmodel import Field, SQLModel
 
 
 class Reminder(SQLModel, table=True):
@@ -7,5 +9,6 @@ class Reminder(SQLModel, table=True):
     wether it was sent to the user or not.
     """
 
-    id: int
-    sent: bool
+    request_id: int = Field(primary_key=True)
+    user_id: int
+    date_sent: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

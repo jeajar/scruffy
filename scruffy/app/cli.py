@@ -10,6 +10,7 @@ from scruffy.infra import (
     MediaInfoDTO,
     OverseerRepository,
     RadarrRepository,
+    ReminderRepository,
     RequestDTO,
     SonarrRepository,
     settings,
@@ -27,6 +28,7 @@ def create_manager() -> MediaManager:
         ),
         sonarr=SonarrRepository(str(settings.sonarr_url), settings.sonarr_api_key),
         radarr=RadarrRepository(str(settings.radarr_url), settings.radarr_api_key),
+        reminder_repository=ReminderRepository(),
         email_service=EmailService(),
     )
 

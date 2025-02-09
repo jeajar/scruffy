@@ -7,6 +7,7 @@ from scruffy.infra import (
     MediaStatus,
     OverseerRepository,
     RadarrRepository,
+    ReminderRepository,
     RequestDTO,
     SonarrRepository,
 )
@@ -16,9 +17,10 @@ from scruffy.settings import settings
 
 
 @dataclass(frozen=True)
-class Result:
+class RetentionResult:
     remind: bool
     delete: bool
+    days_left: int = 0
 
 
 class MediaManager:
@@ -28,11 +30,13 @@ class MediaManager:
         sonarr: SonarrRepository,
         radarr: RadarrRepository,
         email_service: EmailService,
+        reminder_repository: ReminderRepository,
     ):
         self.overseer = overseer
         self.sonarr = sonarr
         self.radarr = radarr
         self.email_service = email_service
+        self.reminder_repository = reminder_repository
         self.logger = setup_logger(__class__.__name__, settings.log_level)
 
     async def check_requests(self) -> List[Tuple[RequestDTO, MediaInfoDTO]]:
@@ -66,16 +70,17 @@ class MediaManager:
 
     def _check_retention_policy(
         self, request: RequestDTO, media_info: MediaInfoDTO
-    ) -> Result:
+    ) -> RetentionResult:
         """Apply retention policy to media."""
         if not media_info.available:
-            return Result(remind=False, delete=False)
+            return RetentionResult(remind=False, delete=False)
 
         age: int = datetime.now(media_info.available_since.tzinfo) - request.updated_at
-        remind: bool = settings.retention_days - age.days == settings.reminder_days
+        remind: bool = settings.retention_days - age.days <= settings.reminder_days
         delete: bool = age.days >= settings.retention_days
+        days_left: int = settings.retention_days - age.days
 
-        return Result(remind=remind, delete=delete)
+        return RetentionResult(remind=remind, delete=delete, days_left=days_left)
 
     async def process_media(self) -> None:
         """Process all media requests and take appropriate actions."""
@@ -97,19 +102,26 @@ class MediaManager:
             await self._handle_result(request, media_info, result)
 
     async def _handle_result(
-        self, request: RequestDTO, media_info: MediaInfoDTO, result: Result
+        self, request: RequestDTO, media_info: MediaInfoDTO, result: RetentionResult
     ) -> None:
         """Handle individual media result."""
         if result.remind:
-            days_left = (
-                settings.retention_days
-                - (
-                    datetime.now(media_info.available_since.tzinfo) - request.updated_at
-                ).days
-            )
-            await self.email_service.send_reminder_notice(
-                request.user_email, media_info, days_left
-            )
+            if not self.reminder_repository.has_reminder(request.request_id):
+                await self.email_service.send_reminder_notice(
+                    request.user_email, media_info, result.days_left
+                )
+                self.reminder_repository.add_reminder(
+                    request.request_id, request.user_id
+                )
+                self.logger.info(
+                    "Reminder sent for '%s' to '%s'",
+                    media_info.title,
+                    request.user_email,
+                )
+            else:
+                self.logger.info(
+                    "Reminder already sent for %s, skipping", media_info.title
+                )
 
         if result.delete:
             await self._delete_media(request)
