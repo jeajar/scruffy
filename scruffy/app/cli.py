@@ -61,6 +61,7 @@ def validate():
         "Retention Days": str(settings.retention_days),
         "Reminder Days": str(settings.reminder_days),
         "Log Level": settings.log_level,
+        "Data Directory": settings.data_dir,
     }
 
     for key, value in settings_to_show.items():
@@ -127,4 +128,4 @@ def process(ctx: typer.Context):
 
 
 if __name__ == "__main__":
-    typer.run(validate)
+    app()

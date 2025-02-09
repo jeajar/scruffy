@@ -1,12 +1,16 @@
+from pathlib import Path
+
 from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel, create_engine, select
 
+from scruffy.infra import settings
 from scruffy.models.reminder_model import Reminder
 
 
 class ReminderRepository:
     def __init__(self, engine: Engine = None) -> None:
-        self.engine = engine or create_engine("sqlite:///scruffy.db")
+        db_path = Path(settings.data_dir) / "scruffy.db"
+        self.engine = engine or create_engine(f"sqlite:///{db_path}")
         SQLModel.metadata.create_all(self.engine)
 
     def has_reminder(self, request_id: int) -> bool:
