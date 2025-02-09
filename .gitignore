@@ -139,3 +139,4 @@ dmypy.json
 # Sqlite and data
 *.db
 .scruffy_data/
+.DS_Store
