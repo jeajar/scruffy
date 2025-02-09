@@ -7,7 +7,13 @@ RUN mkdir -p /data && \
     chmod 777 /data
 
 # Install cron and curl
-RUN apt-get update && apt-get install -y cron curl
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cron \
+    curl && \
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /data && \
+    chmod 777 /data && \
+    touch /var/log/cron.log
 
 # Download the latest installer
 ADD https://astral.sh/uv/install.sh /uv-installer.sh
@@ -26,13 +32,9 @@ RUN uv venv
 RUN uv pip install -e .
 
 COPY scripts/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
 
 COPY scripts/healthcheck.sh /healthcheck.sh
-RUN chmod +x /healthcheck.sh
-
-# Create log file
-RUN touch /var/log/cron.log
+RUN chmod +x /healthcheck.sh /entrypoint.sh
 
 # Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]

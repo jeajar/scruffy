@@ -1,7 +1,8 @@
+import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from scruffy.infra import (
     MediaInfoDTO,
@@ -41,8 +42,13 @@ class MediaManager:
         self.logger = setup_logger(
             name=__class__.__name__,
             level=settings.log_level,
-            log_file=str(Path(settings.data_dir).joinpath("scruffy.log")),
+            log_file=self.log_file(),
         )
+
+    def log_file(self) -> Union[str, None]:
+        if os.access(settings.data_dir, os.W_OK):
+            return str(Path(settings.data_dir).joinpath("scruffy.log"))
+        return None
 
     async def check_requests(self) -> List[Tuple[RequestDTO, MediaInfoDTO]]:
         """Check all media requests and return those needing attention."""

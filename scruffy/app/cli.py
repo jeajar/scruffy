@@ -1,6 +1,5 @@
 import asyncio
 from datetime import datetime, timezone
-from pathlib import Path
 
 import typer
 from rich.console import Console
@@ -19,9 +18,9 @@ from scruffy.infra import (
 from scruffy.services import EmailService
 
 app = typer.Typer()
-log_file = open(Path(settings.data_dir).joinpath("scruffy.log"), "a")
-console = Console(file=log_file, record=True)
-stderr_console = Console(stderr=True)
+
+
+console = Console(record=True)
 
 
 def create_manager() -> MediaManager:

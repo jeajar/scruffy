@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     # Application settings
     log_level: str = "INFO"
     log_file: Optional[str] = None
-    data_dir: str = "/data"
+    data_dir: Optional[str] = ""
 
 
 settings = Settings()

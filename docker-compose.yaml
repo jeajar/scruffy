@@ -18,6 +18,7 @@ services:
       - TZ=America/New_York
       - PROCESS_SCHEDULE="0 19 * * *"  # Run process at 7PM EDT
       - CHECK_SCHEDULE="0 */6 * * *"   # Run check every 6 hours
+      - DATA_DIR=/data
     volumes:
       - ./scruffy_data:/data
     restart: unless-stopped

@@ -9,7 +9,9 @@ from scruffy.models.reminder_model import Reminder
 
 class ReminderRepository:
     def __init__(self, engine: Engine = None) -> None:
-        db_path = Path(settings.data_dir) / "scruffy.db"
+        db_path = Path("scruffy.db")
+        if settings.data_dir:
+            db_path = Path(settings.data_dir) / "scruffy.db"
         self.engine = engine or create_engine(f"sqlite:///{db_path}")
         SQLModel.metadata.create_all(self.engine)
 
