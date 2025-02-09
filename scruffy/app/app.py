@@ -1,5 +1,6 @@
 from dataclasses import asdict, dataclass
 from datetime import datetime
+from pathlib import Path
 from typing import List, Tuple
 
 from scruffy.infra import (
@@ -37,7 +38,11 @@ class MediaManager:
         self.radarr = radarr
         self.email_service = email_service
         self.reminder_repository = reminder_repository
-        self.logger = setup_logger(__class__.__name__, settings.log_level)
+        self.logger = setup_logger(
+            name=__class__.__name__,
+            level=settings.log_level,
+            log_file=str(Path(settings.data_dir).joinpath("scruffy.log")),
+        )
 
     async def check_requests(self) -> List[Tuple[RequestDTO, MediaInfoDTO]]:
         """Check all media requests and return those needing attention."""
