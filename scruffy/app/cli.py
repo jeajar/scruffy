@@ -127,4 +127,4 @@ def process(ctx: typer.Context):
 
 
 if __name__ == "__main__":
-    app()
+    typer.run(validate)

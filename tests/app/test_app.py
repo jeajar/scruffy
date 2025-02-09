@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -29,12 +29,23 @@ def mock_email():
 
 
 @pytest.fixture
-def manager(mock_overseer, mock_sonarr, mock_radarr, mock_email):
+def mock_reminder_repository():
+    mock = Mock()
+    mock.has_reminder = Mock(return_value=False)
+    mock.add_reminder = Mock()
+    return mock
+
+
+@pytest.fixture
+def manager(
+    mock_overseer, mock_sonarr, mock_radarr, mock_email, mock_reminder_repository
+):
     return MediaManager(
         overseer=mock_overseer,
         sonarr=mock_sonarr,
         radarr=mock_radarr,
         email_service=mock_email,
+        reminder_repository=mock_reminder_repository,
     )
 
 
@@ -137,7 +148,8 @@ def test_check_retention_policy(manager, sample_movie_request, sample_media_info
     result = manager._check_retention_policy(sample_movie_request, sample_media_info)
     assert isinstance(result, RetentionResult)
     assert result.delete is True
-    assert result.remind is False
+    assert result.remind is True
+    assert result.days_left < 0
 
 
 @pytest.mark.asyncio

@@ -1,12 +1,13 @@
 from sqlalchemy import Engine
-from sqlmodel import Session, create_engine, select
+from sqlmodel import Session, SQLModel, create_engine, select
 
 from scruffy.models.reminder_model import Reminder
 
 
 class ReminderRepository:
-    def __init__(self, engine: Engine) -> None:
+    def __init__(self, engine: Engine = None) -> None:
         self.engine = engine or create_engine("sqlite:///scruffy.db")
+        SQLModel.metadata.create_all(self.engine)
 
     def has_reminder(self, request_id: int) -> bool:
         with Session(self.engine) as session:
