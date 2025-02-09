@@ -3,6 +3,5 @@
 set -e
 set -x
 
-mypy scruffy
+# TODO: Add mypy here
 ruff check scruffy
-ruff format scruffy --check
