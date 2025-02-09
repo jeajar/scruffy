@@ -20,6 +20,8 @@ dev-dependencies = [
     "pytest-cov>=6.0.0",
     "pytest>=8.3.4",
     "respx>=0.22.0",
+    "ruff>=0.9.5",
+    "mypy>=1.15.0",
 ]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

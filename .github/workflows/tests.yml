@@ -3,10 +3,11 @@ name: Tests
 on:
   push:
     branches:
-      - '**'  # Run on all branches
+      - main
   pull_request:
     branches:
-      - '**'  # Run on PRs targeting any branch
+      - opened
+      - synchronize
 
 jobs:
   test:
