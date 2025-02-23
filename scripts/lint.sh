@@ -5,3 +5,4 @@ set -x
 
 # TODO: Add mypy here
 ruff check scruffy
+ruff format scruffy --check
