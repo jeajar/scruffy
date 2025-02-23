@@ -26,8 +26,8 @@ validate_cron "$CHECK_SCHEDULE" "CHECK_SCHEDULE" || exit 1
 
 # Create crontab with proper environment
 cat << EOF > /etc/cron.d/scruffy
-SHELL=/bin/sh
-PATH=/usr/local/bin:/usr/bin:/bin:/app/venv/bin
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin:/app/venv/bin:/root/.local/bin/
 DATA_DIR=/data
 PYTHONPATH=/app
 
