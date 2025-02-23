@@ -66,6 +66,9 @@ class MediaManager:
         result = []
         for req in to_check:
             media_info = await self._get_media_info(req)
+            if not media_info.available:
+                self.logger.debug("Media not available: %s", asdict(media_info))
+                continue
             self.logger.debug("Got media info: %s", asdict(media_info))
             result.append((req, media_info))
 
@@ -149,3 +152,14 @@ class MediaManager:
             await self.sonarr.delete_series_seasons(
                 request.external_service_id, request.seasons
             )
+
+
+if __name__ == "__main__":
+    from asyncio import run
+
+    from cli import create_manager
+
+    manager = create_manager()
+    manager.check_requests()
+    reqs = run(manager.check_requests())
+    pass

@@ -39,6 +39,34 @@ class SonarrRepository:
             response.raise_for_status()
             return response.json()
 
+    async def delete_series(
+        self,
+        series_id: int,
+        delete_files: bool = False,
+        add_import_list_exclusion: bool = False,
+    ) -> None:
+        """Delete a series and all its files.
+
+        Args:
+            series_id: The Sonarr internal ID of the series
+            delete_files: If True, delete all series files from disk
+            add_import_list_exclusion: If True, add series to import exclusion list
+
+        Raises:
+            httpx.HTTPError: If the API request fails
+        """
+        async with httpx.AsyncClient() as client:
+            params = {
+                "deleteFiles": delete_files,
+                "addImportListExclusion": add_import_list_exclusion,
+            }
+            response = await client.delete(
+                f"{self.base_url}/api/v3/series/{series_id}",
+                headers=self.headers,
+                params=params,
+            )
+            response.raise_for_status()
+
     async def get_series_info(
         self, series_id: int, season_list: list[int]
     ) -> MediaInfoDTO:
@@ -121,11 +149,13 @@ class SonarrRepository:
         self, series_id: int, season_list: list[int]
     ) -> None:
         """
-        TODO: Check if no other seasons are monitored before unmonitoring, and
-        if so, delete the whole series.
+        Delete specific seasons from a series and all their files. If all seasons
+        are deleted, the series will be deleted as well.
         """
         await self.update_season_monitoring(series_id, season_list)
         await self.delete_season_files(series_id, season_list)
+
+        await self._delete_empty_series(series_id)
 
     async def delete_season_files(
         self, series_id: int, season_list: list[int] = True
@@ -196,3 +226,9 @@ class SonarrRepository:
                 json=series,
             )
             response.raise_for_status()
+
+    async def _delete_empty_series(self, series_id: int) -> None:
+        """Delete series if all seasons are unmonitored."""
+        series = await self.get_series(series_id)
+        if all(not season["monitored"] for season in series["seasons"]):
+            await self.delete_series(series_id)

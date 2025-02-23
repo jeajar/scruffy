@@ -103,7 +103,7 @@ def check(ctx: typer.Context):
     table.add_column("Action", style="green")
 
     for request, media_info in results:
-        age = (datetime.now(timezone.utc) - request.updated_at).days
+        age = (datetime.now(timezone.utc) - media_info.available_since).days
         action = (
             "[red]Delete[/red]"
             if age >= settings.retention_days
@@ -112,7 +112,8 @@ def check(ctx: typer.Context):
             else "[green]Keep[/green]"
         )
 
-        table.add_row(media_info.title, request.type, str(age), action)
+        seasons = ", ".join(str(f"s{season:02d}") for season in media_info.seasons)
+        table.add_row(f"{media_info.title} {seasons}", request.type, str(age), action)
 
     console.print(table)
 

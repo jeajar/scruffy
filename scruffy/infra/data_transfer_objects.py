@@ -17,6 +17,7 @@ class RequestDTO:
     external_service_id: int
     seasons: list[int]
 
+    # TODO: Move to factory class, DTO should not be responsible for parsing responses
     @classmethod
     def from_overseer_response(cls, response: dict) -> "RequestDTO":
         media: dict = response.get("media", {})
