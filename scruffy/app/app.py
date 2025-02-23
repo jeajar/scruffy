@@ -139,9 +139,17 @@ class MediaManager:
 
         if result.delete:
             await self._delete_media(request)
+            self.logger.info("Deleted Media '%s' from service", request)
             await self.overseer.delete_request(request.request_id)
+            self.logger.info("Deleted Overseer Request id: '%s'", request.request_id)
+
             await self.email_service.send_deletion_notice(
                 request.user_email, media_info
+            )
+            self.logger.info(
+                "Deletion notice sent for '%s' to '%s'",
+                media_info.title,
+                request.user_email,
             )
 
     async def _delete_media(self, request: RequestDTO) -> None:
@@ -152,14 +160,3 @@ class MediaManager:
             await self.sonarr.delete_series_seasons(
                 request.external_service_id, request.seasons
             )
-
-
-if __name__ == "__main__":
-    from asyncio import run
-
-    from cli import create_manager
-
-    manager = create_manager()
-    manager.check_requests()
-    reqs = run(manager.check_requests())
-    pass
