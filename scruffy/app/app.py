@@ -66,6 +66,9 @@ class MediaManager:
         result = []
         for req in to_check:
             media_info = await self._get_media_info(req)
+            if not media_info.available:
+                self.logger.debug("Media not available: %s", asdict(media_info))
+                continue
             self.logger.debug("Got media info: %s", asdict(media_info))
             result.append((req, media_info))
 
@@ -136,9 +139,17 @@ class MediaManager:
 
         if result.delete:
             await self._delete_media(request)
+            self.logger.info("Deleted Media '%s' from service", request)
             await self.overseer.delete_request(request.request_id)
+            self.logger.info("Deleted Overseer Request id: '%s'", request.request_id)
+
             await self.email_service.send_deletion_notice(
                 request.user_email, media_info
+            )
+            self.logger.info(
+                "Deletion notice sent for '%s' to '%s'",
+                media_info.title,
+                request.user_email,
             )
 
     async def _delete_media(self, request: RequestDTO) -> None:

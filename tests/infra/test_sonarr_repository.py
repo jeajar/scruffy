@@ -197,6 +197,111 @@ async def test_delete_series_seasons(repo, base_url, mock_series_response):
 
 
 @pytest.mark.asyncio
+async def test_delete_series_seasons_with_no_remaining_monitored_seasons(
+    repo, base_url
+):
+    """Test that series is deleted when no monitored seasons remain after deletion."""
+    series_id = 1
+    seasons_to_delete = [1, 2]
+
+    mock_series = {
+        "id": series_id,
+        "title": "Test Series",
+        "seasons": [
+            {"seasonNumber": 1, "monitored": False},
+            {"seasonNumber": 2, "monitored": False},
+        ],
+    }
+
+    mock_episodes = [
+        {"seasonNumber": 1, "episodeNumber": 1, "hasFile": True, "episodeFileId": 101},
+        {"seasonNumber": 2, "episodeNumber": 1, "hasFile": True, "episodeFileId": 201},
+    ]
+
+    with respx.mock(base_url=base_url) as respx_mock:
+        # Mock initial series get for updating monitoring
+        respx_mock.get(f"/api/v3/series/{series_id}").mock(
+            return_value=httpx.Response(200, json=mock_series)
+        )
+        # Mock series update
+        respx_mock.put(f"/api/v3/series/{series_id}").mock(
+            return_value=httpx.Response(200)
+        )
+        # Mock episodes get for file deletion
+        respx_mock.get("/api/v3/episode").mock(
+            return_value=httpx.Response(200, json=mock_episodes)
+        )
+        # Mock episode file deletions
+        respx_mock.delete("/api/v3/episodefile/101").mock(
+            return_value=httpx.Response(200)
+        )
+        respx_mock.delete("/api/v3/episodefile/201").mock(
+            return_value=httpx.Response(200)
+        )
+        # Mock series deletion
+        delete_series = respx_mock.delete(f"/api/v3/series/{series_id}").mock(
+            return_value=httpx.Response(204)
+        )
+
+        await repo.delete_series_seasons(series_id, seasons_to_delete)
+
+        # Verify series was deleted
+        assert delete_series.called
+        # Verify the deleteFiles parameter was set to False (default value)
+        params = dict(delete_series.calls[0].request.url.params)
+        assert params["deleteFiles"] == "false"
+        # Verify the addImportListExclusion parameter was set to False (default value)
+        assert params["addImportListExclusion"] == "false"
+
+
+@pytest.mark.asyncio
+async def test_delete_series_seasons_with_remaining_monitored_seasons(repo, base_url):
+    """Test that series is not deleted when monitored seasons remain after deletion."""
+    series_id = 1
+    seasons_to_delete = [1]
+
+    mock_series = {
+        "id": series_id,
+        "title": "Test Series",
+        "seasons": [
+            {"seasonNumber": 1, "monitored": False},
+            {"seasonNumber": 2, "monitored": True},  # Season 2 remains monitored
+        ],
+    }
+
+    mock_episodes = [
+        {"seasonNumber": 1, "episodeNumber": 1, "hasFile": True, "episodeFileId": 101}
+    ]
+
+    with respx.mock(base_url=base_url, assert_all_called=False) as respx_mock:
+        # Mock initial series get for updating monitoring
+        respx_mock.get(f"/api/v3/series/{series_id}").mock(
+            return_value=httpx.Response(200, json=mock_series)
+        )
+        # Mock series update
+        respx_mock.put(f"/api/v3/series/{series_id}").mock(
+            return_value=httpx.Response(200)
+        )
+        # Mock episodes get for file deletion
+        respx_mock.get("/api/v3/episode").mock(
+            return_value=httpx.Response(200, json=mock_episodes)
+        )
+        # Mock episode file deletion
+        respx_mock.delete("/api/v3/episodefile/101").mock(
+            return_value=httpx.Response(200)
+        )
+        # Mock series deletion (should not be called)
+        delete_series = respx_mock.delete(f"/api/v3/series/{series_id}").mock(
+            return_value=httpx.Response(204)
+        )
+
+        await repo.delete_series_seasons(series_id, seasons_to_delete)
+
+        # Verify series was not deleted
+        assert not delete_series.called
+
+
+@pytest.mark.asyncio
 async def test_delete_season_files(repo, base_url, mock_episodes_response):
     with respx.mock(base_url=base_url) as respx_mock:
         respx_mock.get("/api/v3/episode").mock(
