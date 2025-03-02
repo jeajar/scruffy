@@ -75,10 +75,10 @@ def test_service_initialization_with_credentials(mock_settings):  # noqa: ARG001
 
 @pytest.mark.asyncio
 async def test_send_deletion_notice(
-    mock_settings,
+    mock_settings,  # noqa: ARG001
     mock_fastmail,
-    mock_template,
-    media_info,  # noqa: ARG001
+    mock_template,  # noqa: ARG001
+    media_info,
 ):
     service = EmailService()
     await service.send_deletion_notice("test@test.com", media_info)
@@ -92,10 +92,10 @@ async def test_send_deletion_notice(
 
 @pytest.mark.asyncio
 async def test_send_reminder_notice(
-    mock_settings,
+    mock_settings,  # noqa: ARG001
     mock_fastmail,
-    mock_template,
-    media_info,  # noqa: ARG001
+    mock_template,  # noqa: ARG001
+    media_info,
 ):
     service = EmailService()
     days_left = 7
