@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
@@ -38,8 +38,9 @@ def sample_request():
         type="movie",
         request_id=1,
         request_status=RequestStatus.APPROVED,
-        updated_at=datetime.now(timezone.utc) - timedelta(days=25),
+        updated_at=datetime.now(UTC) - timedelta(days=25),
         media_status=MediaStatus.AVAILABLE,
+        media_id=99,
         external_service_id=1,
         seasons=[],
     )
@@ -50,7 +51,7 @@ def sample_media():
     return MediaInfoDTO(
         title="Test Movie",
         available=True,
-        available_since=datetime.now(timezone.utc) - timedelta(days=25),
+        available_since=datetime.now(UTC) - timedelta(days=25),
         poster="test.jpg",
         seasons=[],
         size_on_disk=1000,

@@ -46,6 +46,17 @@ def mock_request_response():
 
 
 @pytest.mark.asyncio
+async def test_status(repo, base_url):
+    with respx.mock(base_url=base_url) as respx_mock:
+        respx_mock.get("/api/v1/status").mock(
+            return_value=httpx.Response(200, json={"status": "ok"})
+        )
+
+        status = await repo.status()
+        assert status
+
+
+@pytest.mark.asyncio
 async def test_get_requests(repo, base_url, mock_request_response):
     with respx.mock(base_url=base_url) as respx_mock:
         respx_mock.get("/api/v1/request/count").mock(
@@ -70,6 +81,17 @@ async def test_delete_request(repo, base_url):
 
         await repo.delete_request(1)
         assert respx_mock.calls.last.request.url.path == "/api/v1/request/1"
+
+
+@pytest.mark.asyncio
+async def test_delete_media(repo, base_url):
+    with respx.mock(base_url=base_url) as respx_mock:
+        respx_mock.delete("/api/v1/media/1").mock(
+            return_value=httpx.Response(200, json={})
+        )
+
+        await repo.delete_media(1)
+        assert respx_mock.calls.last.request.url.path == "/api/v1/media/1"
 
 
 @pytest.mark.asyncio

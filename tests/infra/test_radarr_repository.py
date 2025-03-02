@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import httpx
 import pytest
@@ -74,9 +74,7 @@ async def test_get_movie_complete(repo, base_url, mock_movie_response):
         assert result.title == "Test Movie"
         assert result.available is True
         assert result.poster == "http://test.com/poster.jpg"
-        assert result.available_since == datetime(
-            2024, 1, 1, 12, 0, tzinfo=timezone.utc
-        )
+        assert result.available_since == datetime(2024, 1, 1, 12, 0, tzinfo=UTC)
         assert result.size_on_disk == 1000000
         assert result.id == 1
         assert result.seasons == []

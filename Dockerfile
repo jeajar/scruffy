@@ -31,9 +31,12 @@ COPY . .
 RUN uv venv
 RUN uv pip install -e .
 
-COPY scripts/entrypoint.sh /entrypoint.sh
+COPY scripts/crontab /etc/cron.d/crontab
+RUN chmod 0644 /etc/cron.d/crontab
+RUN crontab /etc/cron.d/crontab
 
 COPY scripts/healthcheck.sh /healthcheck.sh
+COPY scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /healthcheck.sh /entrypoint.sh
 
 # Set entrypoint

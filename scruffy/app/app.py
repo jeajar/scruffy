@@ -2,7 +2,6 @@ import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from pathlib import Path
-from typing import List, Tuple, Union
 
 from scruffy.infra import (
     MediaInfoDTO,
@@ -45,12 +44,26 @@ class MediaManager:
             log_file=self.log_file(),
         )
 
-    def log_file(self) -> Union[str, None]:
+    def log_file(self) -> str | None:
         if os.access(settings.data_dir, os.W_OK):
             return str(Path(settings.data_dir).joinpath("scruffy.log"))
         return None
 
-    async def check_requests(self) -> List[Tuple[RequestDTO, MediaInfoDTO]]:
+    async def validate_connections(self) -> bool:
+        """
+        Check all services are ready.
+        Returns True if all services are ready, False otherwise.
+        """
+        valid = True
+        for service in [self.overseer, self.sonarr, self.radarr]:
+            if not await service.status():
+                self.logger.error(
+                    "Service %s connection failed", service.__class__.__name__
+                )
+                valid = False
+        return valid
+
+    async def check_requests(self) -> list[tuple[RequestDTO, MediaInfoDTO]]:
         """Check all media requests and return those needing attention."""
         self.logger.info("Checking media requests from Overseerr")
         requests = await self.overseer.get_requests()
@@ -141,6 +154,7 @@ class MediaManager:
             await self._delete_media(request)
             self.logger.info("Deleted Media '%s' from service", request)
             await self.overseer.delete_request(request.request_id)
+            await self.overseer.delete_media(request.media_id)
             self.logger.info("Deleted Overseer Request id: '%s'", request.request_id)
 
             await self.email_service.send_deletion_notice(

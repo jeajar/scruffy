@@ -11,6 +11,21 @@ class RadarrRepository:
         self.api_key = api_key
         self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
 
+    async def status(self) -> bool:
+        """
+        Test Radarr connection status.
+        Returns True if the connection is successful, False otherwise.
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.base_url}/api/v3/system/status", headers=self.headers
+                )
+                response.raise_for_status()
+                return True
+        except httpx.HTTPError:
+            return False
+
     def _get_movie_poster(self, images: list[dict]) -> str:
         # Get poster URL from images
         poster = next(

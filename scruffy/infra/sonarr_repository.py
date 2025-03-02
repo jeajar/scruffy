@@ -20,6 +20,21 @@ class SonarrRepository:
         )
         return poster
 
+    async def status(self) -> bool:
+        """
+        Test Sonarr connection status.
+        Returns True if the connection is successful, False otherwise.
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.base_url}/api/v3/system/status", headers=self.headers
+                )
+                response.raise_for_status()
+                return True
+        except httpx.HTTPError:
+            return False
+
     async def get_series(self, series_id: int) -> dict:
         """Get detailed information about a series by its Sonarr ID.
 

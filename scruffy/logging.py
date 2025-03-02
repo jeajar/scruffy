@@ -2,13 +2,12 @@ import logging
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-from typing import Optional
 
 
 def setup_logger(
     name: str,
     level: str = "INFO",
-    log_file: Optional[Path] = None,
+    log_file: Path | None = None,
     format_string: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 ) -> logging.Logger:
     """Configure and return a logger instance."""

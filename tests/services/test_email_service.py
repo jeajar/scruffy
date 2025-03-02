@@ -66,7 +66,7 @@ def test_service_initialization_no_credentials(mock_settings):
     assert service.conf.USE_CREDENTIALS is False
 
 
-def test_service_initialization_with_credentials(mock_settings):
+def test_service_initialization_with_credentials(mock_settings):  # noqa: ARG001
     service = EmailService()
     assert service.conf.USE_CREDENTIALS is True
     assert service.conf.MAIL_USERNAME == "test"
@@ -75,7 +75,10 @@ def test_service_initialization_with_credentials(mock_settings):
 
 @pytest.mark.asyncio
 async def test_send_deletion_notice(
-    mock_settings, mock_fastmail, mock_template, media_info
+    mock_settings,
+    mock_fastmail,
+    mock_template,
+    media_info,  # noqa: ARG001
 ):
     service = EmailService()
     await service.send_deletion_notice("test@test.com", media_info)
@@ -89,7 +92,10 @@ async def test_send_deletion_notice(
 
 @pytest.mark.asyncio
 async def test_send_reminder_notice(
-    mock_settings, mock_fastmail, mock_template, media_info
+    mock_settings,
+    mock_fastmail,
+    mock_template,
+    media_info,  # noqa: ARG001
 ):
     service = EmailService()
     days_left = 7
@@ -102,7 +108,7 @@ async def test_send_reminder_notice(
     assert call_args.recipients == ["test@test.com"]
 
 
-def test_template_rendering(mock_settings, mock_template, media_info):
+def test_template_rendering(mock_settings, mock_template, media_info):  # noqa: ARG001
     service = EmailService()
     mock_template.render.assert_not_called()
 

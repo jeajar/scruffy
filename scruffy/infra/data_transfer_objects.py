@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal, Union
+from typing import Literal
 
 from .constants import MediaStatus, RequestStatus
 
@@ -13,6 +13,7 @@ class RequestDTO:
     request_id: int
     request_status: RequestStatus
     updated_at: datetime
+    media_id: int
     media_status: MediaStatus
     external_service_id: int
     seasons: list[int]
@@ -28,6 +29,7 @@ class RequestDTO:
             request_id=response["id"],
             updated_at=datetime.fromisoformat(media["updatedAt"]),
             request_status=RequestStatus(response["status"]),
+            media_id=media.get("id"),
             media_status=MediaStatus(media.get("status")),
             external_service_id=media.get("externalServiceId"),
             seasons=[season["seasonNumber"] for season in response.get("seasons", [])],
@@ -44,7 +46,7 @@ class MediaInfoDTO:
     We also store Title and image url information to be used in notifications.
     """
 
-    available_since: Union[None, datetime]
+    available_since: None | datetime
     available: bool
     id: int
     poster: str
