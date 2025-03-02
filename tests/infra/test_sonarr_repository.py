@@ -113,9 +113,7 @@ async def test_get_series_info(
         assert result.title == "Test Series"
         assert result.available is True
         assert result.poster == "http://test.com/poster.jpg"
-        assert result.available_since == datetime(
-            2024, 1, 2, 12, 0, tzinfo=UTC
-        )
+        assert result.available_since == datetime(2024, 1, 2, 12, 0, tzinfo=UTC)
         assert result.size_on_disk == 1000000
         assert result.seasons == [1]
 

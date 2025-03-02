@@ -1,4 +1,3 @@
-
 from pydantic import EmailStr, HttpUrl
 from pydantic_settings import BaseSettings
 
