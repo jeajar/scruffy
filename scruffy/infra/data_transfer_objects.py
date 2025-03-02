@@ -13,6 +13,7 @@ class RequestDTO:
     request_id: int
     request_status: RequestStatus
     updated_at: datetime
+    media_id: int
     media_status: MediaStatus
     external_service_id: int
     seasons: list[int]
@@ -28,6 +29,7 @@ class RequestDTO:
             request_id=response["id"],
             updated_at=datetime.fromisoformat(media["updatedAt"]),
             request_status=RequestStatus(response["status"]),
+            media_id=media.get("id"),
             media_status=MediaStatus(media.get("status")),
             external_service_id=media.get("externalServiceId"),
             seasons=[season["seasonNumber"] for season in response.get("seasons", [])],

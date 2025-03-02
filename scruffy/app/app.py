@@ -155,6 +155,7 @@ class MediaManager:
             await self._delete_media(request)
             self.logger.info("Deleted Media '%s' from service", request)
             await self.overseer.delete_request(request.request_id)
+            await self.overseer.delete_media(request.media_id)
             self.logger.info("Deleted Overseer Request id: '%s'", request.request_id)
 
             await self.email_service.send_deletion_notice(
