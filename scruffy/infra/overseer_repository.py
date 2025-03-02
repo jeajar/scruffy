@@ -1,5 +1,3 @@
-from typing import Optional
-
 import httpx
 
 from scruffy.infra.data_transfer_objects import RequestDTO
@@ -28,7 +26,7 @@ class OverseerRepository:
             return False
 
     async def get_requests(
-        self, take: int = 100, skip: int = 0, filter_status: Optional[str] = None
+        self, take: int = 100, skip: int = 0, filter_status: str | None = None
     ) -> list[RequestDTO]:
         """Fetch all media requests from Overseerr using pagination.
 
@@ -83,7 +81,7 @@ class OverseerRepository:
             response = await client.delete(
                 f"{self.base_url}/api/v1/media/{media_id}", headers=self.headers
             )
-            response.raise_for_status
+            response.raise_for_status()
 
     async def get_media_info(self, media_id: int) -> dict:
         """Fetch detailed media information."""
@@ -94,7 +92,7 @@ class OverseerRepository:
             response.raise_for_status()
             return response.json()
 
-    async def get_request_count(self, status: Optional[str] = None) -> int:
+    async def get_request_count(self, status: str | None = None) -> int:
         """Get total number of requests."""
         async with httpx.AsyncClient() as client:
             params = {"filter": status} if status else {}

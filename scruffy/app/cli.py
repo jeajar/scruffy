@@ -1,6 +1,5 @@
 import asyncio
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 import typer
 from rich.console import Console
@@ -20,7 +19,7 @@ from scruffy.services import EmailService
 
 app = typer.Typer()
 console = Console(record=True)
-_manager: Optional[MediaManager] = None
+_manager: MediaManager | None = None
 
 
 def get_manager() -> MediaManager:
@@ -101,16 +100,9 @@ def validate():
 
 
 @app.command()
-def check(ctx: typer.Context):
+def check():
     """Check media and show what would be processed"""
-    try:
-        results = asyncio.get_event_loop().run_until_complete(async_check_media())
-    except RuntimeError:
-        # If we're in a running event loop (tests), create a new one
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        results = loop.run_until_complete(async_check_media())
-        loop.close()
+    results = asyncio.run(async_check_media())
 
     if not results:
         console.print("[yellow]No media found to process[/yellow]")
@@ -123,7 +115,7 @@ def check(ctx: typer.Context):
     table.add_column("Action", style="green")
 
     for request, media_info in results:
-        age = (datetime.now(timezone.utc) - media_info.available_since).days
+        age = (datetime.now(UTC) - media_info.available_since).days
         action = (
             "[red]Delete[/red]"
             if age >= settings.retention_days
@@ -139,15 +131,9 @@ def check(ctx: typer.Context):
 
 
 @app.command()
-def process(ctx: typer.Context):
+def process():
     """Process media and take actions"""
-    try:
-        asyncio.get_event_loop().run_until_complete(async_process_media())
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(async_process_media())
-        loop.close()
+    asyncio.run(async_process_media())
 
 
 if __name__ == "__main__":

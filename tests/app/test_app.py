@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -57,8 +57,9 @@ def sample_movie_request():
         type="movie",
         request_id=1,
         request_status=RequestStatus.APPROVED,
-        updated_at=datetime.now(timezone.utc) - timedelta(days=31),
+        updated_at=datetime.now(UTC) - timedelta(days=31),
         media_status=MediaStatus.AVAILABLE,
+        media_id=99,
         external_service_id=101,
         seasons=[],
     )
@@ -72,8 +73,9 @@ def sample_movie_remind_request():
         type="movie",
         request_id=1,
         request_status=RequestStatus.APPROVED,
-        updated_at=datetime.now(timezone.utc) - timedelta(days=23),
+        updated_at=datetime.now(UTC) - timedelta(days=23),
         media_status=MediaStatus.AVAILABLE,
+        media_id=99,
         external_service_id=102,
         seasons=[],
     )
@@ -87,8 +89,9 @@ def sample_tv_request():
         type="tv",
         request_id=2,
         request_status=RequestStatus.APPROVED,
-        updated_at=datetime.now(timezone.utc) - timedelta(days=31),
+        updated_at=datetime.now(UTC) - timedelta(days=31),
         media_status=MediaStatus.AVAILABLE,
+        media_id=99,
         external_service_id=102,
         seasons=[1],
     )
@@ -98,7 +101,7 @@ def sample_tv_request():
 def sample_media_info():
     return MediaInfoDTO(
         available=True,
-        available_since=datetime.now(timezone.utc) - timedelta(days=31),
+        available_since=datetime.now(UTC) - timedelta(days=31),
         id=1,
         poster="test.jpg",
         seasons=[1],
@@ -111,7 +114,7 @@ def sample_media_info():
 def sample_media_remind_info():
     return MediaInfoDTO(
         available=True,
-        available_since=datetime.now(timezone.utc) - timedelta(days=23),
+        available_since=datetime.now(UTC) - timedelta(days=23),
         id=2,
         poster="test.jpg",
         seasons=[1],

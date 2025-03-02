@@ -13,6 +13,7 @@ def test_request_dto_creation():
         request_status=RequestStatus.PENDING_APPROVAL,
         updated_at=datetime(2023, 1, 1),
         media_status=MediaStatus.AVAILABLE,
+        media_id=99,
         external_service_id=1000,
         seasons=[],
     )
@@ -21,6 +22,7 @@ def test_request_dto_creation():
     assert request.user_email == "test@example.com"
     assert request.type == "movie"
     assert request.request_id == 100
+    assert request.media_id == 99
     assert request.request_status == RequestStatus.PENDING_APPROVAL
     assert request.media_status == MediaStatus.AVAILABLE
     assert request.external_service_id == 1000

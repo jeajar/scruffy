@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal, Union
+from typing import Literal
 
 from .constants import MediaStatus, RequestStatus
 
@@ -46,7 +46,7 @@ class MediaInfoDTO:
     We also store Title and image url information to be used in notifications.
     """
 
-    available_since: Union[None, datetime]
+    available_since: None | datetime
     available: bool
     id: int
     poster: str
