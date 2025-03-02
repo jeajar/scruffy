@@ -12,6 +12,21 @@ class OverseerRepository:
         self.api_key = api_key
         self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
 
+    async def status(self) -> bool:
+        """
+        Test Overseerr connection status.
+        Returns True if the connection is successful, False otherwise.
+        """
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(
+                    f"{self.base_url}/api/v1/status", headers=self.headers
+                )
+                response.raise_for_status()
+                return True
+        except httpx.HTTPError:
+            return False
+
     async def get_requests(
         self, take: int = 100, skip: int = 0, filter_status: Optional[str] = None
     ) -> list[RequestDTO]:
@@ -61,6 +76,14 @@ class OverseerRepository:
                 f"{self.base_url}/api/v1/request/{request_id}", headers=self.headers
             )
             response.raise_for_status()
+
+    async def delete_media(self, media_id: int) -> None:
+        """Delete media by its ID."""
+        async with httpx.AsyncClient() as client:
+            response = await client.delete(
+                f"{self.base_url}/api/v1/media/{media_id}", headers=self.headers
+            )
+            response.raise_for_status
 
     async def get_media_info(self, media_id: int) -> dict:
         """Fetch detailed media information."""

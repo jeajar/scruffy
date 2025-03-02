@@ -1,5 +1,6 @@
 import asyncio
 from datetime import datetime, timezone
+from typing import Optional
 
 import typer
 from rich.console import Console
@@ -18,33 +19,45 @@ from scruffy.infra import (
 from scruffy.services import EmailService
 
 app = typer.Typer()
-
-
 console = Console(record=True)
+_manager: Optional[MediaManager] = None
 
 
-def create_manager() -> MediaManager:
-    return MediaManager(
-        overseer=OverseerRepository(
-            str(settings.overseerr_url), settings.overseerr_api_key
-        ),
-        sonarr=SonarrRepository(str(settings.sonarr_url), settings.sonarr_api_key),
-        radarr=RadarrRepository(str(settings.radarr_url), settings.radarr_api_key),
-        reminder_repository=ReminderRepository(),
-        email_service=EmailService(),
-    )
+def get_manager() -> MediaManager:
+    global _manager
+    if _manager is None:
+        _manager = MediaManager(
+            overseer=OverseerRepository(
+                str(settings.overseerr_url), settings.overseerr_api_key
+            ),
+            sonarr=SonarrRepository(str(settings.sonarr_url), settings.sonarr_api_key),
+            radarr=RadarrRepository(str(settings.radarr_url), settings.radarr_api_key),
+            reminder_repository=ReminderRepository(),
+            email_service=EmailService(),
+        )
+    return _manager
 
 
 async def async_check_media() -> list[tuple[RequestDTO, MediaInfoDTO]]:
     """Async function to check media"""
-    manager = create_manager()
+    if not await async_validate():
+        raise typer.Exit(1)
+    manager = get_manager()
     return await manager.check_requests()
 
 
 async def async_process_media() -> None:
     """Async function to process media"""
-    manager = create_manager()
+    if not await async_validate():
+        raise typer.Exit(1)
+    manager = get_manager()
     await manager.process_media()
+
+
+async def async_validate() -> bool:
+    """Async validate configuration and connections"""
+    manager = get_manager()
+    return await manager.validate_connections()
 
 
 @app.command()
@@ -71,12 +84,19 @@ def validate():
 
     console.print(table)
 
-    # Test connections
     try:
-        create_manager()
+        get_manager()
         console.print("[green]✓ Configuration is valid[/green]")
     except Exception as e:
         console.print(f"[red]✗ Configuration error: {str(e)}[/red]")
+        raise typer.Exit(1)
+
+    connections_valid = asyncio.run(async_validate())
+
+    if connections_valid:
+        console.print("[green]✓ Services are ready[/green]")
+    else:
+        console.print("[red]✗ Services are not ready[/red]")
         raise typer.Exit(1)
 
 

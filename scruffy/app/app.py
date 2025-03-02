@@ -50,6 +50,20 @@ class MediaManager:
             return str(Path(settings.data_dir).joinpath("scruffy.log"))
         return None
 
+    async def validate_connections(self) -> bool:
+        """
+        Check all services are ready.
+        Returns True if all services are ready, False otherwise.
+        """
+        valid = True
+        for service in [self.overseer, self.sonarr, self.radarr]:
+            if not await service.status():
+                self.logger.error(
+                    "Service %s connection failed", service.__class__.__name__
+                )
+                valid = False
+        return valid
+
     async def check_requests(self) -> List[Tuple[RequestDTO, MediaInfoDTO]]:
         """Check all media requests and return those needing attention."""
         self.logger.info("Checking media requests from Overseerr")
