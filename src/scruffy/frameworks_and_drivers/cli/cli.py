@@ -1,6 +1,5 @@
 import asyncio
 import logging
-from dataclasses import asdict
 
 import typer
 from rich.console import Console
@@ -130,7 +129,6 @@ def check():
             request.user_email,
             str(action),
         )
-        logger.debug(asdict(request), asdict(media_info))
 
     console.print(table)
 
