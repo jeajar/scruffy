@@ -92,7 +92,7 @@ class MediaManager:
 
     async def _get_media_info(self, request: RequestDTO) -> MediaInfoDTO:
         """Get media info from appropriate service."""
-        if request.type == "movie":
+        if request.type_ == "movie":
             return await self.radarr.get_movie(request.external_service_id)
         return await self.sonarr.get_series_info(
             request.external_service_id, request.seasons
@@ -172,7 +172,7 @@ class MediaManager:
 
     async def _delete_media(self, request: RequestDTO) -> None:
         """Delete media from appropriate service."""
-        if request.type == "movie":
+        if request.type_ == "movie":
             await self.radarr.delete_movie(request.external_service_id)
         else:
             await self.sonarr.delete_series_seasons(

@@ -124,7 +124,7 @@ def check():
         seasons = ", ".join(str(f"s{season:02d}") for season in media_info.seasons)
         table.add_row(
             f"{media_info.title} {seasons}",
-            request.type,
+            request.type_,
             str(retention.days_left),
             request.user_email,
             str(action),

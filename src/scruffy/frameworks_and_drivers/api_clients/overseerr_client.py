@@ -3,7 +3,7 @@ from typing import Any
 import httpx
 
 
-class OverseerClient:
+class OverseerrClient:
     """HTTP client for interacting with the Overseerr API."""
 
     def __init__(self, base_url: str, api_key: str):

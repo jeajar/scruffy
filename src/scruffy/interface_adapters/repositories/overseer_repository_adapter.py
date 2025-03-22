@@ -1,8 +1,9 @@
+from datetime import datetime
 from typing import Any
 
 from scruffy.app.interfaces.media_request_repository import IMediaRequestRepository
 
-# TODO: move to app layer dtos ⬇️
+# TODO: move DTO to app layer dtos ⬇️
 from scruffy.infra.data_transfer_objects import RequestDTO
 from scruffy.interface_adapters.protocols import MediaRequestClientProtocol
 
@@ -13,6 +14,21 @@ class OverseerRepositoryAdapter(IMediaRequestRepository):
     def __init__(self, client: MediaRequestClientProtocol):
         """Initialize with an Overseerr API client."""
         self.client = client
+
+    def _build_request_dto(self, response: dict[str, Any]) -> RequestDTO:
+        media: dict = response.get("media", {})
+        return RequestDTO(
+            user_id=response.get("requestedBy", {}).get("id"),
+            user_email=response.get("requestedBy", {}).get("email"),
+            type_=response["type"],
+            request_id=response["id"],
+            updated_at=datetime.fromisoformat(media["updatedAt"]),
+            request_status=int(response["status"]),
+            media_id=media.get("id"),
+            media_status=int(media.get("status")),
+            external_service_id=media.get("externalServiceId"),
+            seasons=[season["seasonNumber"] for season in response.get("seasons", [])],
+        )
 
     async def status(self) -> bool:
         """Check if the Overseerr API is accessible."""
@@ -33,8 +49,7 @@ class OverseerRepositoryAdapter(IMediaRequestRepository):
 
             # Convert response data to DTOs and then to domain entities
             page_results = [
-                RequestDTO.from_overseer_response(req).to_entity()
-                for req in response_data.get("results", [])
+                self._build_request_dto(req) for req in response_data.get("results", [])
             ]
             all_requests.extend(page_results)
 

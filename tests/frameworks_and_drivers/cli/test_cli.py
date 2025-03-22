@@ -4,7 +4,7 @@ from unittest.mock import patch
 import pytest
 from typer.testing import CliRunner
 
-from scruffy.app.cli import app
+from scruffy.frameworks_and_drivers.cli import app
 from scruffy.infra.constants import MediaStatus, RequestStatus
 from scruffy.infra.data_transfer_objects import MediaInfoDTO, RequestDTO
 
@@ -35,7 +35,7 @@ def sample_request():
     return RequestDTO(
         user_id=1,
         user_email="test@test.com",
-        type="movie",
+        type_="movie",
         request_id=1,
         request_status=RequestStatus.APPROVED,
         updated_at=datetime.now(UTC) - timedelta(days=25),

@@ -2,38 +2,19 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-from .constants import MediaStatus, RequestStatus
-
 
 @dataclass(frozen=True)
 class RequestDTO:
     user_id: int
     user_email: str
-    type: Literal["movie", "tv"]
+    type_: Literal["movie", "tv"]
     request_id: int
-    request_status: RequestStatus
+    request_status: int
     updated_at: datetime
     media_id: int
-    media_status: MediaStatus
+    media_status: int
     external_service_id: int
     seasons: list[int]
-
-    # TODO: Move to factory class, DTO should not be responsible for parsing responses
-    @classmethod
-    def from_overseer_response(cls, response: dict) -> "RequestDTO":
-        media: dict = response.get("media", {})
-        return cls(
-            user_id=response.get("requestedBy", {}).get("id"),
-            user_email=response.get("requestedBy", {}).get("email"),
-            type=response["type"],
-            request_id=response["id"],
-            updated_at=datetime.fromisoformat(media["updatedAt"]),
-            request_status=RequestStatus(response["status"]),
-            media_id=media.get("id"),
-            media_status=MediaStatus(media.get("status")),
-            external_service_id=media.get("externalServiceId"),
-            seasons=[season["seasonNumber"] for season in response.get("seasons", [])],
-        )
 
 
 @dataclass(frozen=True)

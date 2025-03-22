@@ -54,7 +54,7 @@ def sample_movie_request():
     return RequestDTO(
         user_id=1,
         user_email="test@example.com",
-        type="movie",
+        type_="movie",
         request_id=1,
         request_status=RequestStatus.APPROVED,
         updated_at=datetime.now(UTC) - timedelta(days=31),
@@ -70,7 +70,7 @@ def sample_movie_remind_request():
     return RequestDTO(
         user_id=2,
         user_email="test@example.com",
-        type="movie",
+        type_="movie",
         request_id=1,
         request_status=RequestStatus.APPROVED,
         updated_at=datetime.now(UTC) - timedelta(days=23),
@@ -86,7 +86,7 @@ def sample_tv_request():
     return RequestDTO(
         user_id=1,
         user_email="test@example.com",
-        type="tv",
+        type_="tv",
         request_id=2,
         request_status=RequestStatus.APPROVED,
         updated_at=datetime.now(UTC) - timedelta(days=31),

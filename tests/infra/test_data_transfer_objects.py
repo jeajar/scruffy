@@ -8,7 +8,7 @@ def test_request_dto_creation():
     request = RequestDTO(
         user_id=1,
         user_email="test@example.com",
-        type="movie",
+        type_="movie",
         request_id=100,
         request_status=RequestStatus.PENDING_APPROVAL,
         updated_at=datetime(2023, 1, 1),
@@ -20,7 +20,7 @@ def test_request_dto_creation():
 
     assert request.user_id == 1
     assert request.user_email == "test@example.com"
-    assert request.type == "movie"
+    assert request.type_ == "movie"
     assert request.request_id == 100
     assert request.media_id == 99
     assert request.request_status == RequestStatus.PENDING_APPROVAL
