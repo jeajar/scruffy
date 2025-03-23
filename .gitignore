@@ -140,3 +140,4 @@ dmypy.json
 *.db
 .scruffy_data/
 .DS_Store
+.github/

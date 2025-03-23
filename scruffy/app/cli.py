@@ -1,5 +1,4 @@
 import asyncio
-from datetime import UTC, datetime
 
 import typer
 from rich.console import Console
@@ -109,23 +108,33 @@ def check():
         return
 
     table = Table(title="Media Status")
+    table.add_column("Id", style="white")
     table.add_column("Title", style="cyan")
     table.add_column("Type", style="blue")
-    table.add_column("Age (days)", style="magenta")
+    table.add_column("Days Left", style="magenta")
+    table.add_column("User", style="yellow")
     table.add_column("Action", style="green")
 
     for request, media_info in results:
-        age = (datetime.now(UTC) - media_info.available_since).days
+        retention = get_manager().retention_policy(media_info=media_info)
+
         action = (
             "[red]Delete[/red]"
-            if age >= settings.retention_days
+            if retention.delete
             else "[yellow]Remind[/yellow]"
-            if age >= (settings.retention_days - settings.reminder_days)
+            if retention.remind
             else "[green]Keep[/green]"
         )
 
         seasons = ", ".join(str(f"s{season:02d}") for season in media_info.seasons)
-        table.add_row(f"{media_info.title} {seasons}", request.type, str(age), action)
+        table.add_row(
+            str(request.request_id),
+            f"{media_info.title} {seasons}",
+            request.type,
+            str(retention.days_left),
+            request.user_email,
+            action,
+        )
 
     console.print(table)
 

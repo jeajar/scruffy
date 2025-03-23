@@ -147,12 +147,18 @@ async def test_check_requests_tv(
     assert results[0] == (sample_tv_request, sample_media_info)
 
 
-def test_check_retention_policy(manager, sample_movie_request, sample_media_info):
-    result = manager._check_retention_policy(sample_movie_request, sample_media_info)
+def test_check_retention_policy(manager, sample_media_info, sample_media_remind_info):
+    result = manager.retention_policy(sample_media_info)
     assert isinstance(result, RetentionResult)
     assert result.delete is True
     assert result.remind is True
     assert result.days_left < 0
+
+    result = manager.retention_policy(sample_media_remind_info)
+    assert isinstance(result, RetentionResult)
+    assert result.delete is False
+    assert result.remind is True
+    assert result.days_left == 7
 
 
 @pytest.mark.asyncio

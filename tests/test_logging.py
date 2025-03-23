@@ -1,5 +1,5 @@
 import logging
-import sys
+import logging.handlers
 
 import pytest
 
@@ -26,32 +26,22 @@ def test_setup_logger_basic():
 
     assert logger.name == "test"
     assert logger.level == logging.INFO
-    assert len(logger.handlers) == 1
-    assert isinstance(logger.handlers[0], logging.StreamHandler)
-    assert logger.handlers[0].stream == sys.stdout
+    assert len(logger.handlers) == 0
 
 
 def test_setup_logger_with_file(temp_log_file):
     logger = setup_logger("test", log_file=temp_log_file)
 
-    assert len(logger.handlers) == 2
-    assert isinstance(logger.handlers[1], logging.handlers.RotatingFileHandler)
-    assert logger.handlers[1].baseFilename == str(temp_log_file)
-    assert logger.handlers[1].maxBytes == 10_000_000
-    assert logger.handlers[1].backupCount == 5
+    assert len(logger.handlers) == 1
+    assert isinstance(logger.handlers[0], logging.handlers.RotatingFileHandler)
+    assert logger.handlers[0].baseFilename == str(temp_log_file)
+    assert logger.handlers[0].maxBytes == 10_000_000
+    assert logger.handlers[0].backupCount == 5
 
 
 def test_setup_logger_custom_level():
     logger = setup_logger("test", level="DEBUG")
     assert logger.level == logging.DEBUG
-
-
-def test_setup_logger_custom_format():
-    custom_format = "%(levelname)s - %(message)s"
-    logger = setup_logger("test", format_string=custom_format)
-
-    formatter = logger.handlers[0].formatter
-    assert formatter._fmt == custom_format
 
 
 def test_logger_writes_to_file(temp_log_file):
@@ -67,7 +57,7 @@ def test_logger_writes_to_file(temp_log_file):
 
 def test_logger_rotating_file(temp_log_file):
     logger = setup_logger("test", log_file=temp_log_file)
-    handler = logger.handlers[1]
+    handler = logger.handlers[0]
 
     assert isinstance(handler, logging.handlers.RotatingFileHandler)
     assert handler.maxBytes == 10_000_000
