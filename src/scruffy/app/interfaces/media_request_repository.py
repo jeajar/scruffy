@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from scruffy.infra.data_transfer_objects import RequestDTO
+from scruffy.app.dtos import RequestDTO
 
 
 class IMediaRequestRepository(ABC):

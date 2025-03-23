@@ -1,10 +1,8 @@
 from datetime import datetime
 from typing import Any
 
+from scruffy.app.dtos import RequestDTO
 from scruffy.app.interfaces.media_request_repository import IMediaRequestRepository
-
-# TODO: move DTO to app layer dtos ⬇️
-from scruffy.infra.data_transfer_objects import RequestDTO
 from scruffy.interface_adapters.protocols import MediaRequestClientProtocol
 
 
@@ -16,6 +14,13 @@ class OverseerRepositoryAdapter(IMediaRequestRepository):
         self.client = client
 
     def _build_request_dto(self, response: dict[str, Any]) -> RequestDTO:
+        """
+        Convert Overseerr API response to RequestDTO for application use
+        cases.
+
+        Args:
+            response: Overseerr API response
+        """
         media: dict = response.get("media", {})
         return RequestDTO(
             user_id=response.get("requestedBy", {}).get("id"),

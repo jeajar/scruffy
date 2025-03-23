@@ -2,7 +2,7 @@ from datetime import datetime
 
 import httpx
 
-from scruffy.infra.data_transfer_objects import MediaInfoDTO
+from scruffy.app.dtos import MediaInfoDTO
 
 
 class RadarrRepository:

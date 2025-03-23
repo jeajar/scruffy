@@ -59,17 +59,15 @@ async def test_status(client, base_url):
 @pytest.mark.asyncio
 async def test_get_requests(client, base_url, mock_request_response):
     with respx.mock(base_url=base_url) as respx_mock:
-        respx_mock.get("/api/v1/request/count").mock(
-            return_value=httpx.Response(200, json={"total": 1})
-        )
         respx_mock.get("/api/v1/request").mock(
             return_value=httpx.Response(200, json=mock_request_response)
         )
 
-        requests = await client.get_requests()
+        query = await client.get_requests()
+        requests = query["results"]
         assert len(requests) == 1
-        assert requests[0].request_id == 1
-        assert requests[0].user_email == "test@example.com"
+        assert requests[0]["id"] == 1
+        assert requests[0]["requestedBy"]["email"] == "test@example.com"
 
 
 @pytest.mark.asyncio

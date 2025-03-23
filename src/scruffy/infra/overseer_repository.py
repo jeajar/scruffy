@@ -1,6 +1,6 @@
 import httpx
 
-from scruffy.infra.data_transfer_objects import RequestDTO
+from scruffy.app.dtos import RequestDTO
 
 
 class OverseerRepository:
