@@ -83,7 +83,5 @@ services:
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}
       - TZ=America/New_York
-      - PROCESS_SCHEDULE="0 19 * * *"  # Run process at 7PM EDT
-      - CHECK_SCHEDULE="0 */6 * * *"   # Run check every 6 hours
     restart: unless-stopped
 ```

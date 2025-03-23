@@ -70,7 +70,7 @@ def test_check_command_with_media(mock_check, runner, sample_request, sample_med
     assert result.exit_code == 0
     assert "Test Movie" in result.stdout
     assert "movie" in result.stdout
-    assert "25" in result.stdout
+    assert "5" in result.stdout
     assert "Remind" in result.stdout
 
 

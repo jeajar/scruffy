@@ -487,8 +487,8 @@ wheels = [
 
 [[package]]
 name = "scruffy"
-version = "0.3.0"
-source = { virtual = "." }
+version = "0.3.2"
+source = { editable = "." }
 dependencies = [
     { name = "fastapi-mail" },
     { name = "httpx" },

@@ -35,6 +35,20 @@ class RequestDTO:
             seasons=[season["seasonNumber"] for season in response.get("seasons", [])],
         )
 
+    def json(self):
+        return {
+            "user_id": int(self.user_id),
+            "user_email": str(self.user_email),
+            "type": str(self.type),
+            "request_id": int(self.request_id),
+            "request_status": self.request_status.name,
+            "updated_at": self.updated_at.isoformat(),
+            "media_id": int(self.media_id),
+            "media_status": self.media_status.name,
+            "external_service_id": int(self.external_service_id),
+            "seasons": list(self.seasons),
+        }
+
 
 @dataclass(frozen=True)
 class MediaInfoDTO:

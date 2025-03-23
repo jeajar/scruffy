@@ -75,14 +75,16 @@ class MediaManager:
             in [MediaStatus.PARTIALLY_AVAILABLE, MediaStatus.AVAILABLE]
         ]
 
+        # Log results
         self.logger.info(f"Found {len(to_check)} available media requests to check")
+
         result = []
         for req in to_check:
             media_info = await self._get_media_info(req)
             if not media_info.available:
-                self.logger.debug("Media not available: %s", asdict(media_info))
+                self.logger.info("Media not available: %s", asdict(media_info))
                 continue
-            self.logger.debug("Got media info: %s", asdict(media_info))
+            self.logger.info("Got media info: %s", asdict(media_info))
             result.append((req, media_info))
 
         return result
@@ -95,14 +97,14 @@ class MediaManager:
             request.external_service_id, request.seasons
         )
 
-    def _check_retention_policy(
-        self, request: RequestDTO, media_info: MediaInfoDTO
-    ) -> RetentionResult:
+    def retention_policy(self, media_info: MediaInfoDTO) -> RetentionResult:
         """Apply retention policy to media."""
         if not media_info.available:
             return RetentionResult(remind=False, delete=False)
 
-        age: int = datetime.now(media_info.available_since.tzinfo) - request.updated_at
+        age: int = (
+            datetime.now(media_info.available_since.tzinfo) - media_info.available_since
+        )
         remind: bool = settings.retention_days - age.days <= settings.reminder_days
         delete: bool = age.days >= settings.retention_days
         days_left: int = settings.retention_days - age.days
@@ -115,7 +117,7 @@ class MediaManager:
         results = await self.check_requests()
 
         for request, media_info in results:
-            result = self._check_retention_policy(request, media_info)
+            result = self.retention_policy(media_info)
             if result.remind:
                 self.logger.info(
                     "Sending reminder to %s for %s",
