@@ -42,7 +42,7 @@ show, they will have 30 days to watch all of it.
 | `SONARR_API_KEY` | `None` | API key for Sonarr authentication | Yes |
 | `RADARR_URL` | `http://localhost:7878` | Radarr server URL | No |
 | `RADARR_API_KEY` | `None` | API key for Radarr authentication | Yes |
-| `RETENTION_DAYS` | `60` | Number of days to keep media before deletion | No |
+| `RETENTION_DAYS` | `30` | Number of days to keep media before deletion | No |
 | `REMINDER_DAYS` | `7` | Days before deletion to send reminder | No |
 | `EMAIL_ENABLED` | `False` | Enable email notifications | No |
 | `SMTP_HOST` | `localhost` | SMTP server hostname | If email enabled |
