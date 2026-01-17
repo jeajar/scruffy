@@ -25,7 +25,7 @@ dev-dependencies = [
 ]
 # Define CLI entry points
 [project.scripts]
-scruffy = "scruffy.app.cli:app"
+scruffy = "scruffy.frameworks_and_drivers.cli.cli_controller:app"
 
 # Define the build system
 [build-system]
