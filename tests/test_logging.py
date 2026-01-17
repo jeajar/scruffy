@@ -3,7 +3,7 @@ import logging.handlers
 
 import pytest
 
-from scruffy.logging import setup_logger
+from scruffy.frameworks_and_drivers.utils.logging import setup_logger
 
 
 @pytest.fixture(autouse=True)

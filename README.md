@@ -32,6 +32,60 @@ show, they will have 30 days to watch all of it.
 
 
 
+## Development Setup
+
+### Environment Variables
+
+For local development, create a `.env` file in the project root. A `.env.example` template is provided for reference.
+
+**Important:** The `.env` file is gitignored and should never be committed. Always use `.env.example` as a template.
+
+#### Using `uv` with Environment Variables
+
+The project uses `pydantic-settings` which automatically loads environment variables from a `.env` file. You can use `uv run` to execute commands:
+
+```bash
+# Run commands with environment variables loaded from .env
+uv run scruffy validate
+uv run scruffy check
+uv run scruffy process
+
+# Or run Python scripts directly
+uv run python -m scruffy.frameworks_and_drivers.cli.cli_controller validate
+```
+
+#### Debugging with VS Code
+
+VS Code debug configurations are provided in `.vscode/launch.json`. The debugger will automatically load environment variables from `.env`:
+
+1. Set breakpoints in your code
+2. Press `F5` or go to Run and Debug
+3. Select one of the available configurations:
+   - **Python: Scruffy CLI (validate)** - Debug the validate command
+   - **Python: Scruffy CLI (check)** - Debug the check command
+   - **Python: Scruffy CLI (process)** - Debug the process command
+   - **Python: Current File** - Debug the currently open Python file
+
+The `.env` file is automatically loaded by the debugger via the `envFile` setting in the launch configuration.
+
+#### Manual Environment Variable Loading
+
+If you need to manually set environment variables (e.g., in a shell script):
+
+```bash
+# Load .env file and export variables
+export $(cat .env | xargs)
+
+# Then run commands
+uv run scruffy validate
+```
+
+Or use `uv run` with explicit environment variables:
+
+```bash
+uv run --env-file .env scruffy validate
+```
+
 ## Configuration
 
 | Environment Variable | Default Value | Description | Required |

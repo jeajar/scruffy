@@ -1,4 +1,4 @@
-from scruffy.quotes import scruffy_quotes
+from scruffy.frameworks_and_drivers.utils.quotes import scruffy_quotes
 
 
 def test_quotes_is_list():
