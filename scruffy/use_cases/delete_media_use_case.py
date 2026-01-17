@@ -9,6 +9,7 @@ from scruffy.use_cases.interfaces.notification_service_interface import (
 from scruffy.use_cases.interfaces.request_repository_interface import (
     RequestRepositoryInterface,
 )
+from scruffy.use_cases.mappers import map_media_entity_to_dto
 
 
 class DeleteMediaUseCase:
@@ -36,7 +37,8 @@ class DeleteMediaUseCase:
         await self.request_repository.delete_request(request.request_id)
         await self.request_repository.delete_media(request.media_id)
 
-        # Send deletion notice
+        # Convert entity to DTO for notification service
+        media_dto = map_media_entity_to_dto(media)
         await self.notification_service.send_deletion_notice(
-            request.user_email, media
+            request.user_email, media_dto
         )

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from scruffy.domain.entities.media import Media
+from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
 
 
 class NotificationServiceInterface(ABC):
@@ -8,12 +8,14 @@ class NotificationServiceInterface(ABC):
 
     @abstractmethod
     async def send_reminder_notice(
-        self, user_email: str, media: Media, days_left: int
+        self, user_email: str, media_dto: MediaInfoDTO, days_left: int
     ) -> None:
         """Send a reminder notification to the user."""
         pass
 
     @abstractmethod
-    async def send_deletion_notice(self, user_email: str, media: Media) -> None:
+    async def send_deletion_notice(
+        self, user_email: str, media_dto: MediaInfoDTO
+    ) -> None:
         """Send a deletion notification to the user."""
         pass

@@ -4,8 +4,6 @@ import typer
 from rich.console import Console
 from rich.table import Table
 
-from scruffy.domain.services.retention_calculator import RetentionCalculator
-from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.di.container import Container
 from scruffy.interface_adapters.presenters.cli_presenter import CLIPresenter
@@ -24,11 +22,13 @@ def get_container() -> Container:
 
 
 async def async_check_media():
-    """Async function to check media."""
+    """Async function to check media with retention information."""
     container = get_container()
     if not await async_validate():
         raise typer.Exit(1)
-    return await container.check_media_requests_use_case.execute()
+    return await container.check_media_requests_use_case.execute_with_retention(
+        container.retention_calculator
+    )
 
 
 async def async_process_media() -> None:
@@ -94,17 +94,7 @@ def check():
         console.print("[yellow]No media found to process[/yellow]")
         return
 
-    container = get_container()
-    retention_policy = RetentionPolicy(
-        retention_days=settings.retention_days, reminder_days=settings.reminder_days
-    )
-    calculator = RetentionCalculator(retention_policy)
-
-    retention_results = [
-        calculator.evaluate(media) for _, media in results
-    ]
-
-    table = CLIPresenter.format_media_table(results, retention_results)
+    table = CLIPresenter.format_media_table(results)
     console.print(table)
 
 

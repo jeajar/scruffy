@@ -1,3 +1,4 @@
+from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.database.database import get_engine
@@ -62,6 +63,7 @@ class Container:
             retention_days=settings.retention_days,
             reminder_days=settings.reminder_days,
         )
+        self._retention_calculator = RetentionCalculator(retention_policy)
 
         self._process_use_case = ProcessMediaUseCase(
             self._check_use_case,
@@ -84,3 +86,8 @@ class Container:
     def overseer_gateway(self) -> OverseerGateway:
         """Get Overseerr gateway."""
         return self._overseer_gateway
+
+    @property
+    def retention_calculator(self) -> RetentionCalculator:
+        """Get retention calculator."""
+        return self._retention_calculator

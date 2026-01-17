@@ -1,4 +1,3 @@
-from scruffy.domain.entities.media_request import MediaRequest
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.dtos.request_dto import RequestDTO
@@ -29,7 +28,7 @@ class OverseerGateway(RequestRepositoryInterface):
 
     async def get_requests(
         self, status_filter: MediaStatus | None = None
-    ) -> list[MediaRequest]:
+    ) -> list[RequestDTO]:
         """Fetch all media requests from Overseerr using pagination."""
         # Note: Overseerr API doesn't support filtering by MediaStatus directly
         # Filtering is done in the use case layer
@@ -48,7 +47,7 @@ class OverseerGateway(RequestRepositoryInterface):
             )
 
             page_results = [
-                RequestDTO.from_overseer_response(req).to_domain_entity()
+                RequestDTO.from_overseer_response(req)
                 for req in response.get("results", [])
             ]
             all_requests.extend(page_results)

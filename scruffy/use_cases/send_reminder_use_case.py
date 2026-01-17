@@ -6,6 +6,7 @@ from scruffy.use_cases.interfaces.notification_service_interface import (
 from scruffy.use_cases.interfaces.reminder_repository_interface import (
     ReminderRepositoryInterface,
 )
+from scruffy.use_cases.mappers import map_media_entity_to_dto
 
 
 class SendReminderUseCase:
@@ -25,7 +26,9 @@ class SendReminderUseCase:
     ) -> None:
         """Send reminder if not already sent."""
         if not self.reminder_repository.has_reminder(request.request_id):
+            # Convert entity to DTO for notification service
+            media_dto = map_media_entity_to_dto(media)
             await self.notification_service.send_reminder_notice(
-                request.user_email, media, days_left
+                request.user_email, media_dto, days_left
             )
             self.reminder_repository.add_reminder(request.request_id, request.user_id)

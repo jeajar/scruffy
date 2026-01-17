@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from scruffy.domain.entities.media_request import MediaRequest
 from scruffy.domain.value_objects.media_status import MediaStatus
+from scruffy.interface_adapters.dtos.request_dto import RequestDTO
 
 
 class RequestRepositoryInterface(ABC):
@@ -10,7 +10,7 @@ class RequestRepositoryInterface(ABC):
     @abstractmethod
     async def get_requests(
         self, status_filter: MediaStatus | None = None
-    ) -> list[MediaRequest]:
+    ) -> list[RequestDTO]:
         """Get all media requests, optionally filtered by status."""
         pass
 

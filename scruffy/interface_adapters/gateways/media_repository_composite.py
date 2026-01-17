@@ -1,5 +1,5 @@
-from scruffy.domain.entities.media import Media
 from scruffy.domain.value_objects.media_type import MediaType
+from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
 from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
 from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 from scruffy.use_cases.interfaces.media_repository_interface import (
@@ -17,7 +17,7 @@ class MediaRepositoryComposite(MediaRepositoryInterface):
 
     async def get_media(
         self, external_service_id: int, media_type: MediaType, seasons: list[int]
-    ) -> Media:
+    ) -> MediaInfoDTO:
         """Get media from appropriate gateway based on type."""
         if media_type == MediaType.MOVIE:
             return await self.radarr_gateway.get_media(

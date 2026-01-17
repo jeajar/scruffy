@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from scruffy.domain.entities.media import Media
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
@@ -21,7 +20,7 @@ class RadarrGateway(MediaRepositoryInterface):
 
     async def get_media(
         self, external_service_id: int, media_type: MediaType, seasons: list[int]
-    ) -> Media:
+    ) -> MediaInfoDTO:
         """Get detailed information about a movie by its Radarr ID."""
         if media_type != MediaType.MOVIE:
             raise ValueError("RadarrGateway only handles movies")
@@ -34,7 +33,7 @@ class RadarrGateway(MediaRepositoryInterface):
         poster = self._get_movie_poster(data.get("images", []))
         added_at = data.get("movieFile", {}).get("dateAdded")
 
-        dto = MediaInfoDTO(
+        return MediaInfoDTO(
             title=data.get("title"),
             available=data.get("hasFile"),
             poster=poster or "",
@@ -43,8 +42,6 @@ class RadarrGateway(MediaRepositoryInterface):
             id=data.get("id"),
             seasons=[],
         )
-
-        return dto.to_domain_entity()
 
     async def delete_media(
         self, external_service_id: int, media_type: MediaType, seasons: list[int]

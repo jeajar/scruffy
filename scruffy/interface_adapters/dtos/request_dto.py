@@ -2,9 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-from scruffy.domain.entities.media_request import MediaRequest
 from scruffy.domain.value_objects.media_status import MediaStatus
-from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.domain.value_objects.request_status import RequestStatus
 
 
@@ -58,22 +56,6 @@ class RequestDTO:
             media_status=media_status,
             external_service_id=media.get("externalServiceId"),
             seasons=[season["seasonNumber"] for season in response.get("seasons", [])],
-        )
-
-    def to_domain_entity(self) -> MediaRequest:
-        """Convert DTO to domain entity."""
-        media_type = MediaType.MOVIE if self.type == "movie" else MediaType.TV
-        return MediaRequest(
-            user_id=self.user_id,
-            user_email=self.user_email,
-            media_type=media_type,
-            request_id=self.request_id,
-            request_status=self.request_status,
-            updated_at=self.updated_at,
-            media_id=self.media_id,
-            media_status=self.media_status,
-            external_service_id=self.external_service_id,
-            seasons=self.seasons,
         )
 
     def json(self):

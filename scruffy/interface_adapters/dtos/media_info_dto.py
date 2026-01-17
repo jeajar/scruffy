@@ -1,8 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
 
-from scruffy.domain.entities.media import Media
-
 
 @dataclass(frozen=True)
 class MediaInfoDTO:
@@ -21,15 +19,3 @@ class MediaInfoDTO:
     seasons: list[int]
     size_on_disk: int
     title: str
-
-    def to_domain_entity(self) -> Media:
-        """Convert DTO to domain entity."""
-        return Media(
-            id=self.id,
-            title=self.title,
-            available=self.available,
-            available_since=self.available_since,
-            size_on_disk=self.size_on_disk,
-            poster=self.poster,
-            seasons=self.seasons,
-        )

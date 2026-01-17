@@ -1,18 +1,13 @@
 from rich.table import Table
 
-from scruffy.domain.entities.media import Media
-from scruffy.domain.entities.media_request import MediaRequest
-from scruffy.domain.services.retention_calculator import RetentionResult
+from scruffy.interface_adapters.dtos.media_check_result_dto import MediaCheckResultDTO
 
 
 class CLIPresenter:
     """Formats output for CLI display."""
 
     @staticmethod
-    def format_media_table(
-        results: list[tuple[MediaRequest, Media]],
-        retention_results: list[RetentionResult],
-    ) -> Table:
+    def format_media_table(results: list[MediaCheckResultDTO]) -> Table:
         """Format media results as a Rich table."""
         table = Table(title="Media Status")
         table.add_column("Id", style="white")
@@ -22,26 +17,29 @@ class CLIPresenter:
         table.add_column("User", style="yellow")
         table.add_column("Action", style="green")
 
-        for (request, media), retention in zip(results, retention_results):
+        for result in results:
             action = (
                 "[red]Delete[/red]"
-                if retention.delete
+                if result.retention.delete
                 else "[yellow]Remind[/yellow]"
-                if retention.remind
+                if result.retention.remind
                 else "[green]Keep[/green]"
             )
 
             seasons = ", ".join(
-                str(f"s{season:02d}") for season in media.seasons
+                str(f"s{season:02d}") for season in result.media.seasons
             )
-            title = f"{media.title} {seasons}" if seasons else media.title
+            title = f"{result.media.title} {seasons}" if seasons else result.media.title
+
+            # Get media type from request DTO
+            media_type_value = "movie" if result.request.type == "movie" else "tv"
 
             table.add_row(
-                str(request.request_id),
+                str(result.request.request_id),
                 title,
-                request.media_type.value,
-                str(retention.days_left),
-                request.user_email,
+                media_type_value,
+                str(result.retention.days_left),
+                result.request.user_email,
                 action,
             )
 

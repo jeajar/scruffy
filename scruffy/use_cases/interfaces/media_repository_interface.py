@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
-from scruffy.domain.entities.media import Media
 from scruffy.domain.value_objects.media_type import MediaType
+from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
 
 
 class MediaRepositoryInterface(ABC):
@@ -10,7 +10,7 @@ class MediaRepositoryInterface(ABC):
     @abstractmethod
     async def get_media(
         self, external_service_id: int, media_type: MediaType, seasons: list[int]
-    ) -> Media:
+    ) -> MediaInfoDTO:
         """Get media information by external service ID."""
         pass
 

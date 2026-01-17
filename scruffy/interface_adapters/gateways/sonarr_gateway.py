@@ -1,6 +1,5 @@
 from datetime import datetime
 
-from scruffy.domain.entities.media import Media
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
@@ -21,7 +20,7 @@ class SonarrGateway(MediaRepositoryInterface):
 
     async def get_media(
         self, external_service_id: int, media_type: MediaType, seasons: list[int]
-    ) -> Media:
+    ) -> MediaInfoDTO:
         """Get detailed information about a series by its Sonarr ID."""
         if media_type != MediaType.TV:
             raise ValueError("SonarrGateway only handles TV shows")
@@ -61,7 +60,7 @@ class SonarrGateway(MediaRepositoryInterface):
                 ep.get("episodeFile", {}).get("size", 0) for ep in episodes
             )
 
-        dto = MediaInfoDTO(
+        return MediaInfoDTO(
             available_since=latest_date if available else None,
             available=available,
             id=external_service_id,
@@ -70,8 +69,6 @@ class SonarrGateway(MediaRepositoryInterface):
             size_on_disk=total_size,
             title=series.get("title", ""),
         )
-
-        return dto.to_domain_entity()
 
     async def delete_media(
         self, external_service_id: int, media_type: MediaType, seasons: list[int]
