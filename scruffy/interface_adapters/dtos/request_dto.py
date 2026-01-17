@@ -26,24 +26,48 @@ class RequestDTO:
         """Create DTO from Overseerr API response."""
         media: dict = response.get("media", {})
         
-        # Map Overseerr status strings to RequestStatus enum
-        status_map = {
-            "pendingApproval": RequestStatus.PENDING_APPROVAL,
-            "approved": RequestStatus.APPROVED,
-            "declined": RequestStatus.DECLINED,
-        }
-        request_status = status_map.get(response.get("status", "").lower(), RequestStatus.PENDING_APPROVAL)
+        # Handle request status - Overseerr can return either integer or string
+        raw_status = response.get("status")
+        if raw_status is None:
+            request_status = RequestStatus.PENDING_APPROVAL
+        elif isinstance(raw_status, int):
+            # Direct integer mapping to enum values
+            try:
+                request_status = RequestStatus(raw_status)
+            except (ValueError, TypeError):
+                request_status = RequestStatus.PENDING_APPROVAL
+        else:
+            # Map Overseerr status strings to RequestStatus enum
+            status_map = {
+                "pendingApproval": RequestStatus.PENDING_APPROVAL,
+                "pendingapproval": RequestStatus.PENDING_APPROVAL,
+                "approved": RequestStatus.APPROVED,
+                "declined": RequestStatus.DECLINED,
+            }
+            request_status = status_map.get(str(raw_status).lower(), RequestStatus.PENDING_APPROVAL)
         
-        # Map Overseerr media status strings to MediaStatus enum
-        media_status_map = {
-            "unknown": MediaStatus.UNKNOWN,
-            "pending": MediaStatus.PENDING,
-            "processing": MediaStatus.PROCESSING,
-            "partiallyAvailable": MediaStatus.PARTIALLY_AVAILABLE,
-            "available": MediaStatus.AVAILABLE,
-        }
-        media_status_str = str(media.get("status", "")).lower()
-        media_status = media_status_map.get(media_status_str, MediaStatus.UNKNOWN)
+        # Handle media status - Overseerr can return either integer or string
+        raw_media_status = media.get("status")
+        if raw_media_status is None:
+            media_status = MediaStatus.UNKNOWN
+        elif isinstance(raw_media_status, int):
+            # Direct integer mapping to enum values
+            try:
+                media_status = MediaStatus(raw_media_status)
+            except (ValueError, TypeError):
+                media_status = MediaStatus.UNKNOWN
+        else:
+            # Map Overseerr media status strings to MediaStatus enum
+            media_status_map = {
+                "unknown": MediaStatus.UNKNOWN,
+                "pending": MediaStatus.PENDING,
+                "processing": MediaStatus.PROCESSING,
+                "partiallyAvailable": MediaStatus.PARTIALLY_AVAILABLE,
+                "partiallyavailable": MediaStatus.PARTIALLY_AVAILABLE,
+                "available": MediaStatus.AVAILABLE,
+            }
+            media_status_str = str(raw_media_status).lower()
+            media_status = media_status_map.get(media_status_str, MediaStatus.UNKNOWN)
         
         return cls(
             user_id=response.get("requestedBy", {}).get("id"),
