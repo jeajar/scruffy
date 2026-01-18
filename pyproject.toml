@@ -6,12 +6,16 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "fastapi-mail>=1.4.2",
+    "fastapi>=0.115.0",
     "httpx>=0.28.1",
+    "jinja2>=3.1.0",
     "pydantic-settings>=2.7.1",
     "pydantic>=2.10.4",
+    "python-multipart>=0.0.18",
     "rich>=13.9.4",
     "sqlmodel>=0.0.22",
     "typer>=0.15.1",
+    "uvicorn[standard]>=0.34.0",
 ]
 
 [tool.uv]
@@ -27,6 +31,7 @@ dev-dependencies = [
 # Define CLI entry points
 [project.scripts]
 scruffy = "scruffy.frameworks_and_drivers.cli.cli_controller:app"
+scruffy-api = "scruffy.frameworks_and_drivers.api.app:main"
 
 # Define the build system
 [build-system]

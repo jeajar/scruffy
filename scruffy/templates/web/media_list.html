@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block title %}Media Requests - Scruffy{% endblock %}
+
+{% block content %}
+<div class="px-4 sm:px-0">
+    <!-- Header -->
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-semibold text-white">Media Requests</h1>
+            <p class="mt-2 text-sm text-gray-400">
+                A list of all available media requests and when Scruffy will clean them up.
+                <span class="text-gray-500">Retention: {{ retention_days }} days | Reminder: {{ reminder_days }} days before deletion</span>
+            </p>
+        </div>
+        <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+            <span class="inline-flex items-center rounded-md bg-scruffy-teal px-3 py-2 text-sm font-semibold text-white">
+                {{ media_list|length }} items
+            </span>
+        </div>
+    </div>
+
+    {% if media_list %}
+    <!-- Media Table -->
+    <div class="mt-8 flow-root">
+        <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+            <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+                <div class="overflow-hidden shadow ring-1 ring-gray-700 sm:rounded-lg">
+                    <table class="min-w-full divide-y divide-gray-700">
+                        <thead class="bg-scruffy-dark">
+                            <tr>
+                                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-white sm:pl-6">
+                                    Media
+                                </th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">
+                                    Type
+                                </th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">
+                                    Available Since
+                                </th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">
+                                    Days Left
+                                </th>
+                                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-white">
+                                    Status
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700 bg-scruffy-darker">
+                            {% for item in media_list %}
+                            <tr class="hover:bg-scruffy-dark transition-colors">
+                                <td class="whitespace-nowrap py-4 pl-4 pr-3 sm:pl-6">
+                                    <div class="flex items-center">
+                                        <div class="h-16 w-11 flex-shrink-0">
+                                            {% if item.media.poster %}
+                                            <img class="h-16 w-11 rounded object-cover" 
+                                                 src="{{ item.media.poster }}" 
+                                                 alt="{{ item.media.title }}">
+                                            {% else %}
+                                            <div class="h-16 w-11 rounded bg-gray-700 flex items-center justify-center">
+                                                <svg class="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+                                                </svg>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="font-medium text-white">{{ item.media.title }}</div>
+                                            {% if item.media.seasons %}
+                                            <div class="text-sm text-gray-400">
+                                                Seasons: {{ item.media.seasons|join(', ') }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    {% if item.request.type == 'movie' %}
+                                    <span class="inline-flex items-center rounded-md bg-blue-900/50 px-2 py-1 text-xs font-medium text-blue-300 ring-1 ring-inset ring-blue-700/50">
+                                        Movie
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center rounded-md bg-purple-900/50 px-2 py-1 text-xs font-medium text-purple-300 ring-1 ring-inset ring-purple-700/50">
+                                        TV Show
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-300">
+                                    {% if item.media.available_since %}
+                                    {{ item.media.available_since.strftime('%b %d, %Y') }}
+                                    {% else %}
+                                    <span class="text-gray-500">Unknown</span>
+                                    {% endif %}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    {% if item.retention.days_left <= 0 %}
+                                    <span class="inline-flex items-center rounded-full bg-red-900/50 px-3 py-1 text-sm font-medium text-red-300 ring-1 ring-inset ring-red-700/50">
+                                        Due for deletion
+                                    </span>
+                                    {% elif item.retention.days_left <= reminder_days %}
+                                    <span class="inline-flex items-center rounded-full bg-yellow-900/50 px-3 py-1 text-sm font-medium text-yellow-300 ring-1 ring-inset ring-yellow-700/50">
+                                        {{ item.retention.days_left }} days
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center rounded-full bg-green-900/50 px-3 py-1 text-sm font-medium text-green-300 ring-1 ring-inset ring-green-700/50">
+                                        {{ item.retention.days_left }} days
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="whitespace-nowrap px-3 py-4 text-sm">
+                                    {% if item.retention.delete %}
+                                    <span class="inline-flex items-center text-red-400">
+                                        <svg class="mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                        Scheduled for deletion
+                                    </span>
+                                    {% elif item.retention.remind %}
+                                    <span class="inline-flex items-center text-yellow-400">
+                                        <svg class="mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                        Reminder sent
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex items-center text-green-400">
+                                        <svg class="mr-1.5 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                        </svg>
+                                        Safe
+                                    </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <!-- Empty state -->
+    <div class="mt-8 text-center">
+        <div class="rounded-lg border-2 border-dashed border-gray-700 p-12">
+            <svg class="mx-auto h-12 w-12 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+            </svg>
+            <h3 class="mt-4 text-lg font-medium text-white">No media requests</h3>
+            <p class="mt-2 text-sm text-gray-400">
+                There are no available media requests to display at this time.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Legend -->
+    <div class="mt-8 rounded-lg bg-scruffy-dark p-4 border border-gray-700">
+        <h3 class="text-sm font-medium text-white mb-3">Status Legend</h3>
+        <div class="flex flex-wrap gap-4 text-sm">
+            <div class="flex items-center">
+                <span class="inline-flex items-center rounded-full bg-green-900/50 px-2 py-0.5 text-xs font-medium text-green-300 ring-1 ring-inset ring-green-700/50 mr-2">Green</span>
+                <span class="text-gray-400">More than {{ reminder_days }} days remaining</span>
+            </div>
+            <div class="flex items-center">
+                <span class="inline-flex items-center rounded-full bg-yellow-900/50 px-2 py-0.5 text-xs font-medium text-yellow-300 ring-1 ring-inset ring-yellow-700/50 mr-2">Yellow</span>
+                <span class="text-gray-400">Reminder period ({{ reminder_days }} days or less)</span>
+            </div>
+            <div class="flex items-center">
+                <span class="inline-flex items-center rounded-full bg-red-900/50 px-2 py-0.5 text-xs font-medium text-red-300 ring-1 ring-inset ring-red-700/50 mr-2">Red</span>
+                <span class="text-gray-400">Due for deletion</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Auto-refresh every 5 minutes
+    setTimeout(function() {
+        location.reload();
+    }, 300000);
+</script>
+{% endblock %}

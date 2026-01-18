@@ -43,5 +43,11 @@ class Settings(BaseSettings):
     loki_url: HttpUrl | None = None  # e.g., "http://loki:3100/loki/api/v1/push"
     loki_labels: dict[str, str] = {"app": "scruffy"}
 
+    # API Server settings
+    api_enabled: bool = True
+    api_host: str = "0.0.0.0"
+    api_port: int = 8080
+    api_secret_key: str = "change-me-in-production"  # For session signing
+
 
 settings = Settings()
