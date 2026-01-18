@@ -1,3 +1,6 @@
+"""Gateway adapter for Sonarr API (TV shows)."""
+
+import logging
 from datetime import datetime
 
 from scruffy.domain.value_objects.media_type import MediaType
@@ -6,6 +9,8 @@ from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SonarrGateway(MediaRepositoryInterface):
@@ -17,6 +22,7 @@ class SonarrGateway(MediaRepositoryInterface):
         self.api_key = api_key
         self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
         self.http_client = http_client or HttpClient()
+        logger.debug("Initialized SonarrGateway", extra={"base_url": self.base_url})
 
     async def get_media(
         self, external_service_id: int, media_type: MediaType, seasons: list[int]
@@ -24,6 +30,11 @@ class SonarrGateway(MediaRepositoryInterface):
         """Get detailed information about a series by its Sonarr ID."""
         if media_type != MediaType.TV:
             raise ValueError("SonarrGateway only handles TV shows")
+
+        logger.debug(
+            "Fetching series from Sonarr",
+            extra={"external_service_id": external_service_id, "seasons": seasons},
+        )
 
         series = await self.http_client.get(
             f"{self.base_url}/api/v3/series/{external_service_id}",
@@ -34,6 +45,7 @@ class SonarrGateway(MediaRepositoryInterface):
         latest_date = None
         total_size = 0
         poster = self._get_series_poster(series.get("images", []))
+        title = series.get("title", "")
 
         for season_num in seasons:
             episodes = await self.get_episodes(external_service_id, season_num)
@@ -41,6 +53,14 @@ class SonarrGateway(MediaRepositoryInterface):
             # Check if all episodes in season have files
             if not all(ep.get("hasFile", False) for ep in episodes):
                 available = False
+                logger.debug(
+                    "Season not fully available",
+                    extra={
+                        "series_id": external_service_id,
+                        "season": season_num,
+                        "title": title,
+                    },
+                )
                 break
 
             # Find latest episode file date
@@ -60,6 +80,17 @@ class SonarrGateway(MediaRepositoryInterface):
                 ep.get("episodeFile", {}).get("size", 0) for ep in episodes
             )
 
+        logger.info(
+            "Retrieved series info",
+            extra={
+                "external_service_id": external_service_id,
+                "title": title,
+                "seasons": seasons,
+                "available": available,
+                "size_on_disk": total_size,
+            },
+        )
+
         return MediaInfoDTO(
             available_since=latest_date if available else None,
             available=available,
@@ -67,7 +98,7 @@ class SonarrGateway(MediaRepositoryInterface):
             poster=poster or "",
             seasons=seasons,
             size_on_disk=total_size,
-            title=series.get("title", ""),
+            title=title,
         )
 
     async def delete_media(
@@ -77,9 +108,19 @@ class SonarrGateway(MediaRepositoryInterface):
         if media_type != MediaType.TV:
             raise ValueError("SonarrGateway only handles TV shows")
 
+        logger.info(
+            "Deleting seasons from Sonarr",
+            extra={"external_service_id": external_service_id, "seasons": seasons},
+        )
+
         await self.update_season_monitoring(external_service_id, seasons)
         await self.delete_season_files(external_service_id, seasons)
         await self._delete_empty_series(external_service_id)
+
+        logger.info(
+            "Seasons deleted successfully",
+            extra={"external_service_id": external_service_id, "seasons": seasons},
+        )
 
     async def get_series(self, series_id: int) -> dict:
         """Get detailed information about a series by its Sonarr ID."""
@@ -89,6 +130,10 @@ class SonarrGateway(MediaRepositoryInterface):
 
     async def get_episodes(self, series_id: int, season_number: int) -> list[dict]:
         """Get episodes for a specific season of a series."""
+        logger.debug(
+            "Fetching episodes",
+            extra={"series_id": series_id, "season_number": season_number},
+        )
         return await self.http_client.get(
             f"{self.base_url}/api/v3/episode",
             headers=self.headers,
@@ -114,6 +159,10 @@ class SonarrGateway(MediaRepositoryInterface):
 
         # Delete episode files if any exist
         if episode_file_ids:
+            logger.debug(
+                "Deleting episode files",
+                extra={"series_id": series_id, "file_count": len(episode_file_ids)},
+            )
             await self.delete_episode_files(episode_file_ids)
 
     async def delete_episode_files(self, episode_file_ids: list[int]) -> None:
@@ -128,6 +177,10 @@ class SonarrGateway(MediaRepositoryInterface):
         self, series_id: int, seasons_to_unmonitor: list[int]
     ) -> None:
         """Update monitoring status for specific seasons of a series."""
+        logger.debug(
+            "Updating season monitoring",
+            extra={"series_id": series_id, "seasons_to_unmonitor": seasons_to_unmonitor},
+        )
         series = await self.get_series(series_id)
 
         # Update monitoring status for specified seasons
@@ -146,6 +199,10 @@ class SonarrGateway(MediaRepositoryInterface):
         """Delete series if all seasons are unmonitored."""
         series = await self.get_series(series_id)
         if all(not season["monitored"] for season in series["seasons"]):
+            logger.info(
+                "Deleting empty series (all seasons unmonitored)",
+                extra={"series_id": series_id, "title": series.get("title")},
+            )
             await self.http_client.delete(
                 f"{self.base_url}/api/v3/series/{series_id}",
                 headers=self.headers,

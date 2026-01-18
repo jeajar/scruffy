@@ -1,3 +1,7 @@
+"""Dependency injection container for Scruffy application."""
+
+import logging
+
 from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.frameworks_and_drivers.config.settings import settings
@@ -19,18 +23,24 @@ from scruffy.use_cases.delete_media_use_case import DeleteMediaUseCase
 from scruffy.use_cases.process_media_use_case import ProcessMediaUseCase
 from scruffy.use_cases.send_reminder_use_case import SendReminderUseCase
 
+logger = logging.getLogger(__name__)
+
 
 class Container:
     """Dependency injection container."""
 
     def __init__(self):
         """Initialize container and wire up dependencies."""
+        logger.info("Initializing dependency injection container")
+
         # Framework dependencies
+        logger.debug("Creating framework dependencies")
         self._http_client = HttpClient()
         self._email_client = EmailClient()
         self._database_engine = get_engine()
 
         # Gateways (interface adapters)
+        logger.debug("Creating gateways")
         self._overseer_gateway = OverseerGateway(
             str(settings.overseerr_url), settings.overseerr_api_key, self._http_client
         )
@@ -47,6 +57,7 @@ class Container:
         self._notification_service = EmailNotificationService(self._email_client)
 
         # Use cases
+        logger.debug("Creating use cases")
         self._check_use_case = CheckMediaRequestsUseCase(
             self._overseer_gateway, self._media_repository
         )
@@ -70,6 +81,15 @@ class Container:
             self._send_reminder_use_case,
             self._delete_media_use_case,
             retention_policy,
+        )
+
+        logger.info(
+            "Container initialized successfully",
+            extra={
+                "retention_days": settings.retention_days,
+                "reminder_days": settings.reminder_days,
+                "email_enabled": settings.email_enabled,
+            },
         )
 
     @property

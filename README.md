@@ -106,7 +106,11 @@ uv run --env-file .env scruffy validate
 | `SMTP_FROM_EMAIL` | `scruffy@example.com` | Sender email address | If email enabled |
 | `SMTP_SSL_TLS` | `True` | Use SSL/TLS for SMTP connection | No |
 | `SMTP_STARTTLS` | `False` | Use STARTTLS for SMTP connection | No |
-| `LOG_LEVEL` | `INFO` | Application logging level | No |
+| `LOG_LEVEL` | `INFO` | Application logging level (DEBUG, INFO, WARNING, ERROR) | No |
+| `LOG_FILE` | `None` | Path to log file (enables file logging with rotation) | No |
+| `LOKI_ENABLED` | `False` | Enable Loki log shipping | No |
+| `LOKI_URL` | `None` | Loki push API URL (e.g., `http://loki:3100/loki/api/v1/push`) | If Loki enabled |
+| `LOKI_LABELS` | `{"app": "scruffy"}` | JSON object of static labels for Loki streams | No |
 
 ### Docker image configuration
 Those cron settings are only available if deploying using the docker image
@@ -138,4 +142,80 @@ services:
       - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}
       - TZ=America/New_York
     restart: unless-stopped
+```
+
+## Loki Integration
+
+Scruffy supports shipping logs directly to Grafana Loki for centralized logging and monitoring. Logs are sent as structured JSON with the following format:
+
+```json
+{
+  "timestamp": "2026-01-18T10:30:00.123456+00:00",
+  "level": "INFO",
+  "logger": "scruffy.use_cases.process_media_use_case",
+  "message": "Processing media request",
+  "request_id": 123,
+  "media_type": "movie"
+}
+```
+
+### Enabling Loki
+
+Set the following environment variables:
+
+```bash
+LOKI_ENABLED=true
+LOKI_URL=http://loki:3100/loki/api/v1/push
+LOKI_LABELS='{"app": "scruffy", "env": "production"}'
+```
+
+### Docker Compose with Loki
+
+Example `docker-compose.yaml` with Loki and Grafana:
+
+```yaml
+version: '3'
+services:
+  scruffy:
+    build: .
+    environment:
+      - OVERSEERR_URL=${OVERSEERR_URL}
+      - OVERSEERR_API_KEY=${OVERSEERR_API_KEY}
+      - SONARR_URL=${SONARR_URL}
+      - SONARR_API_KEY=${SONARR_API_KEY}
+      - RADARR_URL=${RADARR_URL}
+      - RADARR_API_KEY=${RADARR_API_KEY}
+      - LOG_LEVEL=INFO
+      - LOKI_ENABLED=true
+      - LOKI_URL=http://loki:3100/loki/api/v1/push
+      - LOKI_LABELS={"app":"scruffy","env":"production"}
+      - TZ=America/New_York
+    restart: unless-stopped
+    depends_on:
+      - loki
+
+  loki:
+    image: grafana/loki:2.9.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    restart: unless-stopped
+```
+
+### Querying Logs in Grafana
+
+Once configured, you can query Scruffy logs in Grafana using LogQL:
+
+```logql
+{app="scruffy"} |= "delete"
+{app="scruffy", level="error"}
+{app="scruffy"} | json | request_id > 0
 ```

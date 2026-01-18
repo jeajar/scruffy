@@ -1,9 +1,14 @@
+"""Gateway adapter for Overseerr API."""
+
+import logging
+
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.use_cases.dtos.request_dto import RequestDTO
-from scruffy.use_cases.interfaces.request_repository_interface import (
-    RequestRepositoryInterface,
-)
+from scruffy.use_cases.interfaces.request_repository_interface import \
+    RequestRepositoryInterface
+
+logger = logging.getLogger(__name__)
 
 
 class OverseerGateway(RequestRepositoryInterface):
@@ -15,6 +20,7 @@ class OverseerGateway(RequestRepositoryInterface):
         self.api_key = api_key
         self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
         self.http_client = http_client or HttpClient()
+        logger.debug("Initialized OverseerGateway", extra={"base_url": self.base_url})
 
     async def status(self) -> bool:
         """Test Overseerr connection status."""
@@ -22,8 +28,13 @@ class OverseerGateway(RequestRepositoryInterface):
             await self.http_client.get(
                 f"{self.base_url}/api/v1/status", headers=self.headers
             )
+            logger.info("Overseerr connection successful", extra={"base_url": self.base_url})
             return True
-        except Exception:
+        except Exception as e:
+            logger.warning(
+                "Overseerr connection failed",
+                extra={"base_url": self.base_url, "error": str(e)},
+            )
             return False
 
     async def get_requests(
@@ -33,6 +44,11 @@ class OverseerGateway(RequestRepositoryInterface):
         # Note: Overseerr API doesn't support filtering by MediaStatus directly
         # Filtering is done in the use case layer
         total_requests = await self.get_request_count()
+        logger.info(
+            "Fetching media requests from Overseerr",
+            extra={"total_requests": total_requests},
+        )
+
         all_requests = []
         take = 100
         skip = 0
@@ -51,21 +67,33 @@ class OverseerGateway(RequestRepositoryInterface):
                 for req in response.get("results", [])
             ]
             all_requests.extend(page_results)
+            logger.debug(
+                "Fetched request page",
+                extra={"skip": skip, "take": take, "page_count": len(page_results)},
+            )
             skip += take
 
+        logger.info(
+            "Completed fetching all requests",
+            extra={"total_fetched": len(all_requests)},
+        )
         return all_requests
 
     async def delete_request(self, request_id: int) -> None:
         """Delete a request by its ID."""
+        logger.info("Deleting request from Overseerr", extra={"request_id": request_id})
         await self.http_client.delete(
             f"{self.base_url}/api/v1/request/{request_id}", headers=self.headers
         )
+        logger.debug("Request deleted successfully", extra={"request_id": request_id})
 
     async def delete_media(self, media_id: int) -> None:
         """Delete media by its ID."""
+        logger.info("Deleting media from Overseerr", extra={"media_id": media_id})
         await self.http_client.delete(
             f"{self.base_url}/api/v1/media/{media_id}", headers=self.headers
         )
+        logger.debug("Media deleted successfully", extra={"media_id": media_id})
 
     async def get_request_count(self) -> int:
         """Get total number of requests."""
@@ -73,4 +101,6 @@ class OverseerGateway(RequestRepositoryInterface):
             f"{self.base_url}/api/v1/request/count",
             headers=self.headers,
         )
-        return response["total"]
+        count = response["total"]
+        logger.debug("Got request count", extra={"count": count})
+        return count

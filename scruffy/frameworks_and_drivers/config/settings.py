@@ -38,5 +38,10 @@ class Settings(BaseSettings):
     log_file: str | None = None
     data_dir: str | None = ""
 
+    # Loki Settings (optional)
+    loki_enabled: bool = False
+    loki_url: HttpUrl | None = None  # e.g., "http://loki:3100/loki/api/v1/push"
+    loki_labels: dict[str, str] = {"app": "scruffy"}
+
 
 settings = Settings()
