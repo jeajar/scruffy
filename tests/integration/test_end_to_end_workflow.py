@@ -53,10 +53,6 @@ async def test_complete_workflow_check_remind_delete(
     # Mock Overseerr API
     overseerr_base = "http://overseerr.test"
     with respx.mock(base_url=overseerr_base) as respx_mock:
-        # Mock status check
-        respx_mock.get("/api/v1/status").mock(
-            return_value=httpx.Response(200, json={"status": "ok"})
-        )
         # Mock request count
         respx_mock.get("/api/v1/request/count").mock(
             return_value=httpx.Response(200, json={"total": 1})
@@ -143,9 +139,6 @@ async def test_complete_workflow_remind_only(mock_settings, in_memory_engine):
     # Mock Overseerr API
     overseerr_base = "http://overseerr.test"
     with respx.mock(base_url=overseerr_base) as respx_mock:
-        respx_mock.get("/api/v1/status").mock(
-            return_value=httpx.Response(200, json={"status": "ok"})
-        )
         respx_mock.get("/api/v1/request/count").mock(
             return_value=httpx.Response(200, json={"total": 1})
         )

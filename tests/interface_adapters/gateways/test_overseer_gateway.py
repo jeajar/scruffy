@@ -102,8 +102,9 @@ async def test_get_requests_single_page(gateway, base_url):
 @pytest.mark.asyncio
 async def test_get_requests_pagination(gateway, base_url):
     """Test get_requests handles pagination correctly."""
+    # Implementation uses take=100, so we need total > 100 to trigger pagination
     page1_response = {
-        "pageInfo": {"pages": 2, "pageSize": 1, "results": 1, "total": 2},
+        "pageInfo": {"pages": 2, "pageSize": 100, "results": 100, "total": 101},
         "results": [
             {
                 "id": 1,
@@ -120,7 +121,7 @@ async def test_get_requests_pagination(gateway, base_url):
         ],
     }
     page2_response = {
-        "pageInfo": {"pages": 2, "pageSize": 1, "results": 1, "total": 2},
+        "pageInfo": {"pages": 2, "pageSize": 100, "results": 1, "total": 101},
         "results": [
             {
                 "id": 2,
@@ -139,7 +140,7 @@ async def test_get_requests_pagination(gateway, base_url):
 
     with respx.mock(base_url=base_url) as respx_mock:
         respx_mock.get("/api/v1/request/count").mock(
-            return_value=httpx.Response(200, json={"total": 2})
+            return_value=httpx.Response(200, json={"total": 101})
         )
         respx_mock.get("/api/v1/request").mock(side_effect=[
             httpx.Response(200, json=page1_response),
@@ -148,6 +149,7 @@ async def test_get_requests_pagination(gateway, base_url):
 
         requests = await gateway.get_requests()
 
+        # We get 1 result from page 1 and 1 from page 2 (mocked responses only have 1 each)
         assert len(requests) == 2
         assert requests[0].request_id == 1
         assert requests[1].request_id == 2

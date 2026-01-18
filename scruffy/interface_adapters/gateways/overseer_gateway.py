@@ -51,10 +51,6 @@ class OverseerGateway(RequestRepositoryInterface):
                 for req in response.get("results", [])
             ]
             all_requests.extend(page_results)
-
-            if len(page_results) < take:
-                break
-
             skip += take
 
         return all_requests

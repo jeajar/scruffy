@@ -135,7 +135,9 @@ async def test_delete_media(gateway, base_url, mock_series_response):
         respx_mock.get("/api/v3/series/1").mock(
             return_value=httpx.Response(200, json=mock_series_response)
         )
-        respx_mock.put("/api/v3/series/1").mock(return_value=httpx.Response(200))
+        respx_mock.put("/api/v3/series/1").mock(
+            return_value=httpx.Response(200, json=mock_series_response)
+        )
         respx_mock.get("/api/v3/episode").mock(
             return_value=httpx.Response(200, json=mock_episodes)
         )
@@ -215,7 +217,9 @@ async def test_update_season_monitoring(gateway, base_url, mock_series_response)
         respx_mock.get("/api/v3/series/1").mock(
             return_value=httpx.Response(200, json=mock_series_response)
         )
-        respx_mock.put("/api/v3/series/1").mock(return_value=httpx.Response(200))
+        respx_mock.put("/api/v3/series/1").mock(
+            return_value=httpx.Response(200, json=mock_series_response)
+        )
 
         await gateway.update_season_monitoring(1, [1])
 

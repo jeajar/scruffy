@@ -128,7 +128,8 @@ def test_format_media_table_delete_action(sample_result_delete):
     rows = list(table.rows)
     assert len(rows) == 1
     # Action column should contain "Delete" (with Rich markup)
-    action_cell = rows[0][5]  # Action is last column
+    # Access cell data via column._cells (column index 5 is Action)
+    action_cell = table.columns[5]._cells[0]
     assert "Delete" in str(action_cell) or "[red]" in str(action_cell)
 
 
@@ -138,7 +139,8 @@ def test_format_media_table_remind_action(sample_result_remind):
 
     rows = list(table.rows)
     assert len(rows) == 1
-    action_cell = rows[0][5]
+    # Access cell data via column._cells (column index 5 is Action)
+    action_cell = table.columns[5]._cells[0]
     assert "Remind" in str(action_cell) or "[yellow]" in str(action_cell)
 
 
@@ -148,7 +150,8 @@ def test_format_media_table_keep_action(sample_result_tv):
 
     rows = list(table.rows)
     assert len(rows) == 1
-    action_cell = rows[0][5]
+    # Access cell data via column._cells (column index 5 is Action)
+    action_cell = table.columns[5]._cells[0]
     assert "Keep" in str(action_cell) or "[green]" in str(action_cell)
 
 
@@ -157,7 +160,8 @@ def test_format_media_table_season_formatting(sample_result_tv):
     table = CLIPresenter.format_media_table([sample_result_tv])
 
     rows = list(table.rows)
-    title_cell = rows[0][1]  # Title is second column
+    # Access cell data via column._cells (column index 1 is Title)
+    title_cell = table.columns[1]._cells[0]
     title_str = str(title_cell)
     # Should include season formatting
     assert "s01" in title_str.lower() or "s1" in title_str.lower()

@@ -35,8 +35,8 @@ class EmailClient:
         )
 
         self.fastmail = FastMail(self.conf)
-        # Templates are in scruffy/templates at the root level
-        templates_path = Path(__file__).parent.parent.parent.parent / "templates"
+        # Templates are in scruffy/templates
+        templates_path = Path(__file__).parent.parent.parent / "templates"
         self.template_env = Environment(loader=FileSystemLoader(templates_path))
 
     async def send_deletion_notice(
