@@ -1,5 +1,5 @@
 from scruffy.domain.value_objects.media_type import MediaType
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
 from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 from scruffy.use_cases.interfaces.media_repository_interface import (

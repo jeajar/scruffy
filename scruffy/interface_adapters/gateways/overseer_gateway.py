@@ -1,6 +1,6 @@
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
-from scruffy.interface_adapters.dtos.request_dto import RequestDTO
+from scruffy.use_cases.dtos.request_dto import RequestDTO
 from scruffy.use_cases.interfaces.request_repository_interface import (
     RequestRepositoryInterface,
 )

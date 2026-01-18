@@ -2,7 +2,7 @@ from scruffy.domain.entities.media import Media
 from scruffy.domain.entities.media_request import MediaRequest
 from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.domain.value_objects.media_status import MediaStatus
-from scruffy.interface_adapters.dtos.media_check_result_dto import (
+from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
     RetentionResultDTO,
 )

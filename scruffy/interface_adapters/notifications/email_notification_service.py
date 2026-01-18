@@ -1,5 +1,5 @@
 from scruffy.frameworks_and_drivers.email.email_client import EmailClient
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.interfaces.notification_service_interface import (
     NotificationServiceInterface,
 )

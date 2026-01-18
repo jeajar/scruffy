@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from scruffy.domain.value_objects.media_type import MediaType
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 
 
 class MediaRepositoryInterface(ABC):

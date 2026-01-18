@@ -2,8 +2,8 @@
 
 from scruffy.domain.entities.media import Media
 from scruffy.domain.entities.media_request import MediaRequest
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
-from scruffy.interface_adapters.dtos.request_dto import RequestDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.request_dto import RequestDTO
 
 
 def map_media_dto_to_entity(dto: MediaInfoDTO) -> Media:

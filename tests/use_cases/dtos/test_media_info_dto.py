@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 
 
 def test_media_info_dto_creation():

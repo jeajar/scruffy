@@ -2,7 +2,7 @@ from datetime import datetime
 
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
 )

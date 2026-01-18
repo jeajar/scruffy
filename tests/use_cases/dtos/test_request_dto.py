@@ -6,7 +6,7 @@ import pytest
 
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.request_status import RequestStatus
-from scruffy.interface_adapters.dtos.request_dto import RequestDTO
+from scruffy.use_cases.dtos.request_dto import RequestDTO
 
 
 def test_request_dto_creation():

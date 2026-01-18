@@ -2,8 +2,8 @@
 
 from dataclasses import dataclass
 
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
-from scruffy.interface_adapters.dtos.request_dto import RequestDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.request_dto import RequestDTO
 
 
 @dataclass(frozen=True)

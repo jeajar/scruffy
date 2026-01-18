@@ -1,6 +1,6 @@
 from rich.table import Table
 
-from scruffy.interface_adapters.dtos.media_check_result_dto import MediaCheckResultDTO
+from scruffy.use_cases.dtos.media_check_result_dto import MediaCheckResultDTO
 
 
 class CLIPresenter:

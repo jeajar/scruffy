@@ -71,12 +71,12 @@ def test_validate_command_service_failure(mock_get_container, runner, mock_conta
 @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
 def test_check_command_with_results(mock_get_container, runner, mock_container, mock_settings):
     """Test check command with media results."""
-    from scruffy.interface_adapters.dtos.media_check_result_dto import (
+    from scruffy.use_cases.dtos.media_check_result_dto import (
         MediaCheckResultDTO,
         RetentionResultDTO,
     )
-    from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
-    from scruffy.interface_adapters.dtos.request_dto import RequestDTO
+    from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
+    from scruffy.use_cases.dtos.request_dto import RequestDTO
     from scruffy.domain.value_objects.media_status import MediaStatus
     from scruffy.domain.value_objects.request_status import RequestStatus
 

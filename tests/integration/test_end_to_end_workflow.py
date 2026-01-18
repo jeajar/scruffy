@@ -13,8 +13,8 @@ from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.frameworks_and_drivers.di.container import Container
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
-from scruffy.interface_adapters.dtos.request_dto import RequestDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.request_dto import RequestDTO
 
 
 @pytest.fixture

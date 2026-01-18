@@ -5,12 +5,12 @@ from rich.table import Table
 
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.request_status import RequestStatus
-from scruffy.interface_adapters.dtos.media_check_result_dto import (
+from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
     RetentionResultDTO,
 )
-from scruffy.interface_adapters.dtos.media_info_dto import MediaInfoDTO
-from scruffy.interface_adapters.dtos.request_dto import RequestDTO
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
+from scruffy.use_cases.dtos.request_dto import RequestDTO
 from scruffy.interface_adapters.presenters.cli_presenter import CLIPresenter
 
 

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 from scruffy.domain.value_objects.media_status import MediaStatus
-from scruffy.interface_adapters.dtos.request_dto import RequestDTO
+from scruffy.use_cases.dtos.request_dto import RequestDTO
 
 
 class RequestRepositoryInterface(ABC):
