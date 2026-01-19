@@ -10,7 +10,7 @@ from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.frameworks_and_drivers.api.app import create_app
 from scruffy.frameworks_and_drivers.api.auth import (
-    OverseerrUser,
+    PlexUser,
     verify_overseerr_session,
 )
 from scruffy.use_cases.dtos.media_check_result_dto import (
@@ -72,12 +72,12 @@ def mock_container(sample_media_check_result):
 @pytest.fixture
 def mock_authenticated_user():
     """Create mock authenticated user."""
-    return OverseerrUser(
+    return PlexUser(
         id=1,
+        uuid="abc-123",
         email="test@example.com",
         username="testuser",
-        plex_username="plexuser",
-        avatar="http://example.com/avatar.jpg",
+        thumb="http://example.com/avatar.jpg",
     )
 
 

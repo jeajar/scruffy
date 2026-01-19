@@ -107,9 +107,16 @@ class LokiHandler(logging.Handler):
         self.url = url
         self.labels = labels or {"app": "scruffy"}
         self.timeout = timeout
-        self._client = httpx.Client(timeout=timeout)
+        self._client: httpx.Client | None = None
         self.setFormatter(JsonFormatter())
         self._emitting = False  # Guard against re-entrancy
+        self._closed = False  # Track if handler has been closed
+
+    def _get_client(self) -> httpx.Client:
+        """Get or create the HTTP client, recreating if closed."""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.Client(timeout=self.timeout)
+        return self._client
 
     def emit(self, record: logging.LogRecord) -> None:
         """
@@ -118,6 +125,10 @@ class LokiHandler(logging.Handler):
         Args:
             record: The log record to send
         """
+        # Don't emit if handler has been explicitly closed
+        if self._closed:
+            return
+
         # Prevent infinite recursion: skip logs from HTTP client libraries
         # and guard against re-entrancy during emit
         logger_root = record.name.split(".")[0]
@@ -145,8 +156,9 @@ class LokiHandler(logging.Handler):
                 ]
             }
 
-            # Send to Loki
-            response = self._client.post(
+            # Send to Loki (get or recreate client if needed)
+            client = self._get_client()
+            response = client.post(
                 self.url,
                 json=payload,
                 headers={"Content-Type": "application/json"},
@@ -170,7 +182,9 @@ class LokiHandler(logging.Handler):
 
     def close(self) -> None:
         """Close the HTTP client when the handler is closed."""
-        self._client.close()
+        self._closed = True
+        if self._client is not None and not self._client.is_closed:
+            self._client.close()
         super().close()
 
 

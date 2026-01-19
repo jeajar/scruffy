@@ -44,6 +44,26 @@ async def login_page(request: Request):
     )
 
 
+@router.post("/pin")
+async def create_pin():
+    """
+    Create a new Plex PIN for authentication (JSON API).
+
+    Returns JSON with pin_id, code, and auth_url for the React frontend.
+    """
+    try:
+        pin_data = await create_plex_pin()
+    except Exception as e:
+        logger.error("Failed to create Plex PIN", extra={"error": str(e)})
+        raise HTTPException(status_code=502, detail="Failed to connect to Plex")
+
+    return {
+        "pin_id": pin_data["id"],
+        "code": pin_data["code"],
+        "auth_url": pin_data["auth_url"],
+    }
+
+
 @router.get("/callback")
 async def auth_callback(pin_id: int):
     """
@@ -118,10 +138,21 @@ async def check_pin(pin_id: int):
 
 @router.get("/logout")
 async def logout():
-    """Log out and clear the session."""
+    """Log out and clear the session (HTML redirect)."""
     response = RedirectResponse(url="/", status_code=302)
     response.delete_cookie(SESSION_COOKIE_NAME)
     logger.info("User logged out")
+    return response
+
+
+@router.post("/logout")
+async def logout_api():
+    """Log out and clear the session (JSON API)."""
+    from fastapi.responses import JSONResponse
+
+    response = JSONResponse(content={"success": True})
+    response.delete_cookie(SESSION_COOKIE_NAME)
+    logger.info("User logged out via API")
     return response
 
 

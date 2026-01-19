@@ -6,6 +6,7 @@ from pathlib import Path
 
 import uvicorn
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -52,6 +53,20 @@ def create_app() -> FastAPI:
         version="0.3.2",
         lifespan=lifespan,
     )
+
+    # Add CORS middleware for frontend development
+    if settings.cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.cors_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+        logger.info(
+            "CORS middleware configured",
+            extra={"origins": settings.cors_origins},
+        )
 
     # Setup Jinja2 templates
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))

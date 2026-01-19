@@ -1,0 +1,86 @@
+export function LoadingScreen() {
+  return (
+    <div className="scruffy-loading">
+      <div className="loading-container">
+        {/* Sparkles */}
+        <div className="sparkle">
+          <svg
+            className="w-4 h-4 text-yellow-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M10 2l1.5 5.5L17 9l-5.5 1.5L10 16l-1.5-5.5L3 9l5.5-1.5L10 2z" />
+          </svg>
+        </div>
+        <div className="sparkle">
+          <svg
+            className="w-3 h-3 text-blue-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M10 2l1.5 5.5L17 9l-5.5 1.5L10 16l-1.5-5.5L3 9l5.5-1.5L10 2z" />
+          </svg>
+        </div>
+        <div className="sparkle">
+          <svg
+            className="w-5 h-5 text-green-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M10 2l1.5 5.5L17 9l-5.5 1.5L10 16l-1.5-5.5L3 9l5.5-1.5L10 2z" />
+          </svg>
+        </div>
+        <div className="sparkle">
+          <svg
+            className="w-4 h-4 text-purple-400"
+            fill="currentColor"
+            viewBox="0 0 20 20"
+          >
+            <path d="M10 2l1.5 5.5L17 9l-5.5 1.5L10 16l-1.5-5.5L3 9l5.5-1.5L10 2z" />
+          </svg>
+        </div>
+
+        {/* Mop Icon */}
+        <div className="mop">
+          <svg
+            className="w-24 h-24"
+            viewBox="0 0 64 64"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <rect x="30" y="4" width="4" height="36" rx="2" fill="#8B7355" />
+            <rect x="29" y="4" width="6" height="4" rx="1" fill="#A0522D" />
+            <rect x="22" y="38" width="20" height="6" rx="2" fill="#696969" />
+            <rect x="24" y="42" width="16" height="3" rx="1" fill="#505050" />
+            <path
+              d="M24 45 L22 60 Q22 62 24 62 L26 62 Q28 62 27 60 L26 45"
+              fill="#C1C7CC"
+            />
+            <path
+              d="M28 45 L27 60 Q27 62 29 62 L31 62 Q33 62 32 60 L30 45"
+              fill="#D3D3D3"
+            />
+            <path
+              d="M32 45 L32 60 Q32 62 34 62 L36 62 Q38 62 37 60 L34 45"
+              fill="#C1C7CC"
+            />
+            <path
+              d="M36 45 L37 60 Q37 62 39 62 L41 62 Q43 62 42 60 L40 45"
+              fill="#D3D3D3"
+            />
+            <circle cx="20" cy="56" r="2" fill="#87CEEB" opacity="0.7" />
+            <circle cx="44" cy="52" r="1.5" fill="#87CEEB" opacity="0.6" />
+          </svg>
+        </div>
+      </div>
+
+      <p className="mt-6 text-lg text-gray-300">
+        <span>Scruffy's cleaning up your mess</span>
+        <span className="dots" />
+      </p>
+      <p className="mt-2 text-sm text-gray-500 italic">
+        "Scruffy's gonna die the way he lived."
+      </p>
+    </div>
+  );
+}

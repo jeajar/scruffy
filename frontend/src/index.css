@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 9%;
+    --foreground: 0 0% 95%;
+    --card: 240 10% 11%;
+    --card-foreground: 0 0% 95%;
+    --popover: 240 10% 11%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 26 82% 47%;
+    --primary-foreground: 0 0% 0%;
+    --secondary: 185 28% 26%;
+    --secondary-foreground: 0 0% 95%;
+    --muted: 240 10% 15%;
+    --muted-foreground: 0 0% 64%;
+    --accent: 185 28% 26%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 95%;
+    --border: 240 10% 20%;
+    --input: 240 10% 20%;
+    --ring: 26 82% 47%;
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif;
+  }
+}
+
+/* Scruffy Loading Animation */
+.scruffy-loading {
+  position: fixed;
+  inset: 0;
+  background: #16162a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  transition: opacity 0.3s ease-out;
+}
+
+.scruffy-loading.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.scruffy-loading .loading-container {
+  position: relative;
+  width: 150px;
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.scruffy-loading .mop {
+  animation: mop-sweep 1.5s ease-in-out infinite;
+}
+
+@keyframes mop-sweep {
+  0%,
+  100% {
+    transform: rotate(-15deg);
+  }
+  50% {
+    transform: rotate(15deg);
+  }
+}
+
+/* Animated dots */
+.scruffy-loading .dots::after {
+  content: "";
+  animation: loading-dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes loading-dots {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
+  }
+}
+
+/* Sparkle animations */
+.scruffy-loading .sparkle {
+  position: absolute;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+.scruffy-loading .sparkle:nth-child(1) {
+  animation-delay: 0s;
+  top: 0;
+  left: 15%;
+}
+
+.scruffy-loading .sparkle:nth-child(2) {
+  animation-delay: 0.5s;
+  top: 30%;
+  right: 0;
+}
+
+.scruffy-loading .sparkle:nth-child(3) {
+  animation-delay: 1s;
+  bottom: 20%;
+  left: 0;
+}
+
+.scruffy-loading .sparkle:nth-child(4) {
+  animation-delay: 1.5s;
+  bottom: 0;
+  right: 20%;
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Plex spinner */
+.plex-spinner {
+  border: 3px solid rgba(229, 160, 13, 0.3);
+  border-top-color: #e5a00d;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

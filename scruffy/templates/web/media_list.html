@@ -3,6 +3,8 @@
 {% block title %}Media Requests - Scruffy{% endblock %}
 
 {% block content %}
+{% include '_loading.html' %}
+
 <div class="px-4 sm:px-0">
     <!-- Header -->
     <div class="sm:flex sm:items-center">
@@ -177,8 +179,9 @@
 
 {% block extra_scripts %}
 <script>
-    // Auto-refresh every 5 minutes
+    // Auto-refresh every 5 minutes (show loading before refresh)
     setTimeout(function() {
+        showLoading();
         location.reload();
     }, 300000);
 </script>
