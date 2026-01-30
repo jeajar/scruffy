@@ -108,6 +108,16 @@ class Container:
         return self._overseer_gateway
 
     @property
+    def radarr_gateway(self) -> RadarrGateway:
+        """Get Radarr gateway."""
+        return self._radarr_gateway
+
+    @property
+    def sonarr_gateway(self) -> SonarrGateway:
+        """Get Sonarr gateway."""
+        return self._sonarr_gateway
+
+    @property
     def retention_calculator(self) -> RetentionCalculator:
         """Get retention calculator."""
         return self._retention_calculator

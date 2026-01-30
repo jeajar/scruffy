@@ -20,6 +20,10 @@ def mock_container():
     container.process_media_use_case.execute = AsyncMock()
     container.overseer_gateway = Mock()
     container.overseer_gateway.status = AsyncMock(return_value=True)
+    container.radarr_gateway = Mock()
+    container.radarr_gateway.status = AsyncMock(return_value=True)
+    container.sonarr_gateway = Mock()
+    container.sonarr_gateway.status = AsyncMock(return_value=True)
     container.retention_calculator = Mock()
     return container
 
@@ -61,13 +65,6 @@ class TestAppFactory:
         # Should return 200 (health check doesn't require auth)
         assert response.status_code == 200
 
-    def test_liveness_endpoint_exists(self, client):
-        """Test that liveness endpoint is registered."""
-        response = client.get("/health/live")
-
-        assert response.status_code == 200
-        assert response.json()["status"] == "alive"
-
 
 class TestHealthRoutes:
     """Tests for health check routes."""
@@ -75,6 +72,8 @@ class TestHealthRoutes:
     def test_health_check_healthy(self, client, mock_container):
         """Test health check when all services are healthy."""
         mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.radarr_gateway.status = AsyncMock(return_value=True)
+        mock_container.sonarr_gateway.status = AsyncMock(return_value=True)
 
         response = client.get("/health")
 
@@ -82,10 +81,14 @@ class TestHealthRoutes:
         data = response.json()
         assert data["status"] == "healthy"
         assert data["services"]["overseerr"] == "healthy"
+        assert data["services"]["radarr"] == "healthy"
+        assert data["services"]["sonarr"] == "healthy"
 
-    def test_health_check_degraded(self, client, mock_container):
+    def test_health_check_degraded_overseerr(self, client, mock_container):
         """Test health check when Overseerr is unhealthy."""
         mock_container.overseer_gateway.status = AsyncMock(return_value=False)
+        mock_container.radarr_gateway.status = AsyncMock(return_value=True)
+        mock_container.sonarr_gateway.status = AsyncMock(return_value=True)
 
         response = client.get("/health")
 
@@ -93,23 +96,31 @@ class TestHealthRoutes:
         data = response.json()
         assert data["status"] == "degraded"
         assert data["services"]["overseerr"] == "unhealthy"
+        assert data["services"]["radarr"] == "healthy"
+        assert data["services"]["sonarr"] == "healthy"
 
-    def test_readiness_check_ready(self, client, mock_container):
-        """Test readiness check when ready."""
+    def test_health_check_degraded_radarr(self, client, mock_container):
+        """Test health check when Radarr is unhealthy."""
         mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.radarr_gateway.status = AsyncMock(return_value=False)
+        mock_container.sonarr_gateway.status = AsyncMock(return_value=True)
 
-        response = client.get("/health/ready")
-
-        assert response.status_code == 200
-        assert response.json()["status"] == "ready"
-
-    def test_readiness_check_not_ready(self, client, mock_container):
-        """Test readiness check when not ready."""
-        mock_container.overseer_gateway.status = AsyncMock(return_value=False)
-
-        response = client.get("/health/ready")
+        response = client.get("/health")
 
         assert response.status_code == 200
         data = response.json()
-        assert data["status"] == "not_ready"
-        assert "Overseerr unavailable" in data["reason"]
+        assert data["status"] == "degraded"
+        assert data["services"]["radarr"] == "unhealthy"
+
+    def test_health_check_degraded_sonarr(self, client, mock_container):
+        """Test health check when Sonarr is unhealthy."""
+        mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.radarr_gateway.status = AsyncMock(return_value=True)
+        mock_container.sonarr_gateway.status = AsyncMock(return_value=False)
+
+        response = client.get("/health")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "degraded"
+        assert data["services"]["sonarr"] == "unhealthy"

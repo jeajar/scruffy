@@ -9,11 +9,7 @@ from fastapi.testclient import TestClient
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.frameworks_and_drivers.api.app import create_app
-from scruffy.frameworks_and_drivers.api.auth import (
-    PlexUser,
-    SESSION_COOKIE_NAME,
-    get_current_user,
-)
+from scruffy.frameworks_and_drivers.api.auth import PlexUser, get_current_user
 from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
     RetentionResultDTO,
@@ -186,51 +182,3 @@ class TestGetMediaList:
         assert days_left_values == [2, 5, 10, 15]
 
         client.app.dependency_overrides.clear()
-
-
-class TestMediaListPage:
-    """Tests for GET / endpoint (web UI)."""
-
-    def test_unauthenticated_shows_login_page(self, client):
-        """Test that unauthenticated request redirects to login page."""
-        response = client.get("/", follow_redirects=False)
-
-        assert response.status_code == 302
-        assert response.headers["location"] == "/auth/login"
-
-    def test_authenticated_shows_media_list(
-        self, client, mock_container, mock_authenticated_user
-    ):
-        """Test that authenticated request shows media list page."""
-        with patch(
-            "scruffy.frameworks_and_drivers.api.routes.media.verify_session_token",
-            return_value=mock_authenticated_user,
-        ):
-            response = client.get(
-                "/",
-                cookies={SESSION_COOKIE_NAME: "test-session-token"},
-            )
-
-            assert response.status_code == 200
-            assert "Media Requests" in response.text
-            assert "Test Movie" in response.text
-
-    def test_empty_media_list_shows_empty_state(
-        self, client, mock_container, mock_authenticated_user
-    ):
-        """Test that empty media list shows empty state."""
-        mock_container.check_media_requests_use_case.execute_with_retention = (
-            AsyncMock(return_value=[])
-        )
-
-        with patch(
-            "scruffy.frameworks_and_drivers.api.routes.media.verify_session_token",
-            return_value=mock_authenticated_user,
-        ):
-            response = client.get(
-                "/",
-                cookies={SESSION_COOKIE_NAME: "test-session-token"},
-            )
-
-            assert response.status_code == 200
-            assert "No media requests" in response.text

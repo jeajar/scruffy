@@ -28,6 +28,32 @@ def gateway(base_url, api_key):
 
 
 @pytest.mark.asyncio
+async def test_status_success(gateway, base_url):
+    """Test status returns True on successful connection."""
+    with respx.mock(base_url=base_url) as respx_mock:
+        respx_mock.get("/api/v3/system/status").mock(
+            return_value=httpx.Response(200, json={"version": "4.0.0"})
+        )
+
+        result = await gateway.status()
+
+        assert result is True
+
+
+@pytest.mark.asyncio
+async def test_status_failure(gateway, base_url):
+    """Test status returns False on connection failure."""
+    with respx.mock(base_url=base_url) as respx_mock:
+        respx_mock.get("/api/v3/system/status").mock(
+            return_value=httpx.Response(500)
+        )
+
+        result = await gateway.status()
+
+        assert result is False
+
+
+@pytest.mark.asyncio
 async def test_get_media_complete(gateway, base_url):
     """Test get_media returns complete MediaInfoDTO."""
     mock_response = {

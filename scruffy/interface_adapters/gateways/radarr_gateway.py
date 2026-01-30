@@ -24,6 +24,21 @@ class RadarrGateway(MediaRepositoryInterface):
         self.http_client = http_client or HttpClient()
         logger.debug("Initialized RadarrGateway", extra={"base_url": self.base_url})
 
+    async def status(self) -> bool:
+        """Test Radarr connection status."""
+        try:
+            await self.http_client.get(
+                f"{self.base_url}/api/v3/system/status", headers=self.headers
+            )
+            logger.info("Radarr connection successful", extra={"base_url": self.base_url})
+            return True
+        except Exception as e:
+            logger.warning(
+                "Radarr connection failed",
+                extra={"base_url": self.base_url, "error": str(e)},
+            )
+            return False
+
     async def get_media(
         self, external_service_id: int, media_type: MediaType, seasons: list[int]
     ) -> MediaInfoDTO:
