@@ -11,7 +11,8 @@ from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.frameworks_and_drivers.api.app import create_app
 from scruffy.frameworks_and_drivers.api.auth import (
     PlexUser,
-    verify_overseerr_session,
+    SESSION_COOKIE_NAME,
+    get_current_user,
 )
 from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
@@ -113,10 +114,10 @@ class TestGetMediaList:
         self, client, mock_container, mock_authenticated_user
     ):
         """Test that authenticated request returns media list."""
-        # Override the dependency to return authenticated user
-        client.app.dependency_overrides[verify_overseerr_session] = (
-            lambda: mock_authenticated_user
-        )
+        async def override_get_current_user():
+            return mock_authenticated_user
+
+        client.app.dependency_overrides[get_current_user] = override_get_current_user
 
         response = client.get("/api/media")
 
@@ -127,7 +128,6 @@ class TestGetMediaList:
         assert data["count"] == 1
         assert data["media"][0]["media"]["title"] == "Test Movie"
 
-        # Cleanup
         client.app.dependency_overrides.clear()
 
     def test_media_list_sorted_by_days_left(
@@ -171,9 +171,10 @@ class TestGetMediaList:
             AsyncMock(return_value=results)
         )
 
-        client.app.dependency_overrides[verify_overseerr_session] = (
-            lambda: mock_authenticated_user
-        )
+        async def override_get_current_user():
+            return mock_authenticated_user
+
+        client.app.dependency_overrides[get_current_user] = override_get_current_user
 
         response = client.get("/api/media")
 
@@ -191,34 +192,28 @@ class TestMediaListPage:
     """Tests for GET / endpoint (web UI)."""
 
     def test_unauthenticated_shows_login_page(self, client):
-        """Test that unauthenticated request shows login page."""
-        # Don't override auth - let it fail naturally
-        # The endpoint catches HTTPException and shows login page
-        response = client.get("/")
+        """Test that unauthenticated request redirects to login page."""
+        response = client.get("/", follow_redirects=False)
 
-        assert response.status_code == 200
-        assert "Sign in with Plex" in response.text
+        assert response.status_code == 302
+        assert response.headers["location"] == "/auth/login"
 
     def test_authenticated_shows_media_list(
         self, client, mock_container, mock_authenticated_user
     ):
         """Test that authenticated request shows media list page."""
-        # For the / endpoint, we need to patch verify_overseerr_session
-        # since it's called directly inside the function
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.verify_overseerr_session",
+            "scruffy.frameworks_and_drivers.api.routes.media.verify_session_token",
             return_value=mock_authenticated_user,
         ):
-            # Also need to patch where it's imported in the routes module
-            with patch(
-                "scruffy.frameworks_and_drivers.api.routes.media.verify_overseerr_session",
-                new=AsyncMock(return_value=mock_authenticated_user),
-            ):
-                response = client.get("/")
+            response = client.get(
+                "/",
+                cookies={SESSION_COOKIE_NAME: "test-session-token"},
+            )
 
-                assert response.status_code == 200
-                assert "Media Requests" in response.text
-                assert "Test Movie" in response.text
+            assert response.status_code == 200
+            assert "Media Requests" in response.text
+            assert "Test Movie" in response.text
 
     def test_empty_media_list_shows_empty_state(
         self, client, mock_container, mock_authenticated_user
@@ -229,10 +224,13 @@ class TestMediaListPage:
         )
 
         with patch(
-            "scruffy.frameworks_and_drivers.api.routes.media.verify_overseerr_session",
-            new=AsyncMock(return_value=mock_authenticated_user),
+            "scruffy.frameworks_and_drivers.api.routes.media.verify_session_token",
+            return_value=mock_authenticated_user,
         ):
-            response = client.get("/")
+            response = client.get(
+                "/",
+                cookies={SESSION_COOKIE_NAME: "test-session-token"},
+            )
 
             assert response.status_code == 200
             assert "No media requests" in response.text

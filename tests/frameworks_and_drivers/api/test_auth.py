@@ -1,7 +1,7 @@
 """Tests for authentication module."""
 
 import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest
@@ -9,7 +9,9 @@ from fastapi import HTTPException
 
 from scruffy.frameworks_and_drivers.api.auth import (
     PlexUser,
+    _validate_api_key,
     create_session_token,
+    get_current_user,
     verify_api_key,
     verify_overseerr_session,
     verify_session_token,
@@ -165,34 +167,20 @@ class TestSessionToken:
         assert result is None
 
 
-class TestVerifyOverseerrSession:
-    """Tests for verify_overseerr_session function."""
-
-    @pytest.fixture
-    def mock_request_with_session(self):
-        """Create mock request with session cookie."""
-        request = MagicMock()
-        request.cookies = {"scruffy_session": "valid-token"}
-        return request
-
-    @pytest.fixture
-    def mock_request_no_cookies(self):
-        """Create mock request without cookies."""
-        request = MagicMock()
-        request.cookies = {}
-        return request
+class TestGetCurrentUser:
+    """Tests for get_current_user (session cookie dependency)."""
 
     @pytest.mark.asyncio
-    async def test_no_cookies_raises_401(self, mock_request_no_cookies):
-        """Test that missing cookies raises 401."""
+    async def test_no_token_raises_401(self):
+        """Test that missing session token raises 401."""
         with pytest.raises(HTTPException) as exc_info:
-            await verify_overseerr_session(mock_request_no_cookies)
+            await get_current_user(session_token=None)
 
         assert exc_info.value.status_code == 401
         assert "Not authenticated" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    async def test_invalid_session_raises_401(self, mock_request_with_session):
+    async def test_invalid_session_raises_401(self):
         """Test that invalid session raises 401."""
         with patch(
             "scruffy.frameworks_and_drivers.api.auth.verify_session_token"
@@ -200,13 +188,13 @@ class TestVerifyOverseerrSession:
             mock_verify.return_value = None
 
             with pytest.raises(HTTPException) as exc_info:
-                await verify_overseerr_session(mock_request_with_session)
+                await get_current_user(session_token="invalid-token")
 
             assert exc_info.value.status_code == 401
             assert "Session expired" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    async def test_valid_session_returns_user(self, mock_request_with_session):
+    async def test_valid_session_returns_user(self):
         """Test that valid session returns user."""
         expected_user = PlexUser(
             id=1,
@@ -220,56 +208,102 @@ class TestVerifyOverseerrSession:
         ) as mock_verify:
             mock_verify.return_value = expected_user
 
-            user = await verify_overseerr_session(mock_request_with_session)
+            user = await get_current_user(session_token="valid-token")
 
             assert user.id == expected_user.id
             assert user.email == expected_user.email
 
 
-class TestVerifyApiKey:
-    """Tests for verify_api_key function."""
-
-    @pytest.fixture
-    def mock_request_with_key(self):
-        """Create mock request with API key header."""
-        request = MagicMock()
-        request.headers = {"X-Api-Key": "valid-api-key"}
-        return request
-
-    @pytest.fixture
-    def mock_request_no_key(self):
-        """Create mock request without API key header."""
-        request = MagicMock()
-        request.headers = {}
-        return request
+class TestVerifyOverseerrSession:
+    """Tests for verify_overseerr_session (alias for get_current_user)."""
 
     @pytest.mark.asyncio
-    async def test_no_api_key_raises_401(self, mock_request_no_key):
+    async def test_no_token_raises_401(self):
+        """Test that missing token raises 401."""
+        with pytest.raises(HTTPException) as exc_info:
+            await verify_overseerr_session(session_token=None)
+
+        assert exc_info.value.status_code == 401
+
+    @pytest.mark.asyncio
+    async def test_valid_session_returns_user(self):
+        """Test that valid session returns user."""
+        expected_user = PlexUser(
+            id=1,
+            uuid="abc-123",
+            username="testuser",
+            email="test@example.com",
+        )
+        with patch(
+            "scruffy.frameworks_and_drivers.api.auth.verify_session_token"
+        ) as mock_verify:
+            mock_verify.return_value = expected_user
+            user = await verify_overseerr_session(session_token="valid-token")
+            assert user.id == expected_user.id
+
+
+class TestValidateApiKey:
+    """Tests for _validate_api_key (internal validation logic)."""
+
+    def test_no_api_key_raises_401(self):
         """Test that missing API key raises 401."""
         with pytest.raises(HTTPException) as exc_info:
-            await verify_api_key(mock_request_no_key)
+            _validate_api_key(None, "expected-key")
+
+        assert exc_info.value.status_code == 401
+        assert "API key required" in exc_info.value.detail
+
+    def test_not_configured_raises_503(self):
+        """Test that unconfigured expected key raises 503."""
+        with pytest.raises(HTTPException) as exc_info:
+            _validate_api_key("some-key", None)
+
+        assert exc_info.value.status_code == 503
+        assert "not configured" in exc_info.value.detail
+
+    def test_invalid_api_key_raises_401(self):
+        """Test that invalid API key raises 401."""
+        with pytest.raises(HTTPException) as exc_info:
+            _validate_api_key("wrong-key", "expected-key")
+
+        assert exc_info.value.status_code == 401
+        assert "Invalid API key" in exc_info.value.detail
+
+    def test_valid_api_key_passes(self):
+        """Test that valid API key does not raise."""
+        _validate_api_key("valid-key", "valid-key")  # no raise
+
+
+class TestVerifyApiKey:
+    """Tests for verify_api_key (dependency using API key scheme)."""
+
+    @pytest.mark.asyncio
+    async def test_no_api_key_raises_401(self):
+        """Test that missing API key raises 401."""
+        with pytest.raises(HTTPException) as exc_info:
+            await verify_api_key(api_key=None)
 
         assert exc_info.value.status_code == 401
         assert "API key required" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    async def test_invalid_api_key_raises_401(self, mock_request_with_key):
+    async def test_invalid_api_key_raises_401(self):
         """Test that invalid API key raises 401."""
         with patch("scruffy.frameworks_and_drivers.api.auth.settings") as mock_settings:
             mock_settings.overseerr_api_key = "different-key"
 
             with pytest.raises(HTTPException) as exc_info:
-                await verify_api_key(mock_request_with_key)
+                await verify_api_key(api_key="wrong-key")
 
             assert exc_info.value.status_code == 401
             assert "Invalid API key" in exc_info.value.detail
 
     @pytest.mark.asyncio
-    async def test_valid_api_key_succeeds(self, mock_request_with_key):
+    async def test_valid_api_key_succeeds(self):
         """Test that valid API key succeeds."""
         with patch("scruffy.frameworks_and_drivers.api.auth.settings") as mock_settings:
             mock_settings.overseerr_api_key = "valid-api-key"
 
-            result = await verify_api_key(mock_request_with_key)
+            result = await verify_api_key(api_key="valid-api-key")
 
             assert result is True

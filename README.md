@@ -86,6 +86,47 @@ Or use `uv run` with explicit environment variables:
 uv run --env-file .env scruffy validate
 ```
 
+### Running the application
+
+**Backend (API)**
+
+From the project root, with a `.env` file in place:
+
+```bash
+uv run scruffy-api
+```
+
+The API runs at **http://localhost:8080**. For hot-reload during development:
+
+```bash
+uv run uvicorn scruffy.frameworks_and_drivers.api.app:create_app --factory --host 0.0.0.0 --port 8080 --reload
+```
+
+**Frontend**
+
+From the project root:
+
+```bash
+cd frontend
+npm install   # first time only
+npm run dev
+```
+
+The frontend runs at **http://localhost:5173** and proxies `/api`, `/auth`, and `/static` to the backend at port 8080. Start the backend first so the frontend can reach it.
+
+**Using Docker Compose**
+
+To run both backend and frontend in containers:
+
+```bash
+docker compose up
+```
+
+- Frontend: **http://localhost:3000** (production build via nginx)
+- Backend: **http://localhost:8080**
+
+With `docker-compose.override.yml` (included in the repo), the same command uses dev images with hot-reload and frontend on **http://localhost:5173**.
+
 ## Configuration
 
 | Environment Variable | Default Value | Description | Required |
@@ -106,6 +147,8 @@ uv run --env-file .env scruffy validate
 | `SMTP_FROM_EMAIL` | `scruffy@example.com` | Sender email address | If email enabled |
 | `SMTP_SSL_TLS` | `True` | Use SSL/TLS for SMTP connection | No |
 | `SMTP_STARTTLS` | `False` | Use STARTTLS for SMTP connection | No |
+| `API_SECRET_KEY` | `change-me-in-production` | Secret key for session signing (use a strong value in production) | No |
+| `CORS_ORIGINS` | `["http://localhost:5173","http://localhost:3000"]` | Allowed origins for CORS (JSON array) | No |
 | `LOG_LEVEL` | `INFO` | Application logging level (DEBUG, INFO, WARNING, ERROR) | No |
 | `LOG_FILE` | `None` | Path to log file (enables file logging with rotation) | No |
 | `LOKI_ENABLED` | `False` | Enable Loki log shipping | No |

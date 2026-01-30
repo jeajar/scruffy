@@ -7,8 +7,9 @@ from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import HTMLResponse
 
 from scruffy.frameworks_and_drivers.api.auth import (
+    SESSION_COOKIE_NAME,
     AuthenticatedUser,
-    verify_overseerr_session,
+    verify_session_token,
 )
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 from scruffy.frameworks_and_drivers.config.settings import settings
@@ -83,16 +84,19 @@ async def media_list_page(
     """
     Render the media list web page.
 
-    If user is not authenticated, redirects to Overseerr login.
+    If user is not authenticated, redirects to Plex login.
     """
-    # Try to verify authentication
-    try:
-        user = await verify_overseerr_session(request)
-    except HTTPException:
-        # Not authenticated - redirect to Plex login
-        logger.debug("User not authenticated, redirecting to login")
-        from fastapi.responses import RedirectResponse
+    from fastapi.responses import RedirectResponse
 
+    # Read session cookie (same as API; manual check to return redirect instead of 401)
+    session_token = request.cookies.get(SESSION_COOKIE_NAME)
+    if not session_token:
+        logger.debug("User not authenticated, redirecting to login")
+        return RedirectResponse(url="/auth/login", status_code=302)
+
+    user = verify_session_token(session_token)
+    if not user:
+        logger.debug("Invalid or expired session, redirecting to login")
         return RedirectResponse(url="/auth/login", status_code=302)
 
     logger.info(

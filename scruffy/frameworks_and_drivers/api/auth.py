@@ -11,6 +11,7 @@ from typing import Annotated
 
 import httpx
 from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import APIKeyCookie, APIKeyHeader
 
 from scruffy.frameworks_and_drivers.config.settings import settings
 
@@ -24,6 +25,20 @@ PLEX_CLIENT_ID = "scruffy-media-manager"
 # Session configuration
 SESSION_COOKIE_NAME = "scruffy_session"
 SESSION_MAX_AGE = 7 * 24 * 60 * 60  # 7 days
+
+# OpenAPI security schemes (used by Swagger UI for lock icons and Authorize)
+session_cookie_scheme = APIKeyCookie(
+    name=SESSION_COOKIE_NAME,
+    auto_error=False,
+    scheme_name="SessionCookie",
+    description="Signed session token from Plex login. Set via cookie after /auth/check-pin or /auth/callback.",
+)
+api_key_scheme = APIKeyHeader(
+    name="X-Api-Key",
+    auto_error=False,
+    scheme_name="ApiKeyAuth",
+    description="Overseerr API key for task endpoints (cron/automation). Same value as OVERSEERR_API_KEY.",
+)
 
 
 def _get_plex_headers(client_id: str | None = None) -> dict:
@@ -188,14 +203,17 @@ async def check_plex_pin(pin_id: int) -> PlexUser | None:
         return PlexUser.from_plex_response(user_data)
 
 
-async def get_current_user(request: Request) -> PlexUser:
+async def get_current_user(
+    session_token: str | None = Depends(session_cookie_scheme),
+) -> PlexUser:
     """
     Get the current authenticated user from session cookie.
 
+    Uses OpenAPI security scheme so Swagger UI shows a lock and allows
+    entering the session cookie value for testing.
+
     Raises HTTPException if not authenticated.
     """
-    session_token = request.cookies.get(SESSION_COOKIE_NAME)
-
     if not session_token:
         logger.debug("No session cookie")
         raise HTTPException(
@@ -215,37 +233,52 @@ async def get_current_user(request: Request) -> PlexUser:
 
 
 # Keep the old function name for compatibility
-async def verify_overseerr_session(request: Request) -> PlexUser:
+async def verify_overseerr_session(
+    session_token: str | None = Depends(session_cookie_scheme),
+) -> PlexUser:
     """Verify user session (alias for get_current_user)."""
-    return await get_current_user(request)
+    return await get_current_user(session_token)
 
 
-async def verify_api_key(request: Request) -> bool:
+def _validate_api_key(api_key: str | None, expected: str | None) -> None:
     """
-    Verify API key for internal/automated requests.
+    Validate API key and raise HTTPException on failure.
 
-    Checks for X-Api-Key header matching the configured Overseerr API key.
-    This allows cron jobs and automation to call task endpoints.
+    Extracted for testability; used by verify_api_key dependency.
     """
-    api_key = request.headers.get("X-Api-Key")
-
     if not api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API key required",
         )
-
-    if api_key != settings.overseerr_api_key:
+    if not expected:
+        logger.warning("API key authentication not configured (OVERSEERR_API_KEY)")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="API key authentication not configured",
+        )
+    if api_key != expected:
         logger.warning("Invalid API key provided")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API key",
         )
 
+
+async def verify_api_key(
+    api_key: str | None = Depends(api_key_scheme),
+) -> bool:
+    """
+    Verify API key for internal/automated requests.
+
+    Checks X-Api-Key header (via OpenAPI scheme) against OVERSEERR_API_KEY.
+    Used by task endpoints for cron/automation.
+    """
+    _validate_api_key(api_key, settings.overseerr_api_key)
     logger.debug("Request authenticated via API key")
     return True
 
 
-# Type aliases for dependency injection
-AuthenticatedUser = Annotated[PlexUser, Depends(verify_overseerr_session)]
+# Type aliases for dependency injection (OpenAPI security appears on routes using these)
+AuthenticatedUser = Annotated[PlexUser, Depends(get_current_user)]
 ApiKeyAuth = Annotated[bool, Depends(verify_api_key)]
