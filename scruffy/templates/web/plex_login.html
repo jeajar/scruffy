@@ -255,9 +255,13 @@
         }
 
         // Check for error from redirect
-        if (new URLSearchParams(location.search).get('error') === 'not_claimed') {
+        const urlError = new URLSearchParams(location.search).get('error');
+        if (urlError === 'not_claimed') {
             showState('error');
             document.getElementById('error-message').textContent = 'Please complete the Plex sign-in first.';
+        } else if (urlError === 'not_imported') {
+            showState('error');
+            document.getElementById('error-message').textContent = 'Your Plex account is not imported on this server. Ask an admin to import users from Plex in Overseerr.';
         }
     </script>
 </body>

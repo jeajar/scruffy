@@ -13,6 +13,7 @@ from scruffy.frameworks_and_drivers.api.auth import (
     create_session_token,
     verify_session_token,
 )
+from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 
 logger = logging.getLogger(__name__)
 
@@ -65,11 +66,12 @@ async def create_pin():
 
 
 @router.get("/callback")
-async def auth_callback(pin_id: int):
+async def auth_callback(pin_id: int, container: ContainerDep):
     """
     Handle the auth callback after Plex authentication.
 
-    Checks if the PIN has been claimed and creates a session.
+    Checks if the PIN has been claimed, then verifies the user is imported
+    in Overseerr (has access to our Plex server) before creating a session.
     """
     try:
         user = await check_plex_pin(pin_id)
@@ -81,6 +83,28 @@ async def auth_callback(pin_id: int):
         # PIN not yet claimed - redirect back to login
         logger.debug("PIN not yet claimed", extra={"pin_id": pin_id})
         return RedirectResponse(url="/auth/login?error=not_claimed", status_code=302)
+
+    # Ensure user is imported in Overseerr (has access to our Plex server)
+    try:
+        imported = await container.overseer_gateway.user_imported_by_plex_id(user.id)
+    except Exception as e:
+        logger.error(
+            "Failed to check Overseerr for user",
+            extra={"error": str(e), "user_id": user.id},
+        )
+        raise HTTPException(
+            status_code=502,
+            detail="Failed to verify server access",
+        )
+    if not imported:
+        logger.warning(
+            "Plex user not imported in Overseerr - denying login",
+            extra={"user_id": user.id, "username": user.username},
+        )
+        return RedirectResponse(
+            url="/auth/login?error=not_imported",
+            status_code=302,
+        )
 
     # Create session and redirect to home
     session_token = create_session_token(user)
@@ -104,11 +128,12 @@ async def auth_callback(pin_id: int):
 
 
 @router.post("/check-pin")
-async def check_pin(pin_id: int):
+async def check_pin(pin_id: int, container: ContainerDep):
     """
     API endpoint to check if a PIN has been claimed.
 
     Used by the login page to poll for authentication status.
+    Only authorizes if the Plex user is imported in Overseerr (server access).
     """
     try:
         user = await check_plex_pin(pin_id)
@@ -118,6 +143,22 @@ async def check_pin(pin_id: int):
 
     if not user:
         return {"authenticated": False}
+
+    # Ensure user is imported in Overseerr (has access to our Plex server)
+    try:
+        imported = await container.overseer_gateway.user_imported_by_plex_id(user.id)
+    except Exception as e:
+        logger.error(
+            "Failed to check Overseerr for user",
+            extra={"error": str(e), "user_id": user.id},
+        )
+        return {"authenticated": False, "error": "Failed to verify server access"}
+    if not imported:
+        logger.warning(
+            "Plex user not imported in Overseerr - denying login",
+            extra={"user_id": user.id, "username": user.username},
+        )
+        return {"authenticated": False, "error": "not_imported"}
 
     # Create session token
     session_token = create_session_token(user)

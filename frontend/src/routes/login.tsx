@@ -88,6 +88,14 @@ function LoginPage() {
           setTimeout(() => {
             navigate({ to: "/" });
           }, 1000);
+        } else if (!result.authenticated && result.error) {
+          clearInterval(pollInterval);
+          const message =
+            result.error === "not_imported"
+              ? "Your Plex account is not imported on this server. Ask an admin to import users from Plex in Overseerr."
+              : result.error;
+          setError(message);
+          setState("error");
         }
       } catch {
         // Ignore poll errors, will retry

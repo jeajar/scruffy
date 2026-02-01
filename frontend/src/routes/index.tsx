@@ -205,7 +205,8 @@ function MediaRow({ item }: { item: MediaItem }) {
             <div className="font-medium text-white">{media.title}</div>
             {media.seasons && media.seasons.length > 0 && (
               <div className="text-sm text-gray-400">
-                Seasons: {media.seasons.join(", ")}
+                {media.seasons.length === 1 ? "Season:" : "Seasons:"}{" "}
+                {media.seasons.join(", ")}
               </div>
             )}
           </div>

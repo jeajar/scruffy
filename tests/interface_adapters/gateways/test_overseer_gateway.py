@@ -4,7 +4,6 @@ import httpx
 import pytest
 import respx
 
-from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
 
 
@@ -49,9 +48,7 @@ async def test_status_success(gateway, base_url):
 async def test_status_failure(gateway, base_url):
     """Test status returns False on connection failure."""
     with respx.mock(base_url=base_url) as respx_mock:
-        respx_mock.get("/api/v1/status").mock(
-            return_value=httpx.Response(500)
-        )
+        respx_mock.get("/api/v1/status").mock(return_value=httpx.Response(500))
 
         result = await gateway.status()
 
@@ -142,10 +139,12 @@ async def test_get_requests_pagination(gateway, base_url):
         respx_mock.get("/api/v1/request/count").mock(
             return_value=httpx.Response(200, json={"total": 101})
         )
-        respx_mock.get("/api/v1/request").mock(side_effect=[
-            httpx.Response(200, json=page1_response),
-            httpx.Response(200, json=page2_response),
-        ])
+        respx_mock.get("/api/v1/request").mock(
+            side_effect=[
+                httpx.Response(200, json=page1_response),
+                httpx.Response(200, json=page2_response),
+            ]
+        )
 
         requests = await gateway.get_requests()
 
@@ -208,3 +207,76 @@ def test_gateway_initialization_with_http_client(base_url, api_key, mock_http_cl
     gateway = OverseerGateway(base_url, api_key, mock_http_client)
 
     assert gateway.http_client == mock_http_client
+
+
+@pytest.mark.asyncio
+async def test_user_imported_by_plex_id_found(gateway, base_url):
+    """Test user_imported_by_plex_id returns True when user is in Overseerr."""
+    mock_response = {
+        "pageInfo": {"pages": 1, "pageSize": 100, "results": 2, "total": 2},
+        "results": [
+            {"id": 1, "plexId": 100, "username": "other"},
+            {"id": 2, "plexId": 42, "username": "target"},
+        ],
+    }
+    with respx.mock(base_url=base_url) as respx_mock:
+        respx_mock.get("/api/v1/user").mock(
+            return_value=httpx.Response(200, json=mock_response)
+        )
+
+        result = await gateway.user_imported_by_plex_id(42)
+
+        assert result is True
+
+
+@pytest.mark.asyncio
+async def test_user_imported_by_plex_id_not_found(gateway, base_url):
+    """Test user_imported_by_plex_id returns False when user is not in Overseerr."""
+    mock_response = {
+        "pageInfo": {"pages": 1, "pageSize": 100, "results": 1, "total": 1},
+        "results": [{"id": 1, "plexId": 100, "username": "other"}],
+    }
+    with respx.mock(base_url=base_url) as respx_mock:
+        respx_mock.get("/api/v1/user").mock(
+            return_value=httpx.Response(200, json=mock_response)
+        )
+
+        result = await gateway.user_imported_by_plex_id(999)
+
+        assert result is False
+
+
+@pytest.mark.asyncio
+async def test_user_imported_by_plex_id_found_on_second_page(gateway, base_url):
+    """Test user_imported_by_plex_id finds user on paginated second page."""
+    page1 = {
+        "pageInfo": {"pages": 2, "pageSize": 100, "results": 100, "total": 101},
+        "results": [
+            {"id": i, "plexId": i + 1000, "username": f"u{i}"} for i in range(100)
+        ],
+    }
+    page2 = {
+        "pageInfo": {"pages": 2, "pageSize": 100, "results": 1, "total": 101},
+        "results": [{"id": 100, "plexId": 42, "username": "target"}],
+    }
+    with respx.mock(base_url=base_url) as respx_mock:
+        respx_mock.get("/api/v1/user").mock(
+            side_effect=[
+                httpx.Response(200, json=page1),
+                httpx.Response(200, json=page2),
+            ]
+        )
+
+        result = await gateway.user_imported_by_plex_id(42)
+
+        assert result is True
+
+
+@pytest.mark.asyncio
+async def test_user_imported_by_plex_id_api_error(gateway, base_url):
+    """Test user_imported_by_plex_id raises when Overseerr API fails."""
+    with respx.mock(base_url=base_url) as respx_mock:
+        respx_mock.get("/api/v1/user").mock(return_value=httpx.Response(502))
+
+        with pytest.raises(httpx.HTTPStatusError):
+            await gateway.user_imported_by_plex_id(1)
