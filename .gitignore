@@ -141,3 +141,6 @@ dmypy.json
 .scruffy_data/
 .DS_Store
 .github/
+
+# Node
+*node_modules/
