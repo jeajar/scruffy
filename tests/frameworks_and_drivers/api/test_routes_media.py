@@ -10,6 +10,7 @@ from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.frameworks_and_drivers.api.app import create_app
 from scruffy.frameworks_and_drivers.api.auth import PlexUser, get_current_user
+from scruffy.frameworks_and_drivers.api.routes.media import invalidate_media_list_cache
 from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
     RetentionResultDTO,
@@ -110,6 +111,7 @@ class TestGetMediaList:
         self, client, mock_container, mock_authenticated_user
     ):
         """Test that authenticated request returns media list."""
+
         async def override_get_current_user():
             return mock_authenticated_user
 
@@ -130,6 +132,7 @@ class TestGetMediaList:
         self, client, mock_container, mock_authenticated_user
     ):
         """Test that media list is sorted by days_left ascending."""
+        invalidate_media_list_cache()
         # Create multiple results with different days_left
         results = []
         for days_left in [10, 5, 15, 2]:
@@ -163,8 +166,8 @@ class TestGetMediaList:
                 )
             )
 
-        mock_container.check_media_requests_use_case.execute_with_retention = (
-            AsyncMock(return_value=results)
+        mock_container.check_media_requests_use_case.execute_with_retention = AsyncMock(
+            return_value=results
         )
 
         async def override_get_current_user():

@@ -1,5 +1,6 @@
 """Gateway adapter for Sonarr API (TV shows)."""
 
+import asyncio
 import logging
 from datetime import datetime
 
@@ -16,7 +17,9 @@ logger = logging.getLogger(__name__)
 class SonarrGateway(MediaRepositoryInterface):
     """Adapter for Sonarr API (TV shows)."""
 
-    def __init__(self, base_url: str, api_key: str, http_client: HttpClient | None = None):
+    def __init__(
+        self, base_url: str, api_key: str, http_client: HttpClient | None = None
+    ):
         """Initialize Sonarr gateway."""
         self.base_url = base_url.rstrip("/")
         self.api_key = api_key
@@ -30,7 +33,9 @@ class SonarrGateway(MediaRepositoryInterface):
             await self.http_client.get(
                 f"{self.base_url}/api/v3/system/status", headers=self.headers
             )
-            logger.info("Sonarr connection successful", extra={"base_url": self.base_url})
+            logger.info(
+                "Sonarr connection successful", extra={"base_url": self.base_url}
+            )
             return True
         except Exception as e:
             logger.warning(
@@ -62,9 +67,14 @@ class SonarrGateway(MediaRepositoryInterface):
         poster = self._get_series_poster(series.get("images", []))
         title = series.get("title", "")
 
-        for season_num in seasons:
-            episodes = await self.get_episodes(external_service_id, season_num)
+        episode_lists = await asyncio.gather(
+            *[
+                self.get_episodes(external_service_id, season_num)
+                for season_num in seasons
+            ]
+        )
 
+        for season_num, episodes in zip(seasons, episode_lists, strict=False):
             # Check if all episodes in season have files
             if not all(ep.get("hasFile", False) for ep in episodes):
                 available = False
@@ -194,7 +204,10 @@ class SonarrGateway(MediaRepositoryInterface):
         """Update monitoring status for specific seasons of a series."""
         logger.debug(
             "Updating season monitoring",
-            extra={"series_id": series_id, "seasons_to_unmonitor": seasons_to_unmonitor},
+            extra={
+                "series_id": series_id,
+                "seasons_to_unmonitor": seasons_to_unmonitor,
+            },
         )
         series = await self.get_series(series_id)
 

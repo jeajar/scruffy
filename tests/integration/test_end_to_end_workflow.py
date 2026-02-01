@@ -1,7 +1,7 @@
 """End-to-end integration tests for complete workflows."""
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import httpx
 import pytest
@@ -9,12 +9,7 @@ import respx
 
 from scruffy.domain.entities.media import Media
 from scruffy.domain.entities.media_request import MediaRequest
-from scruffy.domain.value_objects.media_status import MediaStatus
-from scruffy.domain.value_objects.media_type import MediaType
-from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.frameworks_and_drivers.di.container import Container
-from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
-from scruffy.use_cases.dtos.request_dto import RequestDTO
 
 
 @pytest.fixture
@@ -46,17 +41,12 @@ def in_memory_engine():
 
 
 @pytest.mark.asyncio
-async def test_complete_workflow_check_remind_delete(
-    mock_settings, in_memory_engine
-):
+async def test_complete_workflow_check_remind_delete(mock_settings, in_memory_engine):
     """Test complete workflow: check → remind → delete."""
     # Mock Overseerr API
     overseerr_base = "http://overseerr.test"
     with respx.mock(base_url=overseerr_base) as respx_mock:
-        # Mock request count
-        respx_mock.get("/api/v1/request/count").mock(
-            return_value=httpx.Response(200, json={"total": 1})
-        )
+        # Count is not called when first page has pageInfo.total
         # Mock get requests
         respx_mock.get("/api/v1/request").mock(
             return_value=httpx.Response(
@@ -72,7 +62,9 @@ async def test_complete_workflow_check_remind_delete(
                             "media": {
                                 "status": "available",
                                 "externalServiceId": 100,
-                                "updatedAt": (datetime.now(UTC) - timedelta(days=31)).isoformat(),
+                                "updatedAt": (
+                                    datetime.now(UTC) - timedelta(days=31)
+                                ).isoformat(),
                                 "id": 99,
                             },
                         }
@@ -81,13 +73,9 @@ async def test_complete_workflow_check_remind_delete(
             )
         )
         # Mock delete request
-        respx_mock.delete("/api/v1/request/1").mock(
-            return_value=httpx.Response(200)
-        )
+        respx_mock.delete("/api/v1/request/1").mock(return_value=httpx.Response(200))
         # Mock delete media
-        respx_mock.delete("/api/v1/media/99").mock(
-            return_value=httpx.Response(200)
-        )
+        respx_mock.delete("/api/v1/media/99").mock(return_value=httpx.Response(200))
 
         # Mock Radarr API
         radarr_base = "http://radarr.test"
@@ -100,9 +88,16 @@ async def test_complete_workflow_check_remind_delete(
                         "title": "Test Movie",
                         "hasFile": True,
                         "sizeOnDisk": 1000000,
-                        "images": [{"coverType": "poster", "remoteUrl": "http://test.com/poster.jpg"}],
+                        "images": [
+                            {
+                                "coverType": "poster",
+                                "remoteUrl": "http://test.com/poster.jpg",
+                            }
+                        ],
                         "movieFile": {
-                            "dateAdded": (datetime.now(UTC) - timedelta(days=31)).isoformat()
+                            "dateAdded": (
+                                datetime.now(UTC) - timedelta(days=31)
+                            ).isoformat()
                         },
                     },
                 )
@@ -112,7 +107,10 @@ async def test_complete_workflow_check_remind_delete(
             )
 
             # Patch database engine
-            with patch("scruffy.frameworks_and_drivers.di.container.get_engine", return_value=in_memory_engine):
+            with patch(
+                "scruffy.frameworks_and_drivers.di.container.get_engine",
+                return_value=in_memory_engine,
+            ):
                 container = Container()
 
                 # Execute check use case
@@ -129,8 +127,16 @@ async def test_complete_workflow_check_remind_delete(
                 await container.process_media_use_case.execute()
 
                 # Verify delete was called
-                assert any(call.request.url.path == "/api/v3/movie/100" for call in radarr_mock.calls if call.request.method == "DELETE")
-                assert any(call.request.url.path == "/api/v1/request/1" for call in respx_mock.calls if call.request.method == "DELETE")
+                assert any(
+                    call.request.url.path == "/api/v3/movie/100"
+                    for call in radarr_mock.calls
+                    if call.request.method == "DELETE"
+                )
+                assert any(
+                    call.request.url.path == "/api/v1/request/1"
+                    for call in respx_mock.calls
+                    if call.request.method == "DELETE"
+                )
 
 
 @pytest.mark.asyncio
@@ -139,9 +145,7 @@ async def test_complete_workflow_remind_only(mock_settings, in_memory_engine):
     # Mock Overseerr API
     overseerr_base = "http://overseerr.test"
     with respx.mock(base_url=overseerr_base) as respx_mock:
-        respx_mock.get("/api/v1/request/count").mock(
-            return_value=httpx.Response(200, json={"total": 1})
-        )
+        # Count is not called when first page has pageInfo.total
         respx_mock.get("/api/v1/request").mock(
             return_value=httpx.Response(
                 200,
@@ -156,7 +160,9 @@ async def test_complete_workflow_remind_only(mock_settings, in_memory_engine):
                             "media": {
                                 "status": "available",
                                 "externalServiceId": 100,
-                                "updatedAt": (datetime.now(UTC) - timedelta(days=24)).isoformat(),
+                                "updatedAt": (
+                                    datetime.now(UTC) - timedelta(days=24)
+                                ).isoformat(),
                                 "id": 99,
                             },
                         }
@@ -178,20 +184,29 @@ async def test_complete_workflow_remind_only(mock_settings, in_memory_engine):
                         "sizeOnDisk": 1000000,
                         "images": [],
                         "movieFile": {
-                            "dateAdded": (datetime.now(UTC) - timedelta(days=24)).isoformat()
+                            "dateAdded": (
+                                datetime.now(UTC) - timedelta(days=24)
+                            ).isoformat()
                         },
                     },
                 )
             )
 
-            with patch("scruffy.frameworks_and_drivers.di.container.get_engine", return_value=in_memory_engine):
+            with patch(
+                "scruffy.frameworks_and_drivers.di.container.get_engine",
+                return_value=in_memory_engine,
+            ):
                 container = Container()
 
                 # Execute process use case (should remind, not delete)
                 await container.process_media_use_case.execute()
 
                 # Verify no delete was called
-                delete_calls = [call for call in radarr_mock.calls if call.request.method == "DELETE"]
+                delete_calls = [
+                    call
+                    for call in radarr_mock.calls
+                    if call.request.method == "DELETE"
+                ]
                 assert len(delete_calls) == 0
 
                 # Verify reminder was added

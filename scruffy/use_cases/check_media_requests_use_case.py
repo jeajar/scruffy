@@ -1,5 +1,6 @@
 """Use case for checking media requests and their status."""
 
+import asyncio
 import logging
 
 from scruffy.domain.entities.media import Media
@@ -61,30 +62,36 @@ class CheckMediaRequestsUseCase:
             },
         )
 
+        coros = [
+            self.media_repository.get_media(
+                req.external_service_id, req.media_type, req.seasons
+            )
+            for req in to_check
+        ]
+        gathered = await asyncio.gather(*coros, return_exceptions=True)
+
         result = []
-        for req in to_check:
-            try:
-                media_dto = await self.media_repository.get_media(
-                    req.external_service_id, req.media_type, req.seasons
-                )
-                media = map_media_dto_to_entity(media_dto)
-                if media.is_available():
-                    result.append((req, media))
-                    logger.debug(
-                        "Media is available",
-                        extra={
-                            "request_id": req.request_id,
-                            "title": media.title,
-                            "available_since": str(media.available_since),
-                        },
-                    )
-            except Exception as e:
+        for req, outcome in zip(to_check, gathered, strict=False):
+            if isinstance(outcome, Exception):
                 logger.error(
                     "Failed to fetch media info",
                     extra={
                         "request_id": req.request_id,
                         "external_service_id": req.external_service_id,
-                        "error": str(e),
+                        "error": str(outcome),
+                    },
+                )
+                continue
+            media_dto = outcome
+            media = map_media_dto_to_entity(media_dto)
+            if media.is_available():
+                result.append((req, media))
+                logger.debug(
+                    "Media is available",
+                    extra={
+                        "request_id": req.request_id,
+                        "title": media.title,
+                        "available_since": str(media.available_since),
                     },
                 )
 
@@ -116,45 +123,50 @@ class CheckMediaRequestsUseCase:
             extra={"to_check": len(to_check)},
         )
 
+        coros = [
+            self.media_repository.get_media(
+                req.external_service_id, req.media_type, req.seasons
+            )
+            for req in to_check
+        ]
+        gathered = await asyncio.gather(*coros, return_exceptions=True)
+
         result = []
-        for req in to_check:
-            try:
-                media_dto = await self.media_repository.get_media(
-                    req.external_service_id, req.media_type, req.seasons
-                )
-                media = map_media_dto_to_entity(media_dto)
-                if media.is_available():
-                    retention_result = retention_calculator.evaluate(media)
-                    retention_dto = RetentionResultDTO(
-                        remind=retention_result.remind,
-                        delete=retention_result.delete,
-                        days_left=retention_result.days_left,
-                    )
-                    # Find the original DTO for this request
-                    request_dto = next(
-                        dto for dto in request_dtos if dto.request_id == req.request_id
-                    )
-                    result.append(
-                        MediaCheckResultDTO(
-                            request=request_dto, media=media_dto, retention=retention_dto
-                        )
-                    )
-                    logger.debug(
-                        "Evaluated retention for media",
-                        extra={
-                            "request_id": req.request_id,
-                            "title": media.title,
-                            "days_left": retention_result.days_left,
-                            "remind": retention_result.remind,
-                            "delete": retention_result.delete,
-                        },
-                    )
-            except Exception as e:
+        for req, outcome in zip(to_check, gathered, strict=False):
+            if isinstance(outcome, Exception):
                 logger.error(
                     "Failed to process media for retention",
                     extra={
                         "request_id": req.request_id,
-                        "error": str(e),
+                        "error": str(outcome),
+                    },
+                )
+                continue
+            media_dto = outcome
+            media = map_media_dto_to_entity(media_dto)
+            if media.is_available():
+                retention_result = retention_calculator.evaluate(media)
+                retention_dto = RetentionResultDTO(
+                    remind=retention_result.remind,
+                    delete=retention_result.delete,
+                    days_left=retention_result.days_left,
+                )
+                request_dto = next(
+                    dto for dto in request_dtos if dto.request_id == req.request_id
+                )
+                result.append(
+                    MediaCheckResultDTO(
+                        request=request_dto, media=media_dto, retention=retention_dto
+                    )
+                )
+                logger.debug(
+                    "Evaluated retention for media",
+                    extra={
+                        "request_id": req.request_id,
+                        "title": media.title,
+                        "days_left": retention_result.days_left,
+                        "remind": retention_result.remind,
+                        "delete": retention_result.delete,
                     },
                 )
 

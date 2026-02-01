@@ -1,6 +1,7 @@
 """Media listing routes."""
 
 import logging
+import time
 from dataclasses import asdict
 
 from fastapi import APIRouter, HTTPException
@@ -11,6 +12,18 @@ from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["media"])
+
+# In-memory cache for GET /api/media (short TTL to reduce load on Overseerr/Radarr/Sonarr)
+_MEDIA_LIST_CACHE_TTL_SECONDS = 60
+_media_list_cache: dict | None = None
+_media_list_cache_expires_at: float = 0
+
+
+def invalidate_media_list_cache() -> None:
+    """Invalidate the media list cache. Call after mutations (e.g. delete) or in tests."""
+    global _media_list_cache, _media_list_cache_expires_at
+    _media_list_cache = None
+    _media_list_cache_expires_at = 0
 
 
 @router.get("/api/media")
@@ -24,6 +37,13 @@ async def get_media_list(
     Returns JSON list of all available media with days until deletion.
     Requires authentication via Overseerr session.
     """
+    global _media_list_cache, _media_list_cache_expires_at
+
+    now = time.monotonic()
+    if _media_list_cache is not None and now < _media_list_cache_expires_at:
+        logger.debug("Returning cached media list")
+        return _media_list_cache
+
     logger.info(
         "Fetching media list",
         extra={"user_id": user.id, "username": user.username},
@@ -60,12 +80,16 @@ async def get_media_list(
                 }
             )
 
+        response = {"media": media_list, "count": len(media_list)}
+        _media_list_cache = response
+        _media_list_cache_expires_at = now + _MEDIA_LIST_CACHE_TTL_SECONDS
+
         logger.info(
             "Media list retrieved",
             extra={"count": len(media_list), "user_id": user.id},
         )
 
-        return {"media": media_list, "count": len(media_list)}
+        return response
 
     except Exception as e:
         logger.error("Failed to fetch media list", extra={"error": str(e)})

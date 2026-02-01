@@ -82,9 +82,7 @@ async def test_get_requests_single_page(gateway, base_url):
     }
 
     with respx.mock(base_url=base_url) as respx_mock:
-        respx_mock.get("/api/v1/request/count").mock(
-            return_value=httpx.Response(200, json={"total": 1})
-        )
+        # Count is not called when first page has pageInfo.total
         respx_mock.get("/api/v1/request").mock(
             return_value=httpx.Response(200, json=mock_response)
         )
@@ -136,9 +134,7 @@ async def test_get_requests_pagination(gateway, base_url):
     }
 
     with respx.mock(base_url=base_url) as respx_mock:
-        respx_mock.get("/api/v1/request/count").mock(
-            return_value=httpx.Response(200, json={"total": 101})
-        )
+        # Count is not called when first page has pageInfo.total
         respx_mock.get("/api/v1/request").mock(
             side_effect=[
                 httpx.Response(200, json=page1_response),

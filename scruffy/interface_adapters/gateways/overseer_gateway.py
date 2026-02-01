@@ -48,25 +48,47 @@ class OverseerGateway(RequestRepositoryInterface):
         """Fetch all media requests from Overseerr using pagination."""
         # Note: Overseerr API doesn't support filtering by MediaStatus directly
         # Filtering is done in the use case layer
-        total_requests = await self.get_request_count()
+        take = 100
+        skip = 0
+
+        # First page: get data and infer total if API returns it (avoids extra count call)
+        response = await self.http_client.get(
+            f"{self.base_url}/api/v1/request",
+            headers=self.headers,
+            params={"take": take, "skip": skip},
+        )
+        page_results = [
+            RequestDTO.from_overseer_response(req)
+            for req in response.get("results", [])
+        ]
+        all_requests = list(page_results)
+
+        page_info = response.get("pageInfo") if isinstance(response, dict) else {}
+        total_requests = None
+        if isinstance(page_info, dict) and "total" in page_info:
+            total_requests = page_info["total"]
+        elif isinstance(response, dict) and "total" in response:
+            total_requests = response["total"]
+
+        if total_requests is None:
+            total_requests = await self.get_request_count()
+
         logger.info(
             "Fetching media requests from Overseerr",
             extra={"total_requests": total_requests},
         )
-
-        all_requests = []
-        take = 100
-        skip = 0
+        logger.debug(
+            "Fetched request page",
+            extra={"skip": skip, "take": take, "page_count": len(page_results)},
+        )
+        skip += take
 
         while skip < total_requests:
-            params = {"take": take, "skip": skip}
-
             response = await self.http_client.get(
                 f"{self.base_url}/api/v1/request",
                 headers=self.headers,
-                params=params,
+                params={"take": take, "skip": skip},
             )
-
             page_results = [
                 RequestDTO.from_overseer_response(req)
                 for req in response.get("results", [])

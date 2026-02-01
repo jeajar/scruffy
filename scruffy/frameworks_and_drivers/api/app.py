@@ -34,6 +34,7 @@ async def lifespan(app: FastAPI):
 
     # Cleanup on shutdown
     logger.info("Shutting down Scruffy API server")
+    await app.state.container.aclose()
 
 
 def create_app() -> FastAPI:

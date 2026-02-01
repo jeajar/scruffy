@@ -1,5 +1,6 @@
 """Use case for deleting media and sending notifications."""
 
+import asyncio
 import logging
 
 from scruffy.domain.entities.media import Media
@@ -47,28 +48,15 @@ class DeleteMediaUseCase:
             },
         )
 
-        # Delete from media service (Radarr/Sonarr)
-        logger.debug(
-            "Deleting from media service",
-            extra={
-                "external_service_id": request.external_service_id,
-                "media_type": str(request.media_type),
-                "seasons": request.seasons,
-            },
-        )
-        await self.media_repository.delete_media(
-            request.external_service_id, request.media_type, request.seasons
+        # Delete from media service (Radarr/Sonarr) and Overseerr in parallel
+        await asyncio.gather(
+            self.media_repository.delete_media(
+                request.external_service_id, request.media_type, request.seasons
+            ),
+            self._delete_from_overseerr(request),
         )
 
-        # Delete from Overseerr
-        logger.debug(
-            "Deleting from Overseerr",
-            extra={"request_id": request.request_id, "media_id": request.media_id},
-        )
-        await self.request_repository.delete_request(request.request_id)
-        await self.request_repository.delete_media(request.media_id)
-
-        # Convert entity to DTO for notification service
+        # Send notification after both deletions complete
         media_dto = map_media_entity_to_dto(media)
         logger.debug(
             "Sending deletion notification",
@@ -86,3 +74,12 @@ class DeleteMediaUseCase:
                 "user_email": request.user_email,
             },
         )
+
+    async def _delete_from_overseerr(self, request: MediaRequest) -> None:
+        """Remove request and media from Overseerr (request_repository)."""
+        logger.debug(
+            "Deleting from Overseerr",
+            extra={"request_id": request.request_id, "media_id": request.media_id},
+        )
+        await self.request_repository.delete_request(request.request_id)
+        await self.request_repository.delete_media(request.media_id)

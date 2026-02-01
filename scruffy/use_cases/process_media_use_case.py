@@ -1,5 +1,6 @@
 """Main orchestration use case for processing media requests."""
 
+import asyncio
 import logging
 
 from scruffy.domain.services.retention_calculator import (
@@ -46,16 +47,30 @@ class ProcessMediaUseCase:
             extra={"request_count": len(results)},
         )
 
-        reminders_sent = 0
-        deletions_made = 0
-
+        # Build list of (request, media, retention_result) that need an action
+        to_handle = []
         for request, media in results:
             retention_result = self.retention_calculator.evaluate(media)
-            action_taken = await self._handle_result(request, media, retention_result)
-            if action_taken == "reminder":
-                reminders_sent += 1
-            elif action_taken == "deletion":
-                deletions_made += 1
+            if retention_result.remind or retention_result.delete:
+                to_handle.append((request, media, retention_result))
+
+        # Run all remind/delete actions in parallel
+        if to_handle:
+            outcomes = await asyncio.gather(
+                *[self._handle_result(req, med, ret) for req, med, ret in to_handle],
+                return_exceptions=True,
+            )
+            reminders_sent = sum(1 for o in outcomes if o == "reminder")
+            deletions_made = sum(1 for o in outcomes if o == "deletion")
+            for outcome in outcomes:
+                if isinstance(outcome, Exception):
+                    logger.error(
+                        "Process media action failed",
+                        extra={"error": str(outcome)},
+                    )
+        else:
+            reminders_sent = 0
+            deletions_made = 0
 
         logger.info(
             "Media processing completed",

@@ -1,5 +1,6 @@
 """Health check routes."""
 
+import asyncio
 import logging
 
 from fastapi import APIRouter
@@ -21,9 +22,11 @@ async def health_check(container: ContainerDep):
     """
     logger.debug("Health check requested")
 
-    overseerr_healthy = await container.overseer_gateway.status()
-    radarr_healthy = await container.radarr_gateway.status()
-    sonarr_healthy = await container.sonarr_gateway.status()
+    overseerr_healthy, radarr_healthy, sonarr_healthy = await asyncio.gather(
+        container.overseer_gateway.status(),
+        container.radarr_gateway.status(),
+        container.sonarr_gateway.status(),
+    )
 
     all_healthy = overseerr_healthy and radarr_healthy and sonarr_healthy
     status = "healthy" if all_healthy else "degraded"

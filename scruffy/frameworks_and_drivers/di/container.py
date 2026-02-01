@@ -92,6 +92,11 @@ class Container:
             },
         )
 
+    async def aclose(self) -> None:
+        """Close shared resources (e.g. HTTP client). Call on application shutdown."""
+        await self._http_client.aclose()
+        logger.debug("Container closed")
+
     @property
     def check_media_requests_use_case(self) -> CheckMediaRequestsUseCase:
         """Get check media requests use case."""
