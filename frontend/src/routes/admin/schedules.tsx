@@ -235,13 +235,6 @@ function AdminSchedulesPage() {
               <p className="mt-2 text-sm text-gray-400">
                 Add a schedule to run check or process automatically (e.g. every 6 hours or daily).
               </p>
-              <Button
-                className="mt-4 bg-scruffy-teal hover:bg-scruffy-teal/90"
-                onClick={() => setShowForm(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add schedule
-              </Button>
             </div>
           ) : (
             <div className="overflow-hidden shadow ring-1 ring-gray-700 sm:rounded-lg">

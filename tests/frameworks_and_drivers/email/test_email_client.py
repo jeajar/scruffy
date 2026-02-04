@@ -35,7 +35,9 @@ def mock_fastmail():
 @pytest.fixture
 def mock_template_env():
     """Mock Jinja2 template environment."""
-    with patch("scruffy.frameworks_and_drivers.email.email_client.Environment") as mock_env:
+    with patch(
+        "scruffy.frameworks_and_drivers.email.email_client.Environment"
+    ) as mock_env:
         template_mock = MagicMock()
         template_mock.render.return_value = "<html>Test</html>"
         mock_env.return_value.get_template.return_value = template_mock
@@ -56,7 +58,9 @@ class TestEmailClientInitialization:
             assert client.fastmail is None
             assert client.template_env is None
 
-    def test_initialization_enabled(self, mock_settings, mock_fastmail, mock_template_env):
+    def test_initialization_enabled(
+        self, mock_settings, mock_fastmail, mock_template_env
+    ):
         """Test initialization when email is enabled."""
         client = EmailClient()
 
@@ -154,15 +158,15 @@ class TestEmailClientSendMethods:
 class TestEmailClientTemplatePath:
     """Tests for EmailClient template path configuration."""
 
-    def test_template_path_exists(self, mock_settings, mock_fastmail, mock_template_env):
+    def test_template_path_exists(
+        self, mock_settings, mock_fastmail, mock_template_env
+    ):
         """Test template path is correctly set."""
         client = EmailClient()
 
         # Verify template path exists (or at least the directory structure)
         template_path = (
-            Path(__file__).parent.parent.parent.parent.parent
-            / "scruffy"
-            / "templates"
+            Path(__file__).parent.parent.parent.parent.parent / "scruffy" / "templates"
         )
         # Just verify the path structure is correct, not that it exists
         assert "templates" in str(template_path)

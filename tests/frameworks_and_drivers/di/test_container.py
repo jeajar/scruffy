@@ -70,7 +70,9 @@ class TestContainerProperties:
 class TestContainerDependencyWiring:
     """Tests for Container dependency wiring."""
 
-    def test_container_wires_dependencies_correctly(self, mock_settings, mock_get_engine):
+    def test_container_wires_dependencies_correctly(
+        self, mock_settings, mock_get_engine
+    ):
         """Test container wires dependencies correctly."""
         container = Container()
 
@@ -84,13 +86,17 @@ class TestContainerDependencyWiring:
         assert container._media_repository.sonarr_gateway == container._sonarr_gateway
 
         # Verify use cases use correct repositories
-        assert container._check_use_case.request_repository == container._overseer_gateway
+        assert (
+            container._check_use_case.request_repository == container._overseer_gateway
+        )
         assert container._check_use_case.media_repository == container._media_repository
 
         # Verify notification service uses email client
         assert container._notification_service.email_client == container._email_client
 
-    def test_container_retention_policy_from_settings(self, mock_settings, mock_get_engine):
+    def test_container_retention_policy_from_settings(
+        self, mock_settings, mock_get_engine
+    ):
         """Test container creates retention policy from settings."""
         container = Container()
 

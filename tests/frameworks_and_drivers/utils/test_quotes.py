@@ -1,7 +1,5 @@
 """Tests for Scruffy quotes utility."""
 
-import pytest
-
 from scruffy.frameworks_and_drivers.utils.quotes import scruffy_quotes
 
 

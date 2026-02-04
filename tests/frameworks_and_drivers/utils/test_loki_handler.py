@@ -144,7 +144,9 @@ class TestLokiHandler:
     @pytest.fixture
     def mock_client(self):
         """Create a mock HTTP client."""
-        with patch("scruffy.frameworks_and_drivers.utils.loki_handler.httpx.Client") as mock:
+        with patch(
+            "scruffy.frameworks_and_drivers.utils.loki_handler.httpx.Client"
+        ) as mock:
             client_instance = MagicMock()
             client_instance.is_closed = False
             mock.return_value = client_instance
@@ -225,7 +227,9 @@ class TestLokiHandler:
         assert stream_labels["app"] == "scruffy"
         assert stream_labels["env"] == "test"
 
-    def test_emit_formats_timestamp_as_nanoseconds(self, handler, mock_client, log_record):
+    def test_emit_formats_timestamp_as_nanoseconds(
+        self, handler, mock_client, log_record
+    ):
         """Test that timestamp is in nanoseconds."""
         mock_response = MagicMock()
         mock_response.raise_for_status = MagicMock()
@@ -259,7 +263,9 @@ class TestLokiHandler:
         captured = capsys.readouterr()
         assert "Loki handler HTTP error" in captured.err
 
-    def test_emit_handles_connection_error(self, handler, mock_client, log_record, capsys):
+    def test_emit_handles_connection_error(
+        self, handler, mock_client, log_record, capsys
+    ):
         """Test that connection errors are handled gracefully."""
         mock_client.post.side_effect = httpx.RequestError("Connection refused")
 
@@ -293,7 +299,9 @@ class TestLokiHandler:
 
     def test_emit_recreates_closed_client(self, log_record):
         """Test that emit recreates the client if it was closed externally."""
-        with patch("scruffy.frameworks_and_drivers.utils.loki_handler.httpx.Client") as mock:
+        with patch(
+            "scruffy.frameworks_and_drivers.utils.loki_handler.httpx.Client"
+        ) as mock:
             # First client - will be marked as closed
             first_client = MagicMock()
             first_client.is_closed = False
@@ -341,7 +349,9 @@ class TestLokiHandlerIntegration:
 
     def test_handler_with_logger(self):
         """Test handler works with Python logger."""
-        with patch("scruffy.frameworks_and_drivers.utils.loki_handler.httpx.Client") as mock:
+        with patch(
+            "scruffy.frameworks_and_drivers.utils.loki_handler.httpx.Client"
+        ) as mock:
             client_instance = MagicMock()
             mock_response = MagicMock()
             mock_response.raise_for_status = MagicMock()
@@ -370,7 +380,9 @@ class TestLokiHandlerRecursionPrevention:
     @pytest.fixture
     def mock_client(self):
         """Create a mock HTTP client."""
-        with patch("scruffy.frameworks_and_drivers.utils.loki_handler.httpx.Client") as mock:
+        with patch(
+            "scruffy.frameworks_and_drivers.utils.loki_handler.httpx.Client"
+        ) as mock:
             client_instance = MagicMock()
             client_instance.is_closed = False
             mock.return_value = client_instance
