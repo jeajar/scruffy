@@ -48,28 +48,28 @@ class TestEmailClientInitialization:
     """Tests for EmailClient initialization."""
 
     def test_initialization_disabled(self):
-        """Test initialization when email is disabled."""
+        """Test _get_fastmail returns None when email is disabled."""
         with patch(
             "scruffy.frameworks_and_drivers.email.email_client.settings"
         ) as mock_settings:
             mock_settings.email_enabled = False
             client = EmailClient()
 
-            assert client.fastmail is None
-            assert client.template_env is None
+            assert client._get_fastmail() is None
+            assert client.template_env is not None
 
     def test_initialization_enabled(
         self, mock_settings, mock_fastmail, mock_template_env
     ):
-        """Test initialization when email is enabled."""
+        """Test _get_fastmail returns FastMail when email is enabled."""
         client = EmailClient()
 
-        assert client.fastmail is not None
+        fm = client._get_fastmail()
+        assert fm is not None
         assert client.template_env is not None
-        assert client.conf.USE_CREDENTIALS is True
 
     def test_initialization_no_credentials(self):
-        """Test initialization without credentials."""
+        """Test _get_fastmail uses USE_CREDENTIALS=False when no username/password."""
         with patch(
             "scruffy.frameworks_and_drivers.email.email_client.settings"
         ) as mock_settings:
@@ -82,13 +82,15 @@ class TestEmailClientInitialization:
             mock_settings.smtp_ssl_tls = False
             mock_settings.smtp_starttls = True
 
-            with patch("scruffy.frameworks_and_drivers.email.email_client.FastMail"):
+            with patch("scruffy.frameworks_and_drivers.email.email_client.FastMail") as mock_fm:
                 with patch(
                     "scruffy.frameworks_and_drivers.email.email_client.Environment"
                 ):
                     client = EmailClient()
+                    client._get_fastmail()
 
-                    assert client.conf.USE_CREDENTIALS is False
+                    conn_config = mock_fm.call_args[0][0]
+                    assert conn_config.USE_CREDENTIALS is False
 
 
 class TestEmailClientSendMethods:

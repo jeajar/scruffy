@@ -11,6 +11,7 @@ class Settings(BaseSettings):
         case_sensitive=False,
     )
 
+    # Services - DEPRECATED: Prefer database (Admin Settings). Env used as fallback when DB empty.
     overseerr_url: HttpUrl = "http://localhost:5050"
     overseerr_api_key: str | None = None
 
@@ -27,7 +28,7 @@ class Settings(BaseSettings):
     # Application URL for email links (e.g. https://scruffy.example.com)
     app_base_url: str = "http://localhost:5173"
 
-    # Email Settings
+    # Email Settings - DEPRECATED: Prefer database (Admin Settings). Env used as fallback when DB empty.
     email_enabled: bool = False
     smtp_host: str = "localhost"
     smtp_port: int = 25

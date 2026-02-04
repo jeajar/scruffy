@@ -97,10 +97,9 @@ class TestCheckTask:
     def test_invalid_api_key_returns_401(self, client):
         """Test that invalid API key returns 401."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.settings"
-        ) as mock_settings:
-            mock_settings.overseerr_api_key = "valid-key"
-
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="valid-key",
+        ):
             response = client.post(
                 "/api/tasks/check", headers={"X-Api-Key": "invalid-key"}
             )
@@ -110,10 +109,9 @@ class TestCheckTask:
     def test_valid_api_key_starts_task(self, client, mock_container):
         """Test that valid API key starts background task."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.settings"
-        ) as mock_settings:
-            mock_settings.overseerr_api_key = "valid-key"
-
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="valid-key",
+        ):
             response = client.post(
                 "/api/tasks/check", headers={"X-Api-Key": "valid-key"}
             )
@@ -138,10 +136,9 @@ class TestCheckSyncTask:
     ):
         """Test that valid API key runs check and returns results."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.settings"
-        ) as mock_settings:
-            mock_settings.overseerr_api_key = "valid-key"
-
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="valid-key",
+        ):
             response = client.post(
                 "/api/tasks/check/sync", headers={"X-Api-Key": "valid-key"}
             )
@@ -161,10 +158,9 @@ class TestCheckSyncTask:
         )
 
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.settings"
-        ) as mock_settings:
-            mock_settings.overseerr_api_key = "valid-key"
-
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="valid-key",
+        ):
             response = client.post(
                 "/api/tasks/check/sync", headers={"X-Api-Key": "valid-key"}
             )
@@ -187,10 +183,9 @@ class TestProcessTask:
     def test_valid_api_key_starts_task(self, client, mock_container):
         """Test that valid API key starts background task."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.settings"
-        ) as mock_settings:
-            mock_settings.overseerr_api_key = "valid-key"
-
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="valid-key",
+        ):
             response = client.post(
                 "/api/tasks/process", headers={"X-Api-Key": "valid-key"}
             )
@@ -213,10 +208,9 @@ class TestProcessSyncTask:
     def test_valid_api_key_runs_process(self, client, mock_container):
         """Test that valid API key runs process and returns success."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.settings"
-        ) as mock_settings:
-            mock_settings.overseerr_api_key = "valid-key"
-
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="valid-key",
+        ):
             response = client.post(
                 "/api/tasks/process/sync", headers={"X-Api-Key": "valid-key"}
             )
@@ -235,10 +229,9 @@ class TestProcessSyncTask:
         )
 
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.settings"
-        ) as mock_settings:
-            mock_settings.overseerr_api_key = "valid-key"
-
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="valid-key",
+        ):
             response = client.post(
                 "/api/tasks/process/sync", headers={"X-Api-Key": "valid-key"}
             )

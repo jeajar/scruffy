@@ -15,6 +15,7 @@ from fastapi.security import APIKeyCookie, APIKeyHeader
 
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 from scruffy.frameworks_and_drivers.config.settings import settings
+from scruffy.frameworks_and_drivers.database.settings_store import get_overseerr_api_key
 
 logger = logging.getLogger(__name__)
 
@@ -272,10 +273,10 @@ async def verify_api_key(
     """
     Verify API key for internal/automated requests.
 
-    Checks X-Api-Key header (via OpenAPI scheme) against OVERSEERR_API_KEY.
-    Used by task endpoints for cron/automation.
+    Checks X-Api-Key header (via OpenAPI scheme) against Overseerr API key.
+    Resolution: DB first, else env (OVERSEERR_API_KEY). Used by task endpoints.
     """
-    _validate_api_key(api_key, settings.overseerr_api_key)
+    _validate_api_key(api_key, get_overseerr_api_key())
     logger.debug("Request authenticated via API key")
     return True
 

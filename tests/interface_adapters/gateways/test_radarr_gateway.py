@@ -1,5 +1,7 @@
 """Tests for RadarrGateway."""
 
+from types import SimpleNamespace
+
 import httpx
 import pytest
 import respx
@@ -7,6 +9,21 @@ import respx
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
+
+
+def _make_settings_provider(base_url: str, api_key: str):
+    """Create mock SettingsProvider returning given url/api_key for Radarr."""
+    config = SimpleNamespace(
+        overseerr_url="http://test.com",
+        overseerr_api_key="test-key",
+        radarr_url=base_url,
+        radarr_api_key=api_key,
+        sonarr_url="http://test.com",
+        sonarr_api_key="test-key",
+    )
+    provider = SimpleNamespace()
+    provider.get_services_config = lambda: config
+    return provider
 
 
 @pytest.fixture
@@ -24,7 +41,7 @@ def api_key():
 @pytest.fixture
 def gateway(base_url, api_key):
     """Create RadarrGateway instance."""
-    return RadarrGateway(base_url, api_key)
+    return RadarrGateway(_make_settings_provider(base_url, api_key))
 
 
 @pytest.mark.asyncio
@@ -166,9 +183,9 @@ def test_get_movie_poster_empty_images():
 
 
 def test_gateway_initialization(base_url, api_key):
-    """Test gateway initialization sets correct attributes."""
-    gateway = RadarrGateway(base_url, api_key)
+    """Test gateway initialization with settings provider."""
+    provider = _make_settings_provider(base_url, api_key)
+    gateway = RadarrGateway(provider)
 
-    assert gateway.base_url == base_url
-    assert gateway.api_key == api_key
-    assert gateway.headers == {"X-Api-Key": api_key, "Accept": "application/json"}
+    assert gateway._settings_provider is provider
+    assert gateway.http_client is not None

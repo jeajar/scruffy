@@ -289,9 +289,10 @@ class TestVerifyApiKey:
     @pytest.mark.asyncio
     async def test_invalid_api_key_raises_401(self):
         """Test that invalid API key raises 401."""
-        with patch("scruffy.frameworks_and_drivers.api.auth.settings") as mock_settings:
-            mock_settings.overseerr_api_key = "different-key"
-
+        with patch(
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="different-key",
+        ):
             with pytest.raises(HTTPException) as exc_info:
                 await verify_api_key(api_key="wrong-key")
 
@@ -301,9 +302,10 @@ class TestVerifyApiKey:
     @pytest.mark.asyncio
     async def test_valid_api_key_succeeds(self):
         """Test that valid API key succeeds."""
-        with patch("scruffy.frameworks_and_drivers.api.auth.settings") as mock_settings:
-            mock_settings.overseerr_api_key = "valid-api-key"
-
+        with patch(
+            "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
+            return_value="valid-api-key",
+        ):
             result = await verify_api_key(api_key="valid-api-key")
 
             assert result is True

@@ -1,6 +1,7 @@
 """Gateway adapter for Overseerr API."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
@@ -9,6 +10,11 @@ from scruffy.use_cases.interfaces.request_repository_interface import (
     RequestRepositoryInterface,
 )
 
+if TYPE_CHECKING:
+    from scruffy.frameworks_and_drivers.database.settings_store import (
+        SettingsProvider,
+    )
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,29 +22,38 @@ class OverseerGateway(RequestRepositoryInterface):
     """Adapter for Overseerr API."""
 
     def __init__(
-        self, base_url: str, api_key: str, http_client: HttpClient | None = None
+        self,
+        settings_provider: "SettingsProvider",
+        http_client: HttpClient | None = None,
     ):
-        """Initialize Overseerr gateway with base URL and API key."""
-        self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
-        self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
+        """Initialize Overseerr gateway with settings provider for runtime config."""
+        self._settings_provider = settings_provider
         self.http_client = http_client or HttpClient()
-        logger.debug("Initialized OverseerGateway", extra={"base_url": self.base_url})
+        logger.debug("Initialized OverseerGateway")
+
+    def _get_config(self) -> tuple[str, dict]:
+        """Get base_url and headers from settings (DB + env fallback)."""
+        config = self._settings_provider.get_services_config()
+        base_url = config.overseerr_url.rstrip("/")
+        api_key = config.overseerr_api_key or ""
+        headers = {"X-Api-Key": api_key, "Accept": "application/json"}
+        return base_url, headers
 
     async def status(self) -> bool:
         """Test Overseerr connection status."""
+        base_url, headers = self._get_config()
         try:
             await self.http_client.get(
-                f"{self.base_url}/api/v1/status", headers=self.headers
+                f"{base_url}/api/v1/status", headers=headers
             )
             logger.info(
-                "Overseerr connection successful", extra={"base_url": self.base_url}
+                "Overseerr connection successful", extra={"base_url": base_url}
             )
             return True
         except Exception as e:
             logger.warning(
                 "Overseerr connection failed",
-                extra={"base_url": self.base_url, "error": str(e)},
+                extra={"base_url": base_url, "error": str(e)},
             )
             return False
 
@@ -46,6 +61,7 @@ class OverseerGateway(RequestRepositoryInterface):
         self, status_filter: MediaStatus | None = None
     ) -> list[RequestDTO]:
         """Fetch all media requests from Overseerr using pagination."""
+        base_url, headers = self._get_config()
         # Note: Overseerr API doesn't support filtering by MediaStatus directly
         # Filtering is done in the use case layer
         take = 100
@@ -53,8 +69,8 @@ class OverseerGateway(RequestRepositoryInterface):
 
         # First page: get data and infer total if API returns it (avoids extra count call)
         response = await self.http_client.get(
-            f"{self.base_url}/api/v1/request",
-            headers=self.headers,
+            f"{base_url}/api/v1/request",
+            headers=headers,
             params={"take": take, "skip": skip},
         )
         page_results = [
@@ -85,8 +101,8 @@ class OverseerGateway(RequestRepositoryInterface):
 
         while skip < total_requests:
             response = await self.http_client.get(
-                f"{self.base_url}/api/v1/request",
-                headers=self.headers,
+                f"{base_url}/api/v1/request",
+                headers=headers,
                 params={"take": take, "skip": skip},
             )
             page_results = [
@@ -108,10 +124,11 @@ class OverseerGateway(RequestRepositoryInterface):
 
     async def get_request(self, request_id: int) -> RequestDTO | None:
         """Fetch a single request by ID. Returns None if not found."""
+        base_url, headers = self._get_config()
         try:
             response = await self.http_client.get(
-                f"{self.base_url}/api/v1/request/{request_id}",
-                headers=self.headers,
+                f"{base_url}/api/v1/request/{request_id}",
+                headers=headers,
             )
             return RequestDTO.from_overseer_response(response)
         except Exception as e:
@@ -123,25 +140,28 @@ class OverseerGateway(RequestRepositoryInterface):
 
     async def delete_request(self, request_id: int) -> None:
         """Delete a request by its ID."""
+        base_url, headers = self._get_config()
         logger.info("Deleting request from Overseerr", extra={"request_id": request_id})
         await self.http_client.delete(
-            f"{self.base_url}/api/v1/request/{request_id}", headers=self.headers
+            f"{base_url}/api/v1/request/{request_id}", headers=headers
         )
         logger.debug("Request deleted successfully", extra={"request_id": request_id})
 
     async def delete_media(self, media_id: int) -> None:
         """Delete media by its ID."""
+        base_url, headers = self._get_config()
         logger.info("Deleting media from Overseerr", extra={"media_id": media_id})
         await self.http_client.delete(
-            f"{self.base_url}/api/v1/media/{media_id}", headers=self.headers
+            f"{base_url}/api/v1/media/{media_id}", headers=headers
         )
         logger.debug("Media deleted successfully", extra={"media_id": media_id})
 
     async def get_request_count(self) -> int:
         """Get total number of requests."""
+        base_url, headers = self._get_config()
         response = await self.http_client.get(
-            f"{self.base_url}/api/v1/request/count",
-            headers=self.headers,
+            f"{base_url}/api/v1/request/count",
+            headers=headers,
         )
         count = response["total"]
         logger.debug("Got request count", extra={"count": count})
@@ -154,12 +174,13 @@ class OverseerGateway(RequestRepositoryInterface):
         Returns True if a user with the given plexId exists in Overseerr, False otherwise.
         Raises on Overseerr API/connection errors so callers can fail closed.
         """
+        base_url, headers = self._get_config()
         take = 100
         skip = 0
         while True:
             response = await self.http_client.get(
-                f"{self.base_url}/api/v1/user",
-                headers=self.headers,
+                f"{base_url}/api/v1/user",
+                headers=headers,
                 params={"take": take, "skip": skip},
             )
             # Overseerr may return {"results": [...], "pageInfo": {...}} or a list
@@ -196,12 +217,13 @@ class OverseerGateway(RequestRepositoryInterface):
         Returns the user dict (with id, permissions, etc.) or None if not found.
         Used to check admin/role from Overseerr (e.g. permissions & ADMIN).
         """
+        base_url, headers = self._get_config()
         take = 100
         skip = 0
         while True:
             response = await self.http_client.get(
-                f"{self.base_url}/api/v1/user",
-                headers=self.headers,
+                f"{base_url}/api/v1/user",
+                headers=headers,
                 params={"take": take, "skip": skip},
             )
             if isinstance(response, list):

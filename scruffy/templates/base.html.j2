@@ -106,16 +106,19 @@
     }
 
   </style>
+  <!--[if !mso]><!-->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!--<![endif]-->
 </head>
 
-<body style="word-spacing:normal;">
+<body style="word-spacing:normal;background-color:#16162a;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <div style="" lang="und" dir="auto">
     <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:600px;" width="600" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-    <div style="margin:0px auto;max-width:600px;">
-      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
+    <div style="margin:0px auto;max-width:600px;background-color:#1a1a2e;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;background-color:#1a1a2e;">
         <tbody>
           <tr>
-            <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
+            <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;background-color:#1a1a2e;">
               <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:600px;" ><![endif]-->
               <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
                 <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
@@ -142,12 +145,12 @@
         </tbody>
       </table>
     </div>
-    <!--[if mso | IE]></td></tr></table><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:600px;" width="600" bgcolor="#C1C7CC" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-    <div style="background:#C1C7CC;background-color:#C1C7CC;margin:0px auto;max-width:600px;">
-      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#C1C7CC;background-color:#C1C7CC;width:100%;">
+    <!--[if mso | IE]></td></tr></table><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:600px;" width="600" bgcolor="#1a1a2e" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
+    <div style="background:#1a1a2e;background-color:#1a1a2e;margin:0px auto;max-width:600px;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#1a1a2e;background-color:#1a1a2e;width:100%;">
         <tbody>
           <tr>
-            <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
+            <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;background-color:#1a1a2e;">
               <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:200px;" ><![endif]-->
               <div class="mj-column-px-200 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
                 <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
@@ -174,20 +177,20 @@
                   <tbody>
                     <tr>
                       <td align="justify" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                      {% if media.seasons|length > 0 %}
-                        <div style="font-family:helvetica;font-size:24px;font-weight:bold;line-height:1;text-align:justify;color:#000000;">{{ media.title }}</div>
-                        <div style="font-family:helvetica;font-size:24px;font-weight:bold;line-height:1;text-align:justify;color:#000000;">Seasons: {{ media.seasons|join(', ') }}</div>
+                      {% if media.seasons|default([])|length > 0 %}
+                        <div style="font-family:'Inter',-apple-system,sans-serif;font-size:24px;font-weight:bold;line-height:1.3;color:#f3f4f6;">{{ media.title }}</div>
+                        <div style="font-family:'Inter',-apple-system,sans-serif;font-size:18px;font-weight:600;line-height:1.3;color:#9ca3af;margin-top:4px;">Seasons: {{ media.seasons|join(', ') }}</div>
                       {% else %}
-                        <div style="font-family:helvetica;font-size:24px;font-weight:bold;line-height:1;text-align:justify;color:#000000;">{{ media.title }}</div>
+                        <div style="font-family:'Inter',-apple-system,sans-serif;font-size:24px;font-weight:bold;line-height:1.3;color:#f3f4f6;">{{ media.title }}</div>
                       {% endif %}
                       </td>
                     </tr>
                     <tr>
                       <td align="justify" style="font-size:0px;padding:10px 25px;word-break:break-word;">
                         {% if reminder %}
-                        <div style="font-family:helvetica;font-size:15px;line-height:1;text-align:justify;color:#000000;">Scruffy's gonna delete this in {{ days_left }} days. Mh-hmm.</div>
+                        <div style="font-family:'Inter',-apple-system,sans-serif;font-size:15px;line-height:1.5;color:#d1d5db;">Scruffy's gonna delete this in {{ days_left }} days. Mh-hmm.</div>
                         {% else %}
-                        <div style="font-family:helvetica;font-size:15px;line-height:1;text-align:justify;color:#000000;">Scruffy's deleted this. Mh-hmm.</div>
+                        <div style="font-family:'Inter',-apple-system,sans-serif;font-size:15px;line-height:1.5;color:#d1d5db;">Scruffy's deleted this. Mh-hmm.</div>
                         {% endif %}
                       </td>
                     </tr>
@@ -197,8 +200,8 @@
                         <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:separate;line-height:100%;">
                           <tbody>
                             <tr>
-                              <td align="center" bgcolor="#824334" role="presentation" style="border:none;border-radius:40px;cursor:auto;mso-padding-alt:10px 25px;background:#824334;" valign="middle">
-                                <a href="{{ extend_url }}" style="display:inline-block;background:#824334;color:#ffffff;font-family:helvetica;font-size:12px;font-weight:normal;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:10px 25px;mso-padding-alt:0px;border-radius:40px;"> I need more time! </a>
+                              <td align="center" bgcolor="#e5a00d" role="presentation" style="border:none;border-radius:8px;cursor:auto;mso-padding-alt:10px 25px;background:#e5a00d;" valign="middle">
+                                <a href="{{ extend_url }}" style="display:inline-block;background:#e5a00d;color:#000000;font-family:'Inter',-apple-system,sans-serif;font-size:14px;font-weight:600;line-height:120%;margin:0;text-decoration:none;text-transform:none;padding:10px 25px;mso-padding-alt:0px;border-radius:8px;"> I need more time! </a>
                               </td>
                             </tr>
                           </tbody>
@@ -227,12 +230,12 @@
                   <tbody>
                     <tr>
                       <td align="justify" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:helvetica;font-size:13px;font-style:italic;line-height:1;text-align:justify;color:#C1C7CC;">"{{quote}}"</div>
+                        <div style="font-family:'Inter',-apple-system,sans-serif;font-size:13px;font-style:italic;line-height:1.5;color:#9ca3af;">"{{quote}}"</div>
                       </td>
                     </tr>
                     <tr>
                       <td align="right" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                        <div style="font-family:helvetica;font-size:13px;line-height:1;text-align:right;color:#C1C7CC;">-Scruffy, the Janitor</div>
+                        <div style="font-family:'Inter',-apple-system,sans-serif;font-size:13px;line-height:1;text-align:right;color:#9ca3af;">- Scruffy, the Janitor</div>
                       </td>
                     </tr>
                   </tbody>

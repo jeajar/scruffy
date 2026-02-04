@@ -6,6 +6,7 @@ from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.database.database import get_engine
+from scruffy.frameworks_and_drivers.database.settings_store import SettingsProvider
 from scruffy.frameworks_and_drivers.email.email_client import EmailClient
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.gateways.media_repository_composite import (
@@ -38,19 +39,20 @@ class Container:
         # Framework dependencies
         logger.debug("Creating framework dependencies")
         self._http_client = HttpClient()
-        self._email_client = EmailClient()
+        self._settings_provider = SettingsProvider()
+        self._email_client = EmailClient(self._settings_provider)
         self._database_engine = get_engine()
 
-        # Gateways (interface adapters)
+        # Gateways (interface adapters) - use SettingsProvider for DB-backed config
         logger.debug("Creating gateways")
         self._overseer_gateway = OverseerGateway(
-            str(settings.overseerr_url), settings.overseerr_api_key, self._http_client
+            self._settings_provider, self._http_client
         )
         self._radarr_gateway = RadarrGateway(
-            str(settings.radarr_url), settings.radarr_api_key, self._http_client
+            self._settings_provider, self._http_client
         )
         self._sonarr_gateway = SonarrGateway(
-            str(settings.sonarr_url), settings.sonarr_api_key, self._http_client
+            self._settings_provider, self._http_client
         )
         self._media_repository = MediaRepositoryComposite(
             self._radarr_gateway, self._sonarr_gateway

@@ -20,8 +20,8 @@ from scruffy.frameworks_and_drivers.utils.logging import configure_logging
 
 logger = logging.getLogger(__name__)
 
-# Template directory path
-TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates" / "web"
+# Template directory path (auth pages: plex_login, auth_close)
+TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates"
 STATIC_DIR = Path(__file__).parent.parent.parent / "templates"
 
 

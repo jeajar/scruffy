@@ -1,5 +1,6 @@
 import random
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
 from jinja2 import Environment, FileSystemLoader
@@ -7,43 +8,63 @@ from jinja2 import Environment, FileSystemLoader
 from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.utils.quotes import scruffy_quotes
 
+if TYPE_CHECKING:
+    from scruffy.frameworks_and_drivers.database.settings_store import (
+        SettingsProvider,
+    )
+
 
 class EmailClient:
     """FastMail wrapper for sending emails."""
 
-    def __init__(self):
-        """Initialize email client with settings."""
-        if not settings.email_enabled:
-            self.fastmail = None
-            self.template_env = None
-            return
+    def __init__(self, settings_provider: "SettingsProvider | None" = None):
+        """Initialize email client. Uses settings_provider for DB-backed config, else env."""
+        self._settings_provider = settings_provider
+        templates_path = Path(__file__).parent.parent.parent / "templates"
+        self.template_env = Environment(loader=FileSystemLoader(templates_path))
 
-        # Set empty strings if credentials not provided
-        username = settings.smtp_username or ""
-        password = settings.smtp_password or ""
+    def _get_config(self) -> dict:
+        """Get email config from provider (DB + env) or fallback to env."""
+        if self._settings_provider is not None:
+            return dict(self._settings_provider.get_email_config())
+        return {
+            "enabled": settings.email_enabled,
+            "smtp_host": settings.smtp_host,
+            "smtp_port": settings.smtp_port,
+            "smtp_username": settings.smtp_username,
+            "smtp_password": settings.smtp_password,
+            "smtp_from_email": str(settings.smtp_from_email),
+            "smtp_ssl_tls": settings.smtp_ssl_tls,
+            "smtp_starttls": settings.smtp_starttls,
+        }
+
+    def _get_fastmail(self) -> FastMail | None:
+        """Build FastMail from current config. Returns None if email disabled."""
+        config = self._get_config()
+        if not config.get("enabled", False):
+            return None
+        username = config.get("smtp_username") or ""
+        password = config.get("smtp_password") or ""
         use_credentials = bool(username and password)
-        self.conf = ConnectionConfig(
+        conf = ConnectionConfig(
             MAIL_USERNAME=username,
             MAIL_PASSWORD=password,
             MAIL_FROM_NAME="Scruffy, the Janitor",
-            MAIL_FROM=settings.smtp_from_email,
-            MAIL_PORT=settings.smtp_port,
-            MAIL_SERVER=settings.smtp_host,
-            MAIL_SSL_TLS=settings.smtp_ssl_tls,
-            MAIL_STARTTLS=settings.smtp_starttls,
+            MAIL_FROM=config.get("smtp_from_email", "scruffy@example.com"),
+            MAIL_PORT=config.get("smtp_port", 25),
+            MAIL_SERVER=config.get("smtp_host", "localhost"),
+            MAIL_SSL_TLS=config.get("smtp_ssl_tls", True),
+            MAIL_STARTTLS=config.get("smtp_starttls", False),
             USE_CREDENTIALS=use_credentials,
         )
-
-        self.fastmail = FastMail(self.conf)
-        # Templates are in scruffy/templates
-        templates_path = Path(__file__).parent.parent.parent / "templates"
-        self.template_env = Environment(loader=FileSystemLoader(templates_path))
+        return FastMail(conf)
 
     async def send_deletion_notice(
         self, to_email: str, title: str, poster: str, days_left: int = 0
     ) -> None:
         """Send deletion notice email."""
-        if not self.fastmail:
+        fastmail = self._get_fastmail()
+        if not fastmail:
             return
 
         template = self.template_env.get_template("base.html.j2")
@@ -61,7 +82,7 @@ class EmailClient:
             subtype="html",
         )
 
-        await self.fastmail.send_message(message)
+        await fastmail.send_message(message)
 
     async def send_reminder_notice(
         self,
@@ -72,7 +93,8 @@ class EmailClient:
         request_id: int,
     ) -> None:
         """Send reminder notice email."""
-        if not self.fastmail:
+        fastmail = self._get_fastmail()
+        if not fastmail:
             return
 
         base_url = settings.app_base_url.rstrip("/")
@@ -94,4 +116,4 @@ class EmailClient:
             subtype="html",
         )
 
-        await self.fastmail.send_message(message)
+        await fastmail.send_message(message)

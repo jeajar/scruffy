@@ -1,10 +1,27 @@
 """Tests for OverseerGateway."""
 
+from types import SimpleNamespace
+
 import httpx
 import pytest
 import respx
 
 from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
+
+
+def _make_settings_provider(base_url: str, api_key: str):
+    """Create mock SettingsProvider returning given url/api_key for Overseerr."""
+    config = SimpleNamespace(
+        overseerr_url=base_url,
+        overseerr_api_key=api_key,
+        radarr_url="http://test.com",
+        radarr_api_key="test-key",
+        sonarr_url="http://test.com",
+        sonarr_api_key="test-key",
+    )
+    provider = SimpleNamespace()
+    provider.get_services_config = lambda: config
+    return provider
 
 
 @pytest.fixture
@@ -22,13 +39,15 @@ def api_key():
 @pytest.fixture
 def gateway(base_url, api_key):
     """Create OverseerGateway instance."""
-    return OverseerGateway(base_url, api_key)
+    return OverseerGateway(_make_settings_provider(base_url, api_key))
 
 
 @pytest.fixture
 def gateway_with_http_client(base_url, api_key, mock_http_client):
     """Create OverseerGateway with mocked HTTP client."""
-    return OverseerGateway(base_url, api_key, mock_http_client)
+    return OverseerGateway(
+        _make_settings_provider(base_url, api_key), mock_http_client
+    )
 
 
 @pytest.mark.asyncio
@@ -190,17 +209,18 @@ async def test_get_request_count(gateway, base_url):
 
 
 def test_gateway_initialization(base_url, api_key):
-    """Test gateway initialization sets correct attributes."""
-    gateway = OverseerGateway(base_url, api_key)
+    """Test gateway initialization with settings provider."""
+    provider = _make_settings_provider(base_url, api_key)
+    gateway = OverseerGateway(provider)
 
-    assert gateway.base_url == base_url
-    assert gateway.api_key == api_key
-    assert gateway.headers == {"X-Api-Key": api_key, "Accept": "application/json"}
+    assert gateway._settings_provider is provider
+    assert gateway.http_client is not None
 
 
 def test_gateway_initialization_with_http_client(base_url, api_key, mock_http_client):
     """Test gateway initialization with custom HTTP client."""
-    gateway = OverseerGateway(base_url, api_key, mock_http_client)
+    provider = _make_settings_provider(base_url, api_key)
+    gateway = OverseerGateway(provider, mock_http_client)
 
     assert gateway.http_client == mock_http_client
 

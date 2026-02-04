@@ -133,24 +133,26 @@ With `docker-compose.override.yml` (included in the repo), the same command uses
 
 ## Configuration
 
+**Services and Notifications** (Overseerr, Radarr, Sonarr, email) are configured in **Admin Settings** (database). Environment variables below are used as fallbacks when the database has no value (e.g. first run, CLI, Docker). Prefer configuring via the Admin UI for normal operation.
+
 | Environment Variable | Default Value | Description | Required |
 |---------------------|---------------|-------------|-----------|
-| `OVERSEERR_URL` | `http://localhost:5050` | Overseerr server URL | No |
-| `OVERSEERR_API_KEY` | `None` | API key for Overseerr authentication | Yes |
-| `SONARR_URL` | `http://localhost:8989` | Sonarr server URL | No |
-| `SONARR_API_KEY` | `None` | API key for Sonarr authentication | Yes |
-| `RADARR_URL` | `http://localhost:7878` | Radarr server URL | No |
-| `RADARR_API_KEY` | `None` | API key for Radarr authentication | Yes |
+| `OVERSEERR_URL` | `http://localhost:5050` | Overseerr server URL (fallback) | No |
+| `OVERSEERR_API_KEY` | `None` | API key for Overseerr (fallback) | Yes |
+| `SONARR_URL` | `http://localhost:8989` | Sonarr server URL (fallback) | No |
+| `SONARR_API_KEY` | `None` | API key for Sonarr (fallback) | Yes |
+| `RADARR_URL` | `http://localhost:7878` | Radarr server URL (fallback) | No |
+| `RADARR_API_KEY` | `None` | API key for Radarr (fallback) | Yes |
 | `RETENTION_DAYS` | `30` | Number of days to keep media before deletion | No |
 | `REMINDER_DAYS` | `7` | Days before deletion to send reminder | No |
-| `EMAIL_ENABLED` | `False` | Enable email notifications | No |
-| `SMTP_HOST` | `localhost` | SMTP server hostname | If email enabled |
-| `SMTP_PORT` | `25` | SMTP server port | If email enabled |
-| `SMTP_USERNAME` | `None` | SMTP authentication username | Optional |
-| `SMTP_PASSWORD` | `None` | SMTP authentication password | Optional |
-| `SMTP_FROM_EMAIL` | `scruffy@example.com` | Sender email address | If email enabled |
-| `SMTP_SSL_TLS` | `True` | Use SSL/TLS for SMTP connection | No |
-| `SMTP_STARTTLS` | `False` | Use STARTTLS for SMTP connection | No |
+| `EMAIL_ENABLED` | `False` | Enable email notifications (fallback) | No |
+| `SMTP_HOST` | `localhost` | SMTP server hostname (fallback) | If email enabled |
+| `SMTP_PORT` | `25` | SMTP server port (fallback) | If email enabled |
+| `SMTP_USERNAME` | `None` | SMTP authentication username (fallback) | Optional |
+| `SMTP_PASSWORD` | `None` | SMTP authentication password (fallback) | Optional |
+| `SMTP_FROM_EMAIL` | `scruffy@example.com` | Sender email address (fallback) | If email enabled |
+| `SMTP_SSL_TLS` | `True` | Use SSL/TLS for SMTP connection (fallback) | No |
+| `SMTP_STARTTLS` | `False` | Use STARTTLS for SMTP connection (fallback) | No |
 | `API_SECRET_KEY` | `change-me-in-production` | Secret key for session signing (use a strong value in production) | No |
 | `CORS_ORIGINS` | `["http://localhost:5173","http://localhost:3000"]` | Allowed origins for CORS (JSON array) | No |
 | `LOG_LEVEL` | `INFO` | Application logging level (DEBUG, INFO, WARNING, ERROR) | No |

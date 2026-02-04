@@ -16,18 +16,34 @@ from scruffy.frameworks_and_drivers.di.container import Container
 
 @pytest.fixture
 def mock_settings():
-    """Mock settings for integration tests."""
-    with patch("scruffy.frameworks_and_drivers.di.container.settings") as mock:
-        mock.overseerr_url = "http://overseerr.test"
-        mock.overseerr_api_key = "overseerr-key"
-        mock.sonarr_url = "http://sonarr.test"
-        mock.sonarr_api_key = "sonarr-key"
-        mock.radarr_url = "http://radarr.test"
-        mock.radarr_api_key = "radarr-key"
-        mock.retention_days = 30
-        mock.reminder_days = 7
-        mock.email_enabled = False  # Disable email for integration tests
-        yield mock
+    """Mock settings for integration tests.
+
+    Patches settings_store's settings (used by SettingsProvider) and
+    container's settings (for retention, etc).
+    """
+    mock_values = {
+        "overseerr_url": "http://overseerr.test",
+        "overseerr_api_key": "overseerr-key",
+        "sonarr_url": "http://sonarr.test",
+        "sonarr_api_key": "sonarr-key",
+        "radarr_url": "http://radarr.test",
+        "radarr_api_key": "radarr-key",
+        "retention_days": 30,
+        "reminder_days": 7,
+        "email_enabled": False,
+    }
+
+    with patch(
+        "scruffy.frameworks_and_drivers.database.settings_store.settings"
+    ) as store_mock:
+        for k, v in mock_values.items():
+            setattr(store_mock, k, v)
+        with patch(
+            "scruffy.frameworks_and_drivers.di.container.settings"
+        ) as container_mock:
+            for k, v in mock_values.items():
+                setattr(container_mock, k, v)
+            yield container_mock
 
 
 @pytest.fixture

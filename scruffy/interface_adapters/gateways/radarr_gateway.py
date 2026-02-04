@@ -2,6 +2,7 @@
 
 import logging
 from datetime import datetime
+from typing import TYPE_CHECKING
 
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
@@ -10,32 +11,48 @@ from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
 )
 
+if TYPE_CHECKING:
+    from scruffy.frameworks_and_drivers.database.settings_store import (
+        SettingsProvider,
+    )
+
 logger = logging.getLogger(__name__)
 
 
 class RadarrGateway(MediaRepositoryInterface):
     """Adapter for Radarr API (movies)."""
 
-    def __init__(self, base_url: str, api_key: str, http_client: HttpClient | None = None):
-        """Initialize Radarr gateway."""
-        self.base_url = base_url.rstrip("/")
-        self.api_key = api_key
-        self.headers = {"X-Api-Key": api_key, "Accept": "application/json"}
+    def __init__(
+        self,
+        settings_provider: "SettingsProvider",
+        http_client: HttpClient | None = None,
+    ):
+        """Initialize Radarr gateway with settings provider for runtime config."""
+        self._settings_provider = settings_provider
         self.http_client = http_client or HttpClient()
-        logger.debug("Initialized RadarrGateway", extra={"base_url": self.base_url})
+        logger.debug("Initialized RadarrGateway")
+
+    def _get_config(self) -> tuple[str, dict]:
+        """Get base_url and headers from settings (DB + env fallback)."""
+        config = self._settings_provider.get_services_config()
+        base_url = config.radarr_url.rstrip("/")
+        api_key = config.radarr_api_key or ""
+        headers = {"X-Api-Key": api_key, "Accept": "application/json"}
+        return base_url, headers
 
     async def status(self) -> bool:
         """Test Radarr connection status."""
+        base_url, headers = self._get_config()
         try:
             await self.http_client.get(
-                f"{self.base_url}/api/v3/system/status", headers=self.headers
+                f"{base_url}/api/v3/system/status", headers=headers
             )
-            logger.info("Radarr connection successful", extra={"base_url": self.base_url})
+            logger.info("Radarr connection successful", extra={"base_url": base_url})
             return True
         except Exception as e:
             logger.warning(
                 "Radarr connection failed",
-                extra={"base_url": self.base_url, "error": str(e)},
+                extra={"base_url": base_url, "error": str(e)},
             )
             return False
 
@@ -46,14 +63,15 @@ class RadarrGateway(MediaRepositoryInterface):
         if media_type != MediaType.MOVIE:
             raise ValueError("RadarrGateway only handles movies")
 
+        base_url, headers = self._get_config()
         logger.debug(
             "Fetching movie from Radarr",
             extra={"external_service_id": external_service_id},
         )
 
         data = await self.http_client.get(
-            f"{self.base_url}/api/v3/movie/{external_service_id}",
-            headers=self.headers,
+            f"{base_url}/api/v3/movie/{external_service_id}",
+            headers=headers,
         )
 
         poster = self._get_movie_poster(data.get("images", []))
@@ -87,14 +105,15 @@ class RadarrGateway(MediaRepositoryInterface):
         if media_type != MediaType.MOVIE:
             raise ValueError("RadarrGateway only handles movies")
 
+        base_url, headers = self._get_config()
         logger.info(
             "Deleting movie from Radarr",
             extra={"external_service_id": external_service_id},
         )
 
         await self.http_client.delete(
-            f"{self.base_url}/api/v3/movie/{external_service_id}",
-            headers=self.headers,
+            f"{base_url}/api/v3/movie/{external_service_id}",
+            headers=headers,
             params={"deleteFiles": "true"},
         )
 
