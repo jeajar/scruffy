@@ -10,9 +10,10 @@ from dataclasses import asdict, dataclass
 from typing import Annotated
 
 import httpx
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyCookie, APIKeyHeader
 
+from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 from scruffy.frameworks_and_drivers.config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -279,6 +280,32 @@ async def verify_api_key(
     return True
 
 
+async def require_admin(
+    user: PlexUser = Depends(get_current_user),
+    container: ContainerDep = ...,  # Injected by FastAPI from ContainerDep
+) -> PlexUser:
+    """
+    Require the current user to be an admin in Overseerr.
+
+    Looks up the user in Overseerr by Plex ID and checks permissions (admin bit).
+    Raises HTTP 403 if the user is not an Overseerr admin.
+    """
+    from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
+
+    overseerr_user = await container.overseer_gateway.get_user_by_plex_id(user.id)
+    if not OverseerGateway.is_overseerr_admin(overseerr_user):
+        logger.warning(
+            "Non-admin user attempted admin action",
+            extra={"user_id": user.id, "username": user.username},
+        )
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required",
+        )
+    return user
+
+
 # Type aliases for dependency injection (OpenAPI security appears on routes using these)
 AuthenticatedUser = Annotated[PlexUser, Depends(get_current_user)]
+AdminUser = Annotated[PlexUser, Depends(require_admin)]
 ApiKeyAuth = Annotated[bool, Depends(verify_api_key)]

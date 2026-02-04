@@ -173,3 +173,58 @@ class OverseerGateway(RequestRepositoryInterface):
             extra={"plex_user_id": plex_user_id},
         )
         return False
+
+    async def get_user_by_plex_id(self, plex_user_id: int) -> dict | None:
+        """
+        Get the Overseerr user object for a Plex user ID.
+
+        Returns the user dict (with id, permissions, etc.) or None if not found.
+        Used to check admin/role from Overseerr (e.g. permissions & ADMIN).
+        """
+        take = 100
+        skip = 0
+        while True:
+            response = await self.http_client.get(
+                f"{self.base_url}/api/v1/user",
+                headers=self.headers,
+                params={"take": take, "skip": skip},
+            )
+            if isinstance(response, list):
+                results = response
+            else:
+                results = response.get("results", [])
+            for user in results:
+                if user.get("plexId") == plex_user_id:
+                    logger.debug(
+                        "Overseerr user found by Plex ID",
+                        extra={"plex_user_id": plex_user_id},
+                    )
+                    return user
+            result_count = len(results)
+            if result_count < take:
+                break
+            if isinstance(response, list):
+                break
+            page_info = response.get("pageInfo", {})
+            skip += take
+            if skip >= page_info.get("total", skip + result_count):
+                break
+        return None
+
+    # Overseerr Permission.ADMIN = 2 (from server/lib/permissions.ts)
+    ADMIN_PERMISSION = 2
+
+    @staticmethod
+    def is_overseerr_admin(user: dict | None) -> bool:
+        """
+        Return True if the Overseerr user has admin permission.
+
+        Overseerr uses a permissions bitmask (see server/lib/permissions in Overseerr).
+        ADMIN = 2 in Overseerr's Permission enum.
+        """
+        if not user:
+            return False
+        perms = user.get("permissions", 0)
+        if isinstance(perms, int):
+            return (perms & OverseerGateway.ADMIN_PERMISSION) != 0
+        return False

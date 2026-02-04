@@ -114,6 +114,10 @@ npm run dev
 
 The frontend runs at **http://localhost:5173** and proxies `/api`, `/auth`, and `/static` to the backend at port 8080. Start the backend first so the frontend can reach it.
 
+**Admin & scheduled jobs**
+
+When the API is running, scheduled jobs (check/process) are stored in the same SQLite DB and run in the background via APScheduler. Admin access is determined by **Overseerr**: any user with admin permission in Overseerr can open **Admin** in the header and manage **Scheduled Jobs** (add/edit/delete cron-style schedules and run jobs on demand). No env var is required.
+
 **Using Docker Compose**
 
 To run both backend and frontend in containers:

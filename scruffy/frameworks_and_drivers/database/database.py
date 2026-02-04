@@ -4,7 +4,6 @@ from sqlalchemy import Engine
 from sqlmodel import SQLModel, create_engine
 
 from scruffy.frameworks_and_drivers.config.settings import settings
-from scruffy.frameworks_and_drivers.database.reminder_model import ReminderModel
 
 
 def get_engine() -> Engine:

@@ -27,6 +27,7 @@ export function useAuth() {
   return {
     user: data?.user as User | undefined,
     isAuthenticated: data?.authenticated ?? false,
+    isAdmin: data?.isAdmin ?? false,
     isLoading,
     error,
     checkAuth,

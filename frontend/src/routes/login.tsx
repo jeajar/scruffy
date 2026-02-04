@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ function LoginPage() {
   const [pinData, setPinData] = useState<PinResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pollCount, setPollCount] = useState(0);
+  const authPopupRef = useRef<Window | null>(null);
 
   const MAX_POLLS = 120; // 2 minutes at 1 second intervals
 
@@ -34,8 +35,12 @@ function LoginPage() {
     onSuccess: (data) => {
       setPinData(data);
       setState("waiting");
-      // Open Plex auth in new window
-      window.open(data.auth_url, "_blank", "width=600,height=700");
+      // Open Plex auth in new window (keep ref so we can close it after sign-in)
+      authPopupRef.current = window.open(
+        data.auth_url,
+        "_blank",
+        "width=600,height=700"
+      );
     },
     onError: (err) => {
       setError(err instanceof Error ? err.message : "Failed to create PIN");
@@ -50,6 +55,10 @@ function LoginPage() {
   };
 
   const handleCancel = useCallback(() => {
+    if (authPopupRef.current && !authPopupRef.current.closed) {
+      authPopupRef.current.close();
+      authPopupRef.current = null;
+    }
     setState("idle");
     setPinData(null);
     setPollCount(0);
@@ -63,6 +72,10 @@ function LoginPage() {
       setPollCount((prev) => {
         if (prev >= MAX_POLLS) {
           clearInterval(pollInterval);
+          if (authPopupRef.current && !authPopupRef.current.closed) {
+            authPopupRef.current.close();
+            authPopupRef.current = null;
+          }
           setError("Authentication timed out. Please try again.");
           setState("error");
           return prev;
@@ -75,6 +88,12 @@ function LoginPage() {
 
         if (result.authenticated && result.session_token) {
           clearInterval(pollInterval);
+
+          // Close the Plex sign-in popup (it stays on Plex's "Thanks!" page; we close from opener)
+          if (authPopupRef.current && !authPopupRef.current.closed) {
+            authPopupRef.current.close();
+            authPopupRef.current = null;
+          }
 
           // Set the session cookie
           const secure = window.location.protocol === "https:" ? "; secure" : "";
@@ -90,6 +109,10 @@ function LoginPage() {
           }, 1000);
         } else if (!result.authenticated && result.error) {
           clearInterval(pollInterval);
+          if (authPopupRef.current && !authPopupRef.current.closed) {
+            authPopupRef.current.close();
+            authPopupRef.current = null;
+          }
           const message =
             result.error === "not_imported"
               ? "Your Plex account is not imported on this server. Ask an admin to import users from Plex in Overseerr."

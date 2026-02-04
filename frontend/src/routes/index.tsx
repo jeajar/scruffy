@@ -98,7 +98,10 @@ function HomePage() {
                       </TableHeader>
                       <TableBody className="bg-scruffy-darker">
                         {media.map((item) => (
-                          <MediaRow key={item.request.id} item={item} />
+                          <MediaRow
+                            key={`${item.request.id}-${item.media.id}`}
+                            item={item}
+                          />
                         ))}
                       </TableBody>
                     </Table>

@@ -10,6 +10,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from scruffy.frameworks_and_drivers.api.scheduler import (
+    shutdown_scheduler,
+    start_scheduler,
+)
 from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.di.container import Container
 from scruffy.frameworks_and_drivers.utils.logging import configure_logging
@@ -30,10 +34,14 @@ async def lifespan(app: FastAPI):
     app.state.container = Container()
     logger.info("Dependency injection container initialized")
 
+    # Start background scheduler (loads schedule jobs from DB)
+    start_scheduler(app)
+
     yield
 
     # Cleanup on shutdown
     logger.info("Shutting down Scruffy API server")
+    shutdown_scheduler(app)
     await app.state.container.aclose()
 
 
@@ -84,11 +92,15 @@ def create_app() -> FastAPI:
     from scruffy.frameworks_and_drivers.api.routes.auth import router as auth_router
     from scruffy.frameworks_and_drivers.api.routes.health import router as health_router
     from scruffy.frameworks_and_drivers.api.routes.media import router as media_router
+    from scruffy.frameworks_and_drivers.api.routes.schedules import (
+        router as schedules_router,
+    )
     from scruffy.frameworks_and_drivers.api.routes.tasks import router as tasks_router
 
     app.include_router(auth_router)
     app.include_router(health_router)
     app.include_router(media_router)
+    app.include_router(schedules_router)
     app.include_router(tasks_router, prefix="/api/tasks")
 
     logger.info(

@@ -106,10 +106,10 @@ async def auth_callback(pin_id: int, container: ContainerDep):
             status_code=302,
         )
 
-    # Create session and redirect to home
+    # Create session and redirect to close page (auto-closes popup like Overseerr)
     session_token = create_session_token(user)
 
-    response = RedirectResponse(url="/", status_code=302)
+    response = RedirectResponse(url="/auth/close", status_code=302)
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=session_token,
@@ -177,6 +177,18 @@ async def check_pin(pin_id: int, container: ContainerDep):
     }
 
 
+@router.get("/close", response_class=HTMLResponse)
+async def auth_close(request: Request):
+    """
+    Page shown after Plex sign-in in the popup.
+
+    Runs window.close() so the auth popup closes automatically (like Overseerr).
+    If the browser blocks close(), the user sees a message to close the window.
+    """
+    templates = request.app.state.templates
+    return templates.TemplateResponse(request, "auth_close.html", {})
+
+
 @router.get("/logout")
 async def logout():
     """Log out and clear the session (HTML redirect)."""
@@ -198,8 +210,10 @@ async def logout_api():
 
 
 @router.get("/status")
-async def auth_status(request: Request):
-    """Check current authentication status."""
+async def auth_status(request: Request, container: ContainerDep):
+    """Check current authentication status. Includes isAdmin from Overseerr when authenticated."""
+    from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
+
     session_token = request.cookies.get(SESSION_COOKIE_NAME)
 
     if not session_token:
@@ -209,6 +223,9 @@ async def auth_status(request: Request):
     if not user:
         return {"authenticated": False}
 
+    overseerr_user = await container.overseer_gateway.get_user_by_plex_id(user.id)
+    is_admin = OverseerGateway.is_overseerr_admin(overseerr_user)
+
     return {
         "authenticated": True,
         "user": {
@@ -217,4 +234,5 @@ async def auth_status(request: Request):
             "email": user.email,
             "thumb": user.thumb,
         },
+        "isAdmin": is_admin,
     }
