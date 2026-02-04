@@ -86,7 +86,7 @@ class TestAuthCallback:
     def test_callback_creates_session_when_user_imported(
         self, client, mock_container, plex_user
     ):
-        """When user is imported in Overseerr, create session and redirect to home."""
+        """When user is imported in Overseerr, create session and redirect to close page."""
         with patch(
             "scruffy.frameworks_and_drivers.api.routes.auth.check_plex_pin",
             new_callable=AsyncMock,
@@ -94,7 +94,7 @@ class TestAuthCallback:
         ):
             response = client.get("/auth/callback?pin_id=123", follow_redirects=False)
         assert response.status_code == 302
-        assert response.headers["location"] == "/"
+        assert response.headers["location"] == "/auth/close"
         assert "scruffy_session" in response.headers.get("set-cookie", "")
         mock_container.overseer_gateway.user_imported_by_plex_id.assert_called_once_with(
             42

@@ -4,6 +4,12 @@ This module provides common fixtures used across the test suite.
 Fixtures are organized by category for better maintainability.
 """
 
+# CRITICAL: Disable email before any application code loads.
+# Ensures tests never send real emails, even with EMAIL_ENABLED=True in .env
+import os
+
+os.environ["EMAIL_ENABLED"] = "False"
+
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 from typing import Any
