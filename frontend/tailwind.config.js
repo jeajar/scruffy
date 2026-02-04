@@ -8,9 +8,7 @@ export default {
         // Scruffy theme colors
         "scruffy-dark": "#1a1a2e",
         "scruffy-darker": "#16162a",
-        "scruffy-accent": "#824334",
         "scruffy-teal": "#304D54",
-        "scruffy-gray": "#C1C7CC",
         "plex-orange": "#e5a00d",
         // shadcn/ui colors
         border: "hsl(var(--border))",

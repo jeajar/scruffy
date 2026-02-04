@@ -205,6 +205,11 @@ function LoginPage() {
                   </p>
                   <p className="text-sm text-gray-500">
                     Complete the sign-in in the Plex window that opened.
+                    {pollCount > 0 && (
+                      <span className="block mt-1">
+                        ({pollCount}s elapsed)
+                      </span>
+                    )}
                   </p>
                   <Button
                     variant="ghost"

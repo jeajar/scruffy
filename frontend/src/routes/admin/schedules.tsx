@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Plus,
   Play,
@@ -27,16 +27,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useAuth } from "@/hooks/useAuth";
+import { useSchedules } from "@/hooks/useSchedules";
 import { LoadingScreen } from "@/components/ui/loading-screen";
-import {
-  getSchedules,
-  createSchedule,
-  updateSchedule,
-  deleteSchedule,
-  runScheduleNow,
-  type Schedule,
-  type ScheduleCreate,
-} from "@/lib/api";
+import type { ScheduleCreate } from "@/lib/api";
 
 export const Route = createFileRoute("/admin/schedules")({
   component: AdminSchedulesPage,
@@ -45,12 +38,21 @@ export const Route = createFileRoute("/admin/schedules")({
 function AdminSchedulesPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, isLoading: authLoading } = useAuth();
-  const [schedules, setSchedules] = useState<Schedule[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [runningId, setRunningId] = useState<number | null>(null);
+  const {
+    schedules,
+    isLoading: loading,
+    error,
+    createSchedule,
+    isCreating,
+    updateSchedule,
+    deleteSchedule,
+    runScheduleNow,
+    runningId,
+  } = useSchedules(!!isAdmin);
+
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [form, setForm] = useState<ScheduleCreate>({
     job_type: "check",
     cron_expression: "0 */6 * * *",
@@ -68,61 +70,50 @@ function AdminSchedulesPage() {
     }
   }, [authLoading, isAuthenticated, isAdmin, navigate]);
 
-  const loadSchedules = useCallback(async () => {
-    if (!isAdmin) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getSchedules();
-      setSchedules(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load schedules");
-    } finally {
-      setLoading(false);
-    }
-  }, [isAdmin]);
-
-  useEffect(() => {
-    if (isAdmin) loadSchedules();
-  }, [isAdmin, loadSchedules]);
-
   const handleCreate = async () => {
+    setFormError(null);
     try {
-      const created = await createSchedule(form);
-      setSchedules((prev) => [...prev, created]);
+      await createSchedule(form);
       setShowForm(false);
       setForm({ job_type: "check", cron_expression: "0 */6 * * *", enabled: true });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to create");
+      setFormError(e instanceof Error ? e.message : "Failed to create");
     }
   };
 
-  const handleUpdate = async (id: number, patch: { job_type?: "check" | "process"; cron_expression?: string; enabled?: boolean }) => {
+  const handleUpdate = async (
+    id: number,
+    patch: {
+      job_type?: "check" | "process";
+      cron_expression?: string;
+      enabled?: boolean;
+    }
+  ) => {
+    setFormError(null);
     try {
-      const updated = await updateSchedule(id, patch);
-      setSchedules((prev) => prev.map((s) => (s.id === id ? updated : s)));
+      await updateSchedule(id, patch);
       setEditingId(null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to update");
+      setFormError(e instanceof Error ? e.message : "Failed to update");
     }
   };
 
   const handleDelete = async (id: number) => {
     if (!confirm("Delete this schedule?")) return;
+    setFormError(null);
     try {
       await deleteSchedule(id);
-      setSchedules((prev) => prev.filter((s) => s.id !== id));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to delete");
+      setFormError(e instanceof Error ? e.message : "Failed to delete");
     }
   };
 
   const handleRunNow = async (id: number) => {
-    setRunningId(id);
+    setFormError(null);
     try {
       await runScheduleNow(id);
-    } finally {
-      setRunningId(null);
+    } catch (e) {
+      setFormError(e instanceof Error ? e.message : "Failed to run schedule");
     }
   };
 
@@ -161,9 +152,9 @@ function AdminSchedulesPage() {
           </div>
         </div>
 
-        {error && (
+        {(error || formError) && (
           <div className="mt-4 rounded-lg bg-red-900/20 border border-red-800 text-red-200 px-4 py-3 text-sm">
-            {error}
+            {error ?? formError}
           </div>
         )}
 
@@ -212,8 +203,12 @@ function AdminSchedulesPage() {
                   />
                   <span className="text-sm">Enabled</span>
                 </label>
-                <Button onClick={handleCreate} className="bg-scruffy-teal hover:bg-scruffy-teal/90">
-                  Create
+                <Button
+                  onClick={handleCreate}
+                  disabled={isCreating}
+                  className="bg-scruffy-teal hover:bg-scruffy-teal/90"
+                >
+                  {isCreating ? "Creating..." : "Create"}
                 </Button>
                 <Button variant="ghost" onClick={() => setShowForm(false)}>
                   Cancel
