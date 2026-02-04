@@ -58,7 +58,7 @@ class SendReminderUseCase:
             # Convert entity to DTO for notification service
             media_dto = map_media_entity_to_dto(media)
             await self.notification_service.send_reminder_notice(
-                request.user_email, media_dto, days_left
+                request.user_email, media_dto, days_left, request.request_id
             )
             await asyncio.to_thread(
                 self.reminder_repository.add_reminder,

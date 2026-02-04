@@ -65,6 +65,7 @@ async def test_execute_sends_reminder_when_no_reminder_exists(
     call_args = mock_notification_service.send_reminder_notice.call_args
     assert call_args[0][0] == sample_request.user_email
     assert call_args[0][2] == 7  # days_left
+    assert call_args[0][3] == sample_request.request_id
     # Second arg should be MediaInfoDTO (converted from Media entity)
     assert call_args[0][1].title == sample_media.title
 

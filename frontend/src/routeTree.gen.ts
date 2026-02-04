@@ -10,13 +10,20 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ExtendRouteImport } from './routes/extend'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSchedulesRouteImport } from './routes/admin/schedules'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExtendRoute = ExtendRouteImport.update({
+  id: '/extend',
+  path: '/extend',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -29,6 +36,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminSchedulesRoute = AdminSchedulesRouteImport.update({
   id: '/admin/schedules',
   path: '/admin/schedules',
@@ -37,35 +49,62 @@ const AdminSchedulesRoute = AdminSchedulesRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
   '/admin/schedules': typeof AdminSchedulesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
   '/admin/schedules': typeof AdminSchedulesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin': typeof AdminIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
   '/admin/schedules': typeof AdminSchedulesRoute
+  '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/login' | '/admin/schedules' | '/admin/'
+  fullPaths:
+    | '/'
+    | '/extend'
+    | '/login'
+    | '/admin/schedules'
+    | '/admin/settings'
+    | '/admin/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/login' | '/admin/schedules' | '/admin'
-  id: '__root__' | '/' | '/login' | '/admin/schedules' | '/admin/'
+  to:
+    | '/'
+    | '/extend'
+    | '/login'
+    | '/admin/schedules'
+    | '/admin/settings'
+    | '/admin'
+  id:
+    | '__root__'
+    | '/'
+    | '/extend'
+    | '/login'
+    | '/admin/schedules'
+    | '/admin/settings'
+    | '/admin/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ExtendRoute: typeof ExtendRoute
   LoginRoute: typeof LoginRoute
   AdminSchedulesRoute: typeof AdminSchedulesRoute
+  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -76,6 +115,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/extend': {
+      id: '/extend'
+      path: '/extend'
+      fullPath: '/extend'
+      preLoaderRoute: typeof ExtendRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -92,6 +138,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/schedules': {
       id: '/admin/schedules'
       path: '/admin/schedules'
@@ -104,8 +157,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ExtendRoute: ExtendRoute,
   LoginRoute: LoginRoute,
   AdminSchedulesRoute: AdminSchedulesRoute,
+  AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport

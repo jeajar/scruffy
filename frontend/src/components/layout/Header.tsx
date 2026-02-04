@@ -6,6 +6,7 @@ import {
   X,
   Settings,
   CalendarClock,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -110,6 +111,15 @@ export function Header() {
                               Schedules
                             </Link>
                           </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/admin/settings"
+                              className="flex cursor-pointer items-center gap-2 text-gray-300 focus:bg-gray-700 focus:text-white"
+                            >
+                              <SlidersHorizontal className="h-4 w-4" />
+                              Settings
+                            </Link>
+                          </DropdownMenuItem>
                         </DropdownMenuSubContent>
                       </DropdownMenuSub>
                     )}
@@ -190,6 +200,17 @@ export function Header() {
                       >
                         <CalendarClock className="h-5 w-5" />
                         Schedules
+                      </Link>
+                      <Link
+                        to="/admin/settings"
+                        className={cn(
+                          navLink,
+                          pathname.startsWith("/admin") && "bg-gray-700 text-white"
+                        )}
+                        onClick={closeMobileMenu}
+                      >
+                        <SlidersHorizontal className="h-5 w-5" />
+                        Settings
                       </Link>
                     </div>
                   )}

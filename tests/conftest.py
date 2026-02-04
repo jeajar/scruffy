@@ -36,6 +36,9 @@ from scruffy.use_cases.interfaces.notification_service_interface import (
 from scruffy.use_cases.interfaces.reminder_repository_interface import (
     ReminderRepositoryInterface,
 )
+from scruffy.use_cases.interfaces.extension_repository_interface import (
+    ExtensionRepositoryInterface,
+)
 from scruffy.use_cases.interfaces.request_repository_interface import (
     RequestRepositoryInterface,
 )
@@ -71,6 +74,12 @@ def mock_reminder_repository() -> Mock:
 def mock_notification_service() -> Mock:
     """Create a mock notification service with spec from interface."""
     return Mock(spec=NotificationServiceInterface)
+
+
+@pytest.fixture
+def mock_extension_repository() -> Mock:
+    """Create a mock extension repository with spec from interface."""
+    return Mock(spec=ExtensionRepositoryInterface)
 
 
 # =============================================================================

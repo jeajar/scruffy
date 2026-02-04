@@ -14,7 +14,7 @@ function AdminIndexPage() {
   useEffect(() => {
     if (!authLoading) {
       if (!isAuthenticated) {
-        navigate({ to: "/login" });
+        navigate({ to: "/login", search: {} });
       } else if (!isAdmin) {
         navigate({ to: "/" });
       } else {

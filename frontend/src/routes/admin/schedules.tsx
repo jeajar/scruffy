@@ -61,7 +61,7 @@ function AdminSchedulesPage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate({ to: "/login" });
+      navigate({ to: "/login", search: {} });
       return;
     }
     if (!authLoading && isAuthenticated && !isAdmin) {

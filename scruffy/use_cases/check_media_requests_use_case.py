@@ -11,6 +11,10 @@ from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
     RetentionResultDTO,
 )
+from scruffy.frameworks_and_drivers.database.settings_store import get_extension_days
+from scruffy.use_cases.interfaces.extension_repository_interface import (
+    ExtensionRepositoryInterface,
+)
 from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
 )
@@ -29,10 +33,12 @@ class CheckMediaRequestsUseCase:
         self,
         request_repository: RequestRepositoryInterface,
         media_repository: MediaRepositoryInterface,
+        extension_repository: ExtensionRepositoryInterface | None = None,
     ):
         """Initialize with required repositories."""
         self.request_repository = request_repository
         self.media_repository = media_repository
+        self.extension_repository = extension_repository
         logger.debug("Initialized CheckMediaRequestsUseCase")
 
     async def execute(self) -> list[tuple[MediaRequest, Media]]:
@@ -108,6 +114,15 @@ class CheckMediaRequestsUseCase:
         logger.info("Checking media requests with retention info")
         request_dtos = await self.request_repository.get_requests()
 
+        # Get extended request IDs and extension_days for retention calculation
+        extended_ids: set[int] = set()
+        extension_days = 0
+        if self.extension_repository is not None:
+            extended_ids = await asyncio.to_thread(
+                self.extension_repository.get_extended_request_ids
+            )
+            extension_days = await asyncio.to_thread(get_extension_days)
+
         # Convert DTOs to entities for business logic
         requests = [map_request_dto_to_entity(dto) for dto in request_dtos]
 
@@ -145,11 +160,14 @@ class CheckMediaRequestsUseCase:
             media_dto = outcome
             media = map_media_dto_to_entity(media_dto)
             if media.is_available():
-                retention_result = retention_calculator.evaluate(media)
+                is_extended = req.request_id in extended_ids
+                ext_days = extension_days if is_extended else 0
+                retention_result = retention_calculator.evaluate(media, extension_days=ext_days)
                 retention_dto = RetentionResultDTO(
                     remind=retention_result.remind,
                     delete=retention_result.delete,
                     days_left=retention_result.days_left,
+                    extended=is_extended,
                 )
                 request_dto = next(
                     dto for dto in request_dtos if dto.request_id == req.request_id
@@ -167,6 +185,7 @@ class CheckMediaRequestsUseCase:
                         "days_left": retention_result.days_left,
                         "remind": retention_result.remind,
                         "delete": retention_result.delete,
+                        "extended": is_extended,
                     },
                 )
 

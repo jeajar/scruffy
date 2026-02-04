@@ -1,11 +1,13 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Film,
   Tv,
   Trash2,
   AlertTriangle,
   CheckCircle2,
+  MoreVertical,
+  Clock,
 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +23,14 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useMedia } from "@/hooks/useMedia";
 import { formatDate } from "@/lib/utils";
-import type { MediaItem } from "@/lib/api";
+import { requestExtend, type MediaItem } from "@/lib/api";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
@@ -30,12 +39,12 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { media, count, isLoading: mediaLoading, isFetched } = useMedia();
+  const { media, count, isLoading: mediaLoading, isFetched, refetch } = useMedia();
 
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate({ to: "/login" });
+      navigate({ to: "/login", search: {} });
     }
   }, [authLoading, isAuthenticated, navigate]);
 
@@ -94,13 +103,17 @@ function HomePage() {
                           <TableHead className="text-white font-semibold">
                             Status
                           </TableHead>
+                          <TableHead className="text-white font-semibold w-12">
+                            <span className="sr-only">Actions</span>
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody className="bg-scruffy-darker">
                         {media.map((item) => (
                           <MediaRow
-                            key={`${item.request.id}-${item.media.id}`}
+                            key={`${item.request.id ?? item.request.request_id}-${item.media.id}`}
                             item={item}
+                            onExtended={refetch}
                           />
                         ))}
                       </TableBody>
@@ -158,8 +171,62 @@ function HomePage() {
   );
 }
 
-function MediaRow({ item }: { item: MediaItem }) {
+function MediaRowActions({
+  requestId,
+  isExtended,
+  onExtended,
+}: {
+  requestId: number;
+  isExtended: boolean;
+  onExtended?: () => void;
+}) {
+  const [isExtending, setIsExtending] = useState(false);
+
+  const handleRequestExtension = async () => {
+    if (isExtended || isExtending) return;
+    setIsExtending(true);
+    try {
+      await requestExtend(requestId);
+      onExtended?.();
+    } finally {
+      setIsExtending(false);
+    }
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-gray-400 hover:text-white"
+        >
+          <MoreVertical className="h-4 w-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-scruffy-dark border-gray-700">
+        <DropdownMenuItem
+          onClick={handleRequestExtension}
+          disabled={isExtended || isExtending}
+          className="text-gray-300 focus:bg-gray-700 focus:text-white"
+        >
+          <Clock className="h-4 w-4 mr-2" />
+          {isExtended ? "Already extended" : "Request extension"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function MediaRow({
+  item,
+  onExtended,
+}: {
+  item: MediaItem;
+  onExtended?: () => void;
+}) {
   const { media, request, retention } = item;
+  const isExtended = request.extended ?? retention.extended ?? false;
 
   const getDaysLeftVariant = () => {
     if (retention.days_left <= 0) return "danger";
@@ -216,9 +283,17 @@ function MediaRow({ item }: { item: MediaItem }) {
         </div>
       </TableCell>
       <TableCell>
-        <Badge variant={request.type === "movie" ? "movie" : "tv"}>
-          {request.type === "movie" ? "Movie" : "TV Show"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Badge variant={request.type === "movie" ? "movie" : "tv"}>
+            {request.type === "movie" ? "Movie" : "TV Show"}
+          </Badge>
+          {isExtended && (
+            <Badge variant="secondary" className="gap-1">
+              <Clock className="h-3 w-3" />
+              Extended
+            </Badge>
+          )}
+        </div>
       </TableCell>
       <TableCell className="text-gray-300">
         {formatDate(media.available_since)}
@@ -245,6 +320,13 @@ function MediaRow({ item }: { item: MediaItem }) {
             {getStatusText()}
           </span>
         </span>
+      </TableCell>
+      <TableCell className="w-12">
+        <MediaRowActions
+          requestId={request.id ?? request.request_id}
+          isExtended={isExtended}
+          onExtended={onExtended}
+        />
       </TableCell>
     </TableRow>
   );

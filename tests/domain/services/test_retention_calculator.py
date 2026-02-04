@@ -178,3 +178,29 @@ def test_evaluate_with_custom_policy():
     assert result.remind is True
     assert result.delete is False
     assert result.days_left == 10
+
+
+def test_evaluate_with_extension_days(retention_policy):
+    """Test evaluate with extension_days pushes the clock back."""
+    calculator = RetentionCalculator(retention_policy)
+    # Media at 24 days old - would normally remind (6 days left)
+    media = Media(
+        id=1,
+        title="Test Movie",
+        available=True,
+        available_since=datetime.now(UTC) - timedelta(days=24),
+        size_on_disk=1000000,
+        poster="",
+        seasons=[],
+    )
+
+    # Without extension: 6 days left, remind=True
+    result_no_ext = calculator.evaluate(media)
+    assert result_no_ext.remind is True
+    assert result_no_ext.days_left == 6
+
+    # With 7 days extension: effective age 17 days, 13 days left, no remind
+    result_ext = calculator.evaluate(media, extension_days=7)
+    assert result_ext.remind is False
+    assert result_ext.delete is False
+    assert result_ext.days_left == 13

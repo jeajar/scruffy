@@ -4,6 +4,10 @@ from sqlalchemy import Engine
 from sqlmodel import SQLModel, create_engine
 
 from scruffy.frameworks_and_drivers.config.settings import settings
+from scruffy.frameworks_and_drivers.database.extension_model import (
+    RequestExtensionModel,
+)
+from scruffy.frameworks_and_drivers.database.settings_model import SettingsModel
 
 
 def get_engine() -> Engine:

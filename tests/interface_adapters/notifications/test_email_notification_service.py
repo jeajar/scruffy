@@ -42,13 +42,16 @@ async def test_send_reminder_notice(service, mock_email_client, sample_media_dto
     """Test send_reminder_notice calls email client."""
     mock_email_client.send_reminder_notice = AsyncMock()
 
-    await service.send_reminder_notice("test@example.com", sample_media_dto, days_left=7)
+    await service.send_reminder_notice(
+        "test@example.com", sample_media_dto, days_left=7, request_id=123
+    )
 
     mock_email_client.send_reminder_notice.assert_called_once_with(
         "test@example.com",
         sample_media_dto.title,
         sample_media_dto.poster,
         7,
+        123,
     )
 
 

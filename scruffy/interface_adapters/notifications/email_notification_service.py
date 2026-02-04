@@ -15,11 +15,15 @@ class EmailNotificationService(NotificationServiceInterface):
         self.email_client = email_client or EmailClient()
 
     async def send_reminder_notice(
-        self, user_email: str, media_dto: MediaInfoDTO, days_left: int
+        self,
+        user_email: str,
+        media_dto: MediaInfoDTO,
+        days_left: int,
+        request_id: int,
     ) -> None:
         """Send a reminder notification to the user."""
         await self.email_client.send_reminder_notice(
-            user_email, media_dto.title, media_dto.poster, days_left
+            user_email, media_dto.title, media_dto.poster, days_left, request_id
         )
 
     async def send_deletion_notice(

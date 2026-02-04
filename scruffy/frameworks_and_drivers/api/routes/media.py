@@ -60,9 +60,12 @@ async def get_media_list(
         # Convert to JSON-serializable format
         media_list = []
         for result in results_sorted:
+            request_json = result.request.json()
+            request_json["id"] = request_json["request_id"]  # Frontend alias
+            request_json["extended"] = result.retention.extended
             media_list.append(
                 {
-                    "request": result.request.json(),
+                    "request": request_json,
                     "media": {
                         "id": result.media.id,
                         "title": result.media.title,

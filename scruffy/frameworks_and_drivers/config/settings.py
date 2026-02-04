@@ -22,6 +22,10 @@ class Settings(BaseSettings):
 
     retention_days: int = 30
     reminder_days: int = 7
+    extension_days: int = 7
+
+    # Application URL for email links (e.g. https://scruffy.example.com)
+    app_base_url: str = "http://localhost:5173"
 
     # Email Settings
     email_enabled: bool = False

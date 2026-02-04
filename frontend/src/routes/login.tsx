@@ -15,6 +15,9 @@ import { Footer } from "@/components/layout/Footer";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
+  validateSearch: (search: Record<string, unknown>): { return_url?: string } => ({
+    return_url: typeof search.return_url === "string" ? search.return_url : undefined,
+  }),
 });
 
 type LoginState = "idle" | "waiting" | "success" | "error";
@@ -22,6 +25,7 @@ type LoginState = "idle" | "waiting" | "success" | "error";
 function LoginPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { return_url } = Route.useSearch();
   const [state, setState] = useState<LoginState>("idle");
   const [pinData, setPinData] = useState<PinResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -105,7 +109,7 @@ function LoginPage() {
           await queryClient.invalidateQueries({ queryKey: ["auth"] });
 
           setTimeout(() => {
-            navigate({ to: "/" });
+            navigate({ to: return_url || "/" });
           }, 1000);
         } else if (!result.authenticated && result.error) {
           clearInterval(pollInterval);
@@ -126,7 +130,7 @@ function LoginPage() {
     }, 1000);
 
     return () => clearInterval(pollInterval);
-  }, [state, pinData, navigate, queryClient]);
+  }, [state, pinData, navigate, queryClient, return_url]);
 
   return (
     <div className="min-h-full flex flex-col">

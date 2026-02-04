@@ -11,6 +11,7 @@ from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.gateways.media_repository_composite import (
     MediaRepositoryComposite,
 )
+from scruffy.interface_adapters.gateways.extension_gateway import ExtensionGateway
 from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
 from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
 from scruffy.interface_adapters.gateways.reminder_gateway import ReminderGateway
@@ -21,6 +22,7 @@ from scruffy.interface_adapters.notifications.email_notification_service import 
 from scruffy.use_cases.check_media_requests_use_case import CheckMediaRequestsUseCase
 from scruffy.use_cases.delete_media_use_case import DeleteMediaUseCase
 from scruffy.use_cases.process_media_use_case import ProcessMediaUseCase
+from scruffy.use_cases.request_extension_use_case import RequestExtensionUseCase
 from scruffy.use_cases.send_reminder_use_case import SendReminderUseCase
 
 logger = logging.getLogger(__name__)
@@ -54,12 +56,15 @@ class Container:
             self._radarr_gateway, self._sonarr_gateway
         )
         self._reminder_gateway = ReminderGateway(self._database_engine)
+        self._extension_gateway = ExtensionGateway(self._database_engine)
         self._notification_service = EmailNotificationService(self._email_client)
 
         # Use cases
         logger.debug("Creating use cases")
         self._check_use_case = CheckMediaRequestsUseCase(
-            self._overseer_gateway, self._media_repository
+            self._overseer_gateway,
+            self._media_repository,
+            self._extension_gateway,
         )
         self._send_reminder_use_case = SendReminderUseCase(
             self._reminder_gateway, self._notification_service
@@ -68,6 +73,10 @@ class Container:
             self._media_repository,
             self._overseer_gateway,
             self._notification_service,
+        )
+        self._request_extension_use_case = RequestExtensionUseCase(
+            self._extension_gateway,
+            self._overseer_gateway,
         )
 
         retention_policy = RetentionPolicy(
@@ -126,3 +135,13 @@ class Container:
     def retention_calculator(self) -> RetentionCalculator:
         """Get retention calculator."""
         return self._retention_calculator
+
+    @property
+    def request_extension_use_case(self) -> RequestExtensionUseCase:
+        """Get request extension use case."""
+        return self._request_extension_use_case
+
+    @property
+    def extension_gateway(self) -> ExtensionGateway:
+        """Get extension gateway."""
+        return self._extension_gateway

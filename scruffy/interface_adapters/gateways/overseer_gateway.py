@@ -106,6 +106,21 @@ class OverseerGateway(RequestRepositoryInterface):
         )
         return all_requests
 
+    async def get_request(self, request_id: int) -> RequestDTO | None:
+        """Fetch a single request by ID. Returns None if not found."""
+        try:
+            response = await self.http_client.get(
+                f"{self.base_url}/api/v1/request/{request_id}",
+                headers=self.headers,
+            )
+            return RequestDTO.from_overseer_response(response)
+        except Exception as e:
+            logger.debug(
+                "Request not found or error fetching",
+                extra={"request_id": request_id, "error": str(e)},
+            )
+            return None
+
     async def delete_request(self, request_id: int) -> None:
         """Delete a request by its ID."""
         logger.info("Deleting request from Overseerr", extra={"request_id": request_id})

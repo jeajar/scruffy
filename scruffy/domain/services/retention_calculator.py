@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import timedelta
 
 from scruffy.domain.entities.media import Media
 from scruffy.domain.value_objects.retention_policy import RetentionPolicy
@@ -20,13 +21,24 @@ class RetentionCalculator:
         """Initialize with retention policy."""
         self.policy = policy
 
-    def evaluate(self, media: Media) -> RetentionResult:
-        """Evaluate retention policy for media."""
+    def evaluate(
+        self, media: Media, extension_days: int = 0
+    ) -> RetentionResult:
+        """
+        Evaluate retention policy for media.
+
+        When extension_days > 0, treats effective_available_since as
+        available_since + extension_days (pushes the clock back).
+        """
         if not media.is_available():
             return RetentionResult(remind=False, delete=False, days_left=0)
 
-        remind = self.policy.should_remind(media.available_since)
-        delete = self.policy.should_delete(media.available_since)
-        days_left = self.policy.days_remaining(media.available_since)
+        available_since = media.available_since
+        if extension_days > 0 and available_since is not None:
+            available_since = available_since + timedelta(days=extension_days)
+
+        remind = self.policy.should_remind(available_since)
+        delete = self.policy.should_delete(available_since)
+        days_left = self.policy.days_remaining(available_since)
 
         return RetentionResult(remind=remind, delete=delete, days_left=days_left)

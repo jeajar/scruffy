@@ -8,7 +8,11 @@ class NotificationServiceInterface(ABC):
 
     @abstractmethod
     async def send_reminder_notice(
-        self, user_email: str, media_dto: MediaInfoDTO, days_left: int
+        self,
+        user_email: str,
+        media_dto: MediaInfoDTO,
+        days_left: int,
+        request_id: int,
     ) -> None:
         """Send a reminder notification to the user."""
         pass

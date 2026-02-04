@@ -13,6 +13,7 @@ class RetentionResultDTO:
     remind: bool
     delete: bool
     days_left: int = 0
+    extended: bool = False
 
 
 @dataclass(frozen=True)

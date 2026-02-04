@@ -90,17 +90,25 @@ def create_app() -> FastAPI:
 
     # Import and include routers
     from scruffy.frameworks_and_drivers.api.routes.auth import router as auth_router
+    from scruffy.frameworks_and_drivers.api.routes.extensions import (
+        router as extensions_router,
+    )
     from scruffy.frameworks_and_drivers.api.routes.health import router as health_router
     from scruffy.frameworks_and_drivers.api.routes.media import router as media_router
     from scruffy.frameworks_and_drivers.api.routes.schedules import (
         router as schedules_router,
     )
+    from scruffy.frameworks_and_drivers.api.routes.settings import (
+        router as settings_router,
+    )
     from scruffy.frameworks_and_drivers.api.routes.tasks import router as tasks_router
 
     app.include_router(auth_router)
+    app.include_router(extensions_router)
     app.include_router(health_router)
     app.include_router(media_router)
     app.include_router(schedules_router)
+    app.include_router(settings_router)
     app.include_router(tasks_router, prefix="/api/tasks")
 
     logger.info(

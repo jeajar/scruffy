@@ -118,7 +118,7 @@ class TestEmailClientSendMethods:
         client = EmailClient()
 
         await client.send_reminder_notice(
-            "test@test.com", "Test Movie", "poster.jpg", days_left=7
+            "test@test.com", "Test Movie", "poster.jpg", days_left=7, request_id=123
         )
 
         mock_fastmail.send_message.assert_called_once()
@@ -151,7 +151,7 @@ class TestEmailClientSendMethods:
 
             # Should not raise
             await client.send_reminder_notice(
-                "test@test.com", "Test Movie", "poster.jpg", days_left=7
+                "test@test.com", "Test Movie", "poster.jpg", days_left=7, request_id=123
             )
 
 

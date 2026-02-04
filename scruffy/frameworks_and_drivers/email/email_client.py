@@ -64,11 +64,19 @@ class EmailClient:
         await self.fastmail.send_message(message)
 
     async def send_reminder_notice(
-        self, to_email: str, title: str, poster: str, days_left: int
+        self,
+        to_email: str,
+        title: str,
+        poster: str,
+        days_left: int,
+        request_id: int,
     ) -> None:
         """Send reminder notice email."""
         if not self.fastmail:
             return
+
+        base_url = settings.app_base_url.rstrip("/")
+        extend_url = f"{base_url}/extend?request_id={request_id}"
 
         template = self.template_env.get_template("base.html.j2")
         html = template.render(
@@ -76,6 +84,7 @@ class EmailClient:
             days_left=days_left,
             quote=random.choice(scruffy_quotes),
             reminder=True,
+            extend_url=extend_url,
         )
 
         message = MessageSchema(

@@ -8,6 +8,11 @@ class RequestRepositoryInterface(ABC):
     """Abstract interface for managing media requests."""
 
     @abstractmethod
+    async def get_request(self, request_id: int) -> RequestDTO | None:
+        """Get a single request by ID. Returns None if not found."""
+        pass
+
+    @abstractmethod
     async def get_requests(
         self, status_filter: MediaStatus | None = None
     ) -> list[RequestDTO]:
