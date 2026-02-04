@@ -1,5 +1,6 @@
 """Use case for sending reminder notifications."""
 
+import asyncio
 import logging
 
 from scruffy.domain.entities.media import Media
@@ -41,7 +42,10 @@ class SendReminderUseCase:
             },
         )
 
-        if not self.reminder_repository.has_reminder(request.request_id):
+        has_reminder = await asyncio.to_thread(
+            self.reminder_repository.has_reminder, request.request_id
+        )
+        if not has_reminder:
             logger.info(
                 "Sending reminder notification",
                 extra={
@@ -56,7 +60,11 @@ class SendReminderUseCase:
             await self.notification_service.send_reminder_notice(
                 request.user_email, media_dto, days_left
             )
-            self.reminder_repository.add_reminder(request.request_id, request.user_id)
+            await asyncio.to_thread(
+                self.reminder_repository.add_reminder,
+                request.request_id,
+                request.user_id,
+            )
             logger.debug(
                 "Reminder sent and recorded",
                 extra={

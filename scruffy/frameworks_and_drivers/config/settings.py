@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     api_enabled: bool = True
     api_host: str = "0.0.0.0"
     api_port: int = 8080
+    api_workers: int = 1  # Note: workers > 1 runs scheduler per worker (duplicate jobs)
     api_secret_key: str = "change-me-in-production"  # For session signing
 
     # CORS settings for frontend

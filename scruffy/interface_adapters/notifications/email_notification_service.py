@@ -10,6 +10,8 @@ class EmailNotificationService(NotificationServiceInterface):
 
     def __init__(self, email_client: EmailClient | None = None):
         """Initialize with email client."""
+        # TODO: Fix dependency inversion violation, EmailClient should be
+        # and abstract interface.
         self.email_client = email_client or EmailClient()
 
     async def send_reminder_notice(

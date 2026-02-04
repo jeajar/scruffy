@@ -1,5 +1,6 @@
 """Admin routes for scheduled jobs (check/process)."""
 
+import asyncio
 import logging
 from datetime import UTC, datetime
 
@@ -67,27 +68,18 @@ def _to_response(model: ScheduleJobModel) -> ScheduleResponse:
     )
 
 
-# --- Routes ---
+# --- Sync DB helpers (run in thread pool to avoid blocking event loop) ---
 
 
-@router.get("", response_model=list[ScheduleResponse])
-async def list_schedules(_user: AdminUser) -> list[ScheduleResponse]:
-    """List all scheduled jobs. Admin only."""
+def _list_schedules_sync() -> list[ScheduleJobModel]:
     engine = get_engine()
     with Session(engine) as session:
-        rows = list(
+        return list(
             session.exec(select(ScheduleJobModel).order_by(ScheduleJobModel.id))
         )
-    return [_to_response(r) for r in rows]
 
 
-@router.post("", response_model=ScheduleResponse, status_code=status.HTTP_201_CREATED)
-async def create_schedule(
-    body: ScheduleCreate,
-    request: Request,
-    _user: AdminUser,
-) -> ScheduleResponse:
-    """Create a new schedule. Admin only."""
+def _create_schedule_sync(body: ScheduleCreate) -> ScheduleJobModel:
     engine = get_engine()
     model = ScheduleJobModel(
         job_type=body.job_type,
@@ -98,8 +90,79 @@ async def create_schedule(
         session.add(model)
         session.commit()
         session.refresh(model)
-        if model.id is None:
-            raise HTTPException(status_code=500, detail="Failed to create schedule")
+    if model.id is None:
+        raise HTTPException(status_code=500, detail="Failed to create schedule")
+    return model
+
+
+def _get_schedule_sync(schedule_id: int) -> ScheduleJobModel | None:
+    engine = get_engine()
+    with Session(engine) as session:
+        return session.get(ScheduleJobModel, schedule_id)
+
+
+def _update_schedule_sync(
+    schedule_id: int, body: ScheduleUpdate
+) -> ScheduleJobModel:
+    engine = get_engine()
+    with Session(engine) as session:
+        model = session.get(ScheduleJobModel, schedule_id)
+        if not model:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Schedule not found",
+            )
+        if body.job_type is not None:
+            model.job_type = body.job_type
+        if body.cron_expression is not None:
+            model.cron_expression = body.cron_expression.strip()
+        if body.enabled is not None:
+            model.enabled = body.enabled
+        model.updated_at = datetime.now(UTC)
+        session.add(model)
+        session.commit()
+        session.refresh(model)
+    return model
+
+
+def _delete_schedule_sync(schedule_id: int) -> None:
+    engine = get_engine()
+    with Session(engine) as session:
+        model = session.get(ScheduleJobModel, schedule_id)
+        if not model:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Schedule not found",
+            )
+        session.delete(model)
+        session.commit()
+
+
+def _get_schedule_job_type_sync(schedule_id: int) -> str | None:
+    engine = get_engine()
+    with Session(engine) as session:
+        model = session.get(ScheduleJobModel, schedule_id)
+        return model.job_type if model else None
+
+
+# --- Routes ---
+
+
+@router.get("", response_model=list[ScheduleResponse])
+async def list_schedules(_user: AdminUser) -> list[ScheduleResponse]:
+    """List all scheduled jobs. Admin only."""
+    rows = await asyncio.to_thread(_list_schedules_sync)
+    return [_to_response(r) for r in rows]
+
+
+@router.post("", response_model=ScheduleResponse, status_code=status.HTTP_201_CREATED)
+async def create_schedule(
+    body: ScheduleCreate,
+    request: Request,
+    _user: AdminUser,
+) -> ScheduleResponse:
+    """Create a new schedule. Admin only."""
+    model = await asyncio.to_thread(_create_schedule_sync, body)
     add_job_to_scheduler(request.app, model)
     logger.info(
         "Schedule created",
@@ -111,9 +174,7 @@ async def create_schedule(
 @router.get("/{schedule_id}", response_model=ScheduleResponse)
 async def get_schedule(schedule_id: int, _user: AdminUser) -> ScheduleResponse:
     """Get a single schedule by id. Admin only."""
-    engine = get_engine()
-    with Session(engine) as session:
-        model = session.get(ScheduleJobModel, schedule_id)
+    model = await asyncio.to_thread(_get_schedule_sync, schedule_id)
     if not model:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"
@@ -129,23 +190,7 @@ async def update_schedule(
     _user: AdminUser,
 ) -> ScheduleResponse:
     """Update a schedule. Admin only."""
-    engine = get_engine()
-    with Session(engine) as session:
-        model = session.get(ScheduleJobModel, schedule_id)
-        if not model:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"
-            )
-        if body.job_type is not None:
-            model.job_type = body.job_type
-        if body.cron_expression is not None:
-            model.cron_expression = body.cron_expression.strip()
-        if body.enabled is not None:
-            model.enabled = body.enabled
-        model.updated_at = datetime.now(UTC)
-        session.add(model)
-        session.commit()
-        session.refresh(model)
+    model = await asyncio.to_thread(_update_schedule_sync, schedule_id, body)
     update_job_in_scheduler(request.app, model)
     logger.info("Schedule updated", extra={"job_id": schedule_id})
     return _to_response(model)
@@ -158,15 +203,7 @@ async def delete_schedule(
     _user: AdminUser,
 ) -> None:
     """Delete a schedule. Admin only."""
-    engine = get_engine()
-    with Session(engine) as session:
-        model = session.get(ScheduleJobModel, schedule_id)
-        if not model:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"
-            )
-        session.delete(model)
-        session.commit()
+    await asyncio.to_thread(_delete_schedule_sync, schedule_id)
     remove_job_from_scheduler(request.app, schedule_id)
     logger.info("Schedule deleted", extra={"job_id": schedule_id})
 
@@ -193,14 +230,13 @@ async def run_schedule_now(
     _user: AdminUser,
 ) -> dict:
     """Run this schedule's job once now (in background). Admin only."""
-    engine = get_engine()
-    with Session(engine) as session:
-        model = session.get(ScheduleJobModel, schedule_id)
-        if not model:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"
-            )
-        job_type = model.job_type
+    job_type = await asyncio.to_thread(
+        _get_schedule_job_type_sync, schedule_id
+    )
+    if not job_type:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"
+        )
     background_tasks.add_task(_run_job_now, container, job_type)
     return {
         "status": "started",

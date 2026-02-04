@@ -1,6 +1,8 @@
 """End-to-end integration tests for complete workflows."""
 
+import tempfile
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from unittest.mock import patch
 
 import httpx
@@ -30,14 +32,23 @@ def mock_settings():
 
 @pytest.fixture
 def in_memory_engine():
-    """In-memory database engine for integration tests."""
+    """Database engine for integration tests.
+
+    Uses a temp file (not :memory:) so connections from the thread pool
+    (asyncio.to_thread) see the same database as the main thread.
+    """
     from sqlalchemy import create_engine
     from sqlmodel import SQLModel
 
-    engine = create_engine("sqlite:///:memory:")
-    SQLModel.metadata.create_all(engine)
-    yield engine
-    SQLModel.metadata.drop_all(engine)
+    with tempfile.NamedTemporaryFile(suffix=".db", delete=False) as f:
+        db_path = f.name
+    try:
+        engine = create_engine(f"sqlite:///{db_path}")
+        SQLModel.metadata.create_all(engine)
+        yield engine
+    finally:
+        SQLModel.metadata.drop_all(engine)
+        Path(db_path).unlink(missing_ok=True)
 
 
 @pytest.mark.asyncio
