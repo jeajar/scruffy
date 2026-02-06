@@ -54,27 +54,20 @@ function RetentionPage() {
     }
   }, [settings?.extension_days]);
 
-  const handleSaveRetention = async () => {
+  const handleSave = async () => {
     const retention = parseInt(retentionDays, 10);
     const reminder = parseInt(reminderDays, 10);
+    const extension = parseInt(extensionDays, 10);
     if (isNaN(retention) || retention < 1 || retention > 365) return;
     if (isNaN(reminder) || reminder < 1 || reminder > 365) return;
     if (reminder >= retention) return;
+    if (isNaN(extension) || extension < 1 || extension > 365) return;
     try {
       await updateMutation.mutateAsync({
         retention_days: retention,
         reminder_days: reminder,
+        extension_days: extension,
       });
-    } catch {
-      // Error handled by mutation
-    }
-  };
-
-  const handleSaveExtension = async () => {
-    const days = parseInt(extensionDays, 10);
-    if (isNaN(days) || days < 1 || days > 365) return;
-    try {
-      await updateMutation.mutateAsync({ extension_days: days });
     } catch {
       // Error handled by mutation
     }
@@ -89,18 +82,27 @@ function RetentionPage() {
     parseInt(reminderDays, 10) >= 1 &&
     parseInt(reminderDays, 10) <= 365 &&
     parseInt(reminderDays, 10) < parseInt(retentionDays, 10);
+  const extensionValid =
+    !isNaN(parseInt(extensionDays, 10)) &&
+    parseInt(extensionDays, 10) >= 1 &&
+    parseInt(extensionDays, 10) <= 365;
+
+  const hasChanges =
+    parseInt(retentionDays, 10) !== settings?.retention_days ||
+    parseInt(reminderDays, 10) !== settings?.reminder_days ||
+    parseInt(extensionDays, 10) !== settings?.extension_days;
 
   return (
-    <div className="space-y-8 w-full">
-      {/* Base Retention */}
+    <div className="w-full">
       <Card className="bg-scruffy-dark border-gray-700 w-full">
         <CardHeader>
           <CardTitle className="text-white flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Base Retention
+            Retention
           </CardTitle>
           <CardDescription>
-            How long to keep media before deletion, and when to send reminders.
+            How long to keep media before deletion, when to send reminders, and
+            how many days to add when a user requests an extension.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -149,48 +151,6 @@ function RetentionPage() {
                   retention days)
                 </p>
               </div>
-              {updateMutation.isError && (
-                <p className="text-sm text-red-400">
-                  {updateMutation.error instanceof Error
-                    ? updateMutation.error.message
-                    : "Failed to save"}
-                </p>
-              )}
-              <Button
-                onClick={handleSaveRetention}
-                disabled={
-                  updateMutation.isPending ||
-                  !retentionValid ||
-                  !reminderValid ||
-                  (parseInt(retentionDays, 10) === settings?.retention_days &&
-                    parseInt(reminderDays, 10) === settings?.reminder_days)
-                }
-                className="bg-scruffy-teal hover:bg-scruffy-teal/90"
-              >
-                {updateMutation.isPending ? "Saving..." : "Save Base Retention"}
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Extension Settings */}
-      <Card className="bg-scruffy-dark border-gray-700 w-full">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Clock className="h-5 w-5" />
-            Extension Settings
-          </CardTitle>
-          <CardDescription>
-            When a user requests "more time" on a media request, how many extra
-            days should be added to the retention period?
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {isLoading ? (
-            <div className="plex-spinner" />
-          ) : (
-            <>
               <div>
                 <label
                   htmlFor="extension-days"
@@ -219,15 +179,17 @@ function RetentionPage() {
                 </p>
               )}
               <Button
-                onClick={handleSaveExtension}
+                onClick={handleSave}
                 disabled={
                   updateMutation.isPending ||
-                  extensionDays === "" ||
-                  parseInt(extensionDays, 10) === settings?.extension_days
+                  !retentionValid ||
+                  !reminderValid ||
+                  !extensionValid ||
+                  !hasChanges
                 }
                 className="bg-scruffy-teal hover:bg-scruffy-teal/90"
               >
-                {updateMutation.isPending ? "Saving..." : "Save Extension"}
+                {updateMutation.isPending ? "Saving..." : "Save"}
               </Button>
             </>
           )}
