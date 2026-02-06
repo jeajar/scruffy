@@ -1,20 +1,18 @@
 """Helpers for reading/writing admin settings from database."""
 
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import cast
 
 from sqlalchemy import ColumnElement
 from sqlmodel import Session, select
 
+from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.frameworks_and_drivers.config.settings import settings
+from scruffy.frameworks_and_drivers.database.database import get_engine
+from scruffy.frameworks_and_drivers.database.settings_model import SettingsModel
 from scruffy.interface_adapters.interfaces.settings_provider_interface import (
     EmailConfig,
 )
-
-if TYPE_CHECKING:
-    from scruffy.domain.value_objects.retention_policy import RetentionPolicy
-from scruffy.frameworks_and_drivers.database.database import get_engine
-from scruffy.frameworks_and_drivers.database.settings_model import SettingsModel
 
 logger = logging.getLogger(__name__)
 
@@ -148,10 +146,8 @@ def set_reminder_days(value: int) -> None:
     logger.info("Updated reminder_days setting", extra={"value": value})
 
 
-def get_retention_policy() -> "RetentionPolicy":
+def get_retention_policy() -> RetentionPolicy:
     """Get current retention policy from DB (with env fallback)."""
-    from scruffy.domain.value_objects.retention_policy import RetentionPolicy
-
     return RetentionPolicy(
         retention_days=get_retention_days(),
         reminder_days=get_reminder_days(),
