@@ -24,6 +24,9 @@ from scruffy.interface_adapters.notifications.email_notification_service import 
 )
 from scruffy.use_cases.check_media_requests_use_case import CheckMediaRequestsUseCase
 from scruffy.use_cases.delete_media_use_case import DeleteMediaUseCase
+from scruffy.use_cases.interfaces.notification_service_interface import (
+    NotificationServiceInterface,
+)
 from scruffy.use_cases.process_media_use_case import ProcessMediaUseCase
 from scruffy.use_cases.request_extension_use_case import RequestExtensionUseCase
 from scruffy.use_cases.send_reminder_use_case import SendReminderUseCase
@@ -144,3 +147,8 @@ class Container:
     def extension_gateway(self) -> ExtensionGateway:
         """Get extension gateway."""
         return self._extension_gateway
+
+    @property
+    def notification_service(self) -> NotificationServiceInterface:
+        """Get notification service (for admin/test use e.g. sending test reminder)."""
+        return self._notification_service

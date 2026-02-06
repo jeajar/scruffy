@@ -8,6 +8,7 @@ from fastapi import APIRouter, HTTPException
 
 from scruffy.frameworks_and_drivers.api.auth import AuthenticatedUser
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
+from scruffy.frameworks_and_drivers.database.settings_store import get_overseerr_url
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,12 @@ async def get_media_list(
                 }
             )
 
-        response = {"media": media_list, "count": len(media_list)}
+        overseerr_url = get_overseerr_url()
+        response = {
+            "media": media_list,
+            "count": len(media_list),
+            "overseerr_url": overseerr_url.rstrip("/") if overseerr_url else None,
+        }
         _media_list_cache = response
         _media_list_cache_expires_at = now + _MEDIA_LIST_CACHE_TTL_SECONDS
 

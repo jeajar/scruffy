@@ -6,6 +6,18 @@ from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.request_status import RequestStatus
 
 
+def _extract_tmdb_id(media: dict, media_type: str) -> int | None:
+    """Extract TMDB ID from Overseerr media object for media page URLs."""
+    # Overseerr: media.movie.tmdbId or media.tv.tmdbId
+    sub = media.get("movie") if media_type == "movie" else media.get("tv")
+    if isinstance(sub, dict) and "tmdbId" in sub:
+        return int(sub["tmdbId"])
+    # Fallback: media.tmdbId (some API versions)
+    if "tmdbId" in media:
+        return int(media["tmdbId"])
+    return None
+
+
 @dataclass(frozen=True)
 class RequestDTO:
     """Data Transfer Object for media requests."""
@@ -20,12 +32,13 @@ class RequestDTO:
     media_status: MediaStatus
     external_service_id: int
     seasons: list[int]
+    tmdb_id: int | None = None
 
     @classmethod
     def from_overseer_response(cls, response: dict) -> "RequestDTO":
         """Create DTO from Overseerr API response."""
         media: dict = response.get("media", {})
-        
+
         # Handle request status - Overseerr can return either integer or string
         raw_status = response.get("status")
         if raw_status is None:
@@ -44,8 +57,10 @@ class RequestDTO:
                 "approved": RequestStatus.APPROVED,
                 "declined": RequestStatus.DECLINED,
             }
-            request_status = status_map.get(str(raw_status).lower(), RequestStatus.PENDING_APPROVAL)
-        
+            request_status = status_map.get(
+                str(raw_status).lower(), RequestStatus.PENDING_APPROVAL
+            )
+
         # Handle media status - Overseerr can return either integer or string
         raw_media_status = media.get("status")
         if raw_media_status is None:
@@ -68,7 +83,10 @@ class RequestDTO:
             }
             media_status_str = str(raw_media_status).lower()
             media_status = media_status_map.get(media_status_str, MediaStatus.UNKNOWN)
-        
+
+        media_type = response.get("type", "movie")
+        tmdb_id = _extract_tmdb_id(media, media_type)
+
         return cls(
             user_id=response.get("requestedBy", {}).get("id"),
             user_email=response.get("requestedBy", {}).get("email"),
@@ -80,6 +98,7 @@ class RequestDTO:
             media_status=media_status,
             external_service_id=media.get("externalServiceId"),
             seasons=[season["seasonNumber"] for season in response.get("seasons", [])],
+            tmdb_id=tmdb_id,
         )
 
     def json(self):
@@ -95,4 +114,5 @@ class RequestDTO:
             "media_status": self.media_status.name,
             "external_service_id": int(self.external_service_id),
             "seasons": list(self.seasons),
+            "tmdb_id": self.tmdb_id,
         }

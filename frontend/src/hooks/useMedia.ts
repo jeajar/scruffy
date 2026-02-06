@@ -12,6 +12,7 @@ export function useMedia() {
   return {
     media: data?.media ?? [],
     count: data?.count ?? 0,
+    overseerrUrl: data?.overseerr_url ?? null,
     isLoading,
     isFetched,
     error,

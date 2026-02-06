@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   MoreVertical,
   Clock,
+  ExternalLink,
 } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +40,7 @@ export const Route = createFileRoute("/")({
 function HomePage() {
   const navigate = useNavigate();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { media, count, isLoading: mediaLoading, isFetched, refetch } = useMedia();
+  const { media, count, overseerrUrl, isLoading: mediaLoading, isFetched, refetch } = useMedia();
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -113,6 +114,7 @@ function HomePage() {
                           <MediaRow
                             key={`${item.request.id ?? item.request.request_id}-${item.media.id}`}
                             item={item}
+                            overseerrUrl={overseerrUrl}
                             onExtended={refetch}
                           />
                         ))}
@@ -172,11 +174,15 @@ function HomePage() {
 }
 
 function MediaRowActions({
-  requestId,
+  overseerrUrl,
+  mediaType,
+  tmdbId,
   isExtended,
   onExtended,
 }: {
-  requestId: number;
+  overseerrUrl: string | null;
+  mediaType: string;
+  tmdbId: number | null | undefined;
   isExtended: boolean;
   onExtended?: () => void;
 }) {
@@ -205,6 +211,21 @@ function MediaRowActions({
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="bg-scruffy-dark border-gray-700">
+        {overseerrUrl && tmdbId && (
+          <DropdownMenuItem
+            asChild
+            className="text-gray-300 focus:bg-gray-700 focus:text-white"
+          >
+            <a
+              href={`${overseerrUrl}/${mediaType}/${tmdbId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open in Overseerr
+            </a>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem
           onClick={handleRequestExtension}
           disabled={isExtended || isExtending}
@@ -220,9 +241,11 @@ function MediaRowActions({
 
 function MediaRow({
   item,
+  overseerrUrl,
   onExtended,
 }: {
   item: MediaItem;
+  overseerrUrl: string | null;
   onExtended?: () => void;
 }) {
   const { media, request, retention } = item;
@@ -323,7 +346,9 @@ function MediaRow({
       </TableCell>
       <TableCell className="w-12">
         <MediaRowActions
-          requestId={request.id ?? request.request_id}
+          overseerrUrl={overseerrUrl}
+          mediaType={request.type}
+          tmdbId={request.tmdb_id}
           isExtended={isExtended}
           onExtended={onExtended}
         />
