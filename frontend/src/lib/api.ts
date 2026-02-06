@@ -256,12 +256,31 @@ export async function runScheduleNow(id: number): Promise<{ status: string; job_
 
 // --- Admin Job Runs ---
 
+export interface JobRunSummaryReminder {
+  email: string;
+  title: string;
+  days_left: number;
+}
+
+export interface JobRunSummaryDeletion {
+  email: string;
+  title: string;
+}
+
+export interface JobRunSummary {
+  reminders?: JobRunSummaryReminder[];
+  deletions?: JobRunSummaryDeletion[];
+  items_checked?: number;
+  needing_attention?: number;
+}
+
 export interface JobRun {
   id: number;
   job_type: "check" | "process";
   finished_at: string;
   success: boolean;
   error_message: string | null;
+  summary?: JobRunSummary | null;
 }
 
 export async function getJobRuns(): Promise<JobRun[]> {

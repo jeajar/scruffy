@@ -115,7 +115,9 @@ The frontend runs at **http://localhost:5173** and proxies `/api`, `/auth`, and 
 
 **Admin & scheduled jobs**
 
-When the API is running, scheduled jobs (check/process) are stored in the same SQLite DB and run in the background via APScheduler. Admin access is determined by **Overseerr**: any user with admin permission in Overseerr can open **Admin** in the header and manage **Scheduled Jobs** (add/edit/delete cron-style schedules and run jobs on demand). No env var is required.
+When the API is running, scheduled jobs (check/process) are stored in the same SQLite DB and run in the background via APScheduler. Admin access is determined by **Overseerr**: any user with admin permission in Overseerr can open **Admin** in the header and manage **Scheduled Jobs** (add/edit/delete cron-style schedules and run jobs on demand). The **Jobs** page shows run history with an expandable summary of what was sent (reminders) or deleted per run. No env var is required.
+
+If you upgraded from a version before job run summaries and use an existing SQLite DB, add the column so new runs can store summaries: `sqlite3 scruffy.db "ALTER TABLE jobrunmodel ADD COLUMN summary TEXT;"`
 
 **Using Docker Compose**
 

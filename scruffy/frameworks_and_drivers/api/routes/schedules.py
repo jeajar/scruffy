@@ -213,13 +213,20 @@ async def _run_job_now(container: ContainerDep, job_type: str) -> None:
     """Background helper to run check or process once."""
     success = False
     error_message: str | None = None
+    summary = None
     try:
         if job_type == "check":
-            await container.check_media_requests_use_case.execute_with_retention(
+            results = await container.check_media_requests_use_case.execute_with_retention(
                 container.retention_calculator
             )
+            summary = {
+                "items_checked": len(results),
+                "needing_attention": sum(
+                    1 for r in results if r.retention.remind or r.retention.delete
+                ),
+            }
         elif job_type == "process":
-            await container.process_media_use_case.execute()
+            summary = await container.process_media_use_case.execute()
         logger.info("Run-now job completed", extra={"job_type": job_type})
         success = True
     except Exception as e:
@@ -227,7 +234,7 @@ async def _run_job_now(container: ContainerDep, job_type: str) -> None:
         logger.exception("Run-now job %s failed: %s", job_type, e)
     finally:
         await asyncio.to_thread(
-            record_job_run_sync, job_type, success, error_message
+            record_job_run_sync, job_type, success, error_message, summary
         )
 
 

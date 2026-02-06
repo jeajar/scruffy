@@ -59,7 +59,9 @@ def mock_container(sample_media_check_result):
         return_value=[sample_media_check_result]
     )
     container.process_media_use_case = Mock()
-    container.process_media_use_case.execute = AsyncMock()
+    container.process_media_use_case.execute = AsyncMock(
+        return_value={"reminders": [], "deletions": []}
+    )
     container.overseer_gateway = Mock()
     container.overseer_gateway.status = AsyncMock(return_value=True)
     container.retention_calculator = Mock()
@@ -68,15 +70,18 @@ def mock_container(sample_media_check_result):
 
 @pytest.fixture
 def app_with_mock_container(mock_container):
-    """Create app with mocked container."""
+    """Create app with mocked container and patched record_job_run_sync (no real DB)."""
     with patch(
         "scruffy.frameworks_and_drivers.api.app.Container",
         return_value=mock_container,
     ):
         with patch("scruffy.frameworks_and_drivers.api.app.configure_logging"):
-            app = create_app()
-            app.state.container = mock_container
-            yield app
+            with patch(
+                "scruffy.frameworks_and_drivers.api.routes.tasks.record_job_run_sync"
+            ):
+                app = create_app()
+                app.state.container = mock_container
+                yield app
 
 
 @pytest.fixture

@@ -81,11 +81,24 @@ def sample_media():
 @pytest.mark.asyncio
 async def test_execute_calls_check_use_case(use_case, mock_check_use_case, sample_request, sample_media):
     """Test execute calls check use case."""
-    mock_check_use_case.execute = AsyncMock(return_value=[(sample_request, sample_media)])
+    # Use media that does not trigger remind/delete (5 days old; retention 30, reminder 7)
+    media_no_action = Media(
+        id=1,
+        title="Test Movie",
+        available=True,
+        available_since=datetime.now(UTC) - timedelta(days=5),
+        size_on_disk=1000000,
+        poster="",
+        seasons=[],
+    )
+    mock_check_use_case.execute = AsyncMock(
+        return_value=[(sample_request, media_no_action)]
+    )
 
-    await use_case.execute()
+    summary = await use_case.execute()
 
     mock_check_use_case.execute.assert_called_once()
+    assert summary == {"reminders": [], "deletions": []}
 
 
 @pytest.mark.asyncio
@@ -106,29 +119,40 @@ async def test_execute_calls_send_reminder_when_remind_true(
     mock_check_use_case.execute = AsyncMock(return_value=[(sample_request, reminder_media)])
     mock_send_reminder_use_case.execute = AsyncMock()
 
-    await use_case.execute()
+    summary = await use_case.execute()
 
     mock_send_reminder_use_case.execute.assert_called_once()
     call_args = mock_send_reminder_use_case.execute.call_args
     assert call_args[0][0] == sample_request
     assert call_args[0][1] == reminder_media
     assert isinstance(call_args[0][2], int)  # days_left
+    assert len(summary["reminders"]) == 1
+    assert summary["reminders"][0]["email"] == "test@example.com"
+    assert summary["reminders"][0]["title"] == "Test Movie"
+    assert summary["reminders"][0]["days_left"] == call_args[0][2]
+    assert summary["deletions"] == []
 
 
 @pytest.mark.asyncio
 async def test_execute_calls_delete_media_when_delete_true(
     use_case, mock_check_use_case, mock_delete_media_use_case, sample_request, sample_media
 ):
-    """Test execute calls delete_media_use_case when delete is True."""
+    """Test execute calls delete_media_use_case when delete is True (media 31 days old)."""
     mock_check_use_case.execute = AsyncMock(return_value=[(sample_request, sample_media)])
     mock_delete_media_use_case.execute = AsyncMock()
 
-    await use_case.execute()
+    summary = await use_case.execute()
 
     mock_delete_media_use_case.execute.assert_called_once()
     call_args = mock_delete_media_use_case.execute.call_args
     assert call_args[0][0] == sample_request
     assert call_args[0][1] == sample_media
+    assert len(summary["deletions"]) == 1
+    assert summary["deletions"][0]["email"] == "test@example.com"
+    assert summary["deletions"][0]["title"] == "Test Movie"
+    # sample_media is 31 days old so past retention; may also trigger reminder
+    assert "reminders" in summary
+    assert "deletions" in summary
 
 
 @pytest.mark.asyncio
@@ -211,7 +235,8 @@ async def test_execute_handles_empty_results(use_case, mock_check_use_case):
     """Test execute handles empty results from check use case."""
     mock_check_use_case.execute = AsyncMock(return_value=[])
 
-    await use_case.execute()
+    summary = await use_case.execute()
 
     # Should complete without errors
     mock_check_use_case.execute.assert_called_once()
+    assert summary == {"reminders": [], "deletions": []}

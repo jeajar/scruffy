@@ -27,7 +27,9 @@ def mock_container():
         return_value=[]
     )
     container.process_media_use_case = Mock()
-    container.process_media_use_case.execute = AsyncMock()
+    container.process_media_use_case.execute = AsyncMock(
+        return_value={"reminders": [], "deletions": []}
+    )
     container.retention_calculator = Mock()
     return container
 

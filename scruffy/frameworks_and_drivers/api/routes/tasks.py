@@ -19,10 +19,17 @@ async def _run_check_task(container):
     """Background task to run check use case."""
     success = False
     error_message: str | None = None
+    summary = None
     try:
         results = await container.check_media_requests_use_case.execute_with_retention(
             container.retention_calculator
         )
+        summary = {
+            "items_checked": len(results),
+            "needing_attention": sum(
+                1 for r in results if r.retention.remind or r.retention.delete
+            ),
+        }
         logger.info(
             "Check task completed",
             extra={"results_count": len(results)},
@@ -33,7 +40,7 @@ async def _run_check_task(container):
         logger.error("Check task failed", extra={"error": str(e)})
     finally:
         await asyncio.to_thread(
-            record_job_run_sync, "check", success, error_message
+            record_job_run_sync, "check", success, error_message, summary
         )
 
 
@@ -41,8 +48,9 @@ async def _run_process_task(container):
     """Background task to run process use case."""
     success = False
     error_message: str | None = None
+    summary = None
     try:
-        await container.process_media_use_case.execute()
+        summary = await container.process_media_use_case.execute()
         logger.info("Process task completed")
         success = True
     except Exception as e:
@@ -50,7 +58,7 @@ async def _run_process_task(container):
         logger.error("Process task failed", extra={"error": str(e)})
     finally:
         await asyncio.to_thread(
-            record_job_run_sync, "process", success, error_message
+            record_job_run_sync, "process", success, error_message, summary
         )
 
 
@@ -143,7 +151,7 @@ async def trigger_check_sync(
         error_message = str(e)
         logger.error("Sync check task failed", extra={"error": str(e)})
         await asyncio.to_thread(
-            record_job_run_sync, "check", False, error_message
+            record_job_run_sync, "check", False, error_message, None
         )
         return {
             "status": "failed",
@@ -152,7 +160,15 @@ async def trigger_check_sync(
         }
     finally:
         if success:
-            await asyncio.to_thread(record_job_run_sync, "check", True, None)
+            check_summary = {
+                "items_checked": len(results),
+                "needing_attention": sum(
+                    1 for r in results if r.retention.remind or r.retention.delete
+                ),
+            }
+            await asyncio.to_thread(
+                record_job_run_sync, "check", True, None, check_summary
+            )
 
 
 @router.post("/process")
@@ -199,8 +215,9 @@ async def trigger_process_sync(
 
     success = False
     error_message: str | None = None
+    summary = None
     try:
-        await container.process_media_use_case.execute()
+        summary = await container.process_media_use_case.execute()
         success = True
 
         logger.info("Sync process task completed")
@@ -215,7 +232,7 @@ async def trigger_process_sync(
         error_message = str(e)
         logger.error("Sync process task failed", extra={"error": str(e)})
         await asyncio.to_thread(
-            record_job_run_sync, "process", False, error_message
+            record_job_run_sync, "process", False, error_message, None
         )
         return {
             "status": "failed",
@@ -224,4 +241,6 @@ async def trigger_process_sync(
         }
     finally:
         if success:
-            await asyncio.to_thread(record_job_run_sync, "process", True, None)
+            await asyncio.to_thread(
+                record_job_run_sync, "process", True, None, summary
+            )

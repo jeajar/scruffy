@@ -44,10 +44,17 @@ async def async_check_media():
         raise typer.Exit(1)
     success = False
     error_message: str | None = None
+    summary = None
     try:
         result = await container.check_media_requests_use_case.execute_with_retention(
             container.retention_calculator
         )
+        summary = {
+            "items_checked": len(result),
+            "needing_attention": sum(
+                1 for r in result if r.retention.remind or r.retention.delete
+            ),
+        }
         success = True
         return result
     except Exception as e:
@@ -55,7 +62,7 @@ async def async_check_media():
         raise
     finally:
         await asyncio.to_thread(
-            record_job_run_sync, "check", success, error_message
+            record_job_run_sync, "check", success, error_message, summary
         )
 
 
@@ -66,15 +73,16 @@ async def async_process_media() -> None:
         raise typer.Exit(1)
     success = False
     error_message: str | None = None
+    summary = None
     try:
-        await container.process_media_use_case.execute()
+        summary = await container.process_media_use_case.execute()
         success = True
     except Exception as e:
         error_message = str(e)
         raise
     finally:
         await asyncio.to_thread(
-            record_job_run_sync, "process", success, error_message
+            record_job_run_sync, "process", success, error_message, summary
         )
 
 

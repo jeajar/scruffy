@@ -46,14 +46,17 @@ class ProcessMediaUseCase:
             },
         )
 
-    async def execute(self) -> None:
-        """Process all media requests and take appropriate actions."""
+    async def execute(self) -> dict:
+        """Process all media requests and take appropriate actions. Returns summary dict with 'reminders' and 'deletions' lists."""
         logger.info("Starting media processing")
         results = await self.check_use_case.execute()
         logger.info(
             "Found media requests to process",
             extra={"request_count": len(results)},
         )
+
+        reminders_summary: list[dict] = []
+        deletions_summary: list[dict] = []
 
         # Build list of (request, media, retention_result) that need an action
         to_handle = []
@@ -68,32 +71,43 @@ class ProcessMediaUseCase:
                 *[self._handle_result(req, med, ret) for req, med, ret in to_handle],
                 return_exceptions=True,
             )
-            reminders_sent = sum(1 for o in outcomes if o == "reminder")
-            deletions_made = sum(1 for o in outcomes if o == "deletion")
             for outcome in outcomes:
                 if isinstance(outcome, Exception):
                     logger.error(
                         "Process media action failed",
                         extra={"error": str(outcome)},
                     )
+                elif isinstance(outcome, tuple):
+                    _action, entries = outcome
+                    if entries:
+                        for entry in entries:
+                            if "days_left" in entry:
+                                reminders_summary.append(entry)
+                            else:
+                                deletions_summary.append(entry)
         else:
-            reminders_sent = 0
-            deletions_made = 0
+            pass
 
         logger.info(
             "Media processing completed",
             extra={
                 "total_processed": len(results),
-                "reminders_sent": reminders_sent,
-                "deletions_made": deletions_made,
+                "reminders_sent": len(reminders_summary),
+                "deletions_made": len(deletions_summary),
             },
         )
 
+        return {
+            "reminders": reminders_summary,
+            "deletions": deletions_summary,
+        }
+
     async def _handle_result(
         self, request, media, retention_result: RetentionResult
-    ) -> str | None:
-        """Handle individual media result. Returns action taken."""
+    ) -> tuple[str | None, list[dict]]:
+        """Handle individual media result. Returns (action, list of summary entries)."""
         action = None
+        summary_entries: list[dict] = []
 
         if retention_result.remind:
             logger.info(
@@ -109,6 +123,11 @@ class ProcessMediaUseCase:
                 request, media, retention_result.days_left
             )
             action = "reminder"
+            summary_entries.append({
+                "email": request.user_email,
+                "title": media.title,
+                "days_left": retention_result.days_left,
+            })
 
         if retention_result.delete:
             logger.info(
@@ -121,5 +140,9 @@ class ProcessMediaUseCase:
             )
             await self.delete_media_use_case.execute(request, media)
             action = "deletion"
+            summary_entries.append({
+                "email": request.user_email,
+                "title": media.title,
+            })
 
-        return action
+        return (action, summary_entries)

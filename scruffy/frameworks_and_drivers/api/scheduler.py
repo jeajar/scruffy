@@ -25,14 +25,21 @@ def _make_job_runner(app: "FastAPI", job_type: str):
         container = app.state.container
         success = False
         error_message: str | None = None
+        summary: dict | None = None
         try:
             if job_type == "check":
-                await container.check_media_requests_use_case.execute_with_retention(
+                results = await container.check_media_requests_use_case.execute_with_retention(
                     container.retention_calculator
                 )
+                summary = {
+                    "items_checked": len(results),
+                    "needing_attention": sum(
+                        1 for r in results if r.retention.remind or r.retention.delete
+                    ),
+                }
                 logger.info("Scheduled check job completed")
             elif job_type == "process":
-                await container.process_media_use_case.execute()
+                summary = await container.process_media_use_case.execute()
                 logger.info("Scheduled process job completed")
             else:
                 logger.warning("Unknown job_type in schedule: %s", job_type)
@@ -43,7 +50,7 @@ def _make_job_runner(app: "FastAPI", job_type: str):
         finally:
             if job_type in ("check", "process"):
                 await asyncio.to_thread(
-                    record_job_run_sync, job_type, success, error_message
+                    record_job_run_sync, job_type, success, error_message, summary
                 )
 
     return _run
