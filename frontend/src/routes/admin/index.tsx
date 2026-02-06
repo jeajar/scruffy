@@ -16,7 +16,7 @@ function AdminIndexPage() {
       if (!isAuthenticated) {
         navigate({ to: "/login", search: {} });
       } else if (!isAdmin) {
-        navigate({ to: "/" });
+        navigate({ to: "/", search: { extend: undefined } });
       } else {
         navigate({ to: "/admin/settings/schedules" });
       }

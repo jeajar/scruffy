@@ -45,6 +45,7 @@ export function Header() {
           {/* Logo - always visible */}
           <Link
             to="/"
+            search={{ extend: undefined }}
             className="flex flex-shrink-0 items-center"
             onClick={closeMobileMenu}
           >

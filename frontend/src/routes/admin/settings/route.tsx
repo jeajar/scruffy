@@ -29,7 +29,7 @@ function SettingsLayoutPage() {
       return;
     }
     if (!authLoading && isAuthenticated && !isAdmin) {
-      navigate({ to: "/" });
+      navigate({ to: "/", search: { extend: undefined } });
       return;
     }
   }, [authLoading, isAuthenticated, isAdmin, navigate]);

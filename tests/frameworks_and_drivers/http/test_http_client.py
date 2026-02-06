@@ -5,6 +5,9 @@ import pytest
 import respx
 
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
+from scruffy.interface_adapters.interfaces.http_client_interface import (
+    HttpRequestError,
+)
 
 
 @pytest.fixture
@@ -57,11 +60,11 @@ class TestHttpClientGet:
 
     @pytest.mark.asyncio
     async def test_get_raises_on_error(self, client):
-        """Test get raises HTTPError on HTTP error."""
+        """Test get raises HttpRequestError on HTTP error."""
         with respx.mock:
             respx.get("http://test.com/api").mock(return_value=httpx.Response(404))
 
-            with pytest.raises(httpx.HTTPStatusError):
+            with pytest.raises(HttpRequestError):
                 await client.get("http://test.com/api")
 
 
@@ -109,13 +112,13 @@ class TestHttpClientDelete:
 
     @pytest.mark.asyncio
     async def test_delete_raises_on_error(self, client):
-        """Test delete raises HTTPError on HTTP error."""
+        """Test delete raises HttpRequestError on HTTP error."""
         with respx.mock:
             respx.delete("http://test.com/api/resource/1").mock(
                 return_value=httpx.Response(500)
             )
 
-            with pytest.raises(httpx.HTTPStatusError):
+            with pytest.raises(HttpRequestError):
                 await client.delete("http://test.com/api/resource/1")
 
 
@@ -172,13 +175,13 @@ class TestHttpClientPut:
 
     @pytest.mark.asyncio
     async def test_put_raises_on_error(self, client):
-        """Test put raises HTTPError on HTTP error."""
+        """Test put raises HttpRequestError on HTTP error."""
         with respx.mock:
             respx.put("http://test.com/api/resource/1").mock(
                 return_value=httpx.Response(400)
             )
 
-            with pytest.raises(httpx.HTTPStatusError):
+            with pytest.raises(HttpRequestError):
                 await client.put(
                     "http://test.com/api/resource/1", json={"name": "test"}
                 )

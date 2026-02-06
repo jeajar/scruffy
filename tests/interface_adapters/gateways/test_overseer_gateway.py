@@ -6,7 +6,11 @@ import httpx
 import pytest
 import respx
 
+from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
+from scruffy.interface_adapters.interfaces.http_client_interface import (
+    HttpRequestError,
+)
 
 
 def _make_settings_provider(base_url: str, api_key: str):
@@ -39,7 +43,9 @@ def api_key():
 @pytest.fixture
 def gateway(base_url, api_key):
     """Create OverseerGateway instance."""
-    return OverseerGateway(_make_settings_provider(base_url, api_key))
+    return OverseerGateway(
+        _make_settings_provider(base_url, api_key), HttpClient()
+    )
 
 
 @pytest.fixture
@@ -211,10 +217,11 @@ async def test_get_request_count(gateway, base_url):
 def test_gateway_initialization(base_url, api_key):
     """Test gateway initialization with settings provider."""
     provider = _make_settings_provider(base_url, api_key)
-    gateway = OverseerGateway(provider)
+    http_client = HttpClient()
+    gateway = OverseerGateway(provider, http_client)
 
     assert gateway._settings_provider is provider
-    assert gateway.http_client is not None
+    assert gateway.http_client is http_client
 
 
 def test_gateway_initialization_with_http_client(base_url, api_key, mock_http_client):
@@ -294,5 +301,5 @@ async def test_user_imported_by_plex_id_api_error(gateway, base_url):
     with respx.mock(base_url=base_url) as respx_mock:
         respx_mock.get("/api/v1/user").mock(return_value=httpx.Response(502))
 
-        with pytest.raises(httpx.HTTPStatusError):
+        with pytest.raises(HttpRequestError):
             await gateway.user_imported_by_plex_id(1)

@@ -7,6 +7,7 @@ import pytest
 import respx
 
 from scruffy.domain.value_objects.media_type import MediaType
+from scruffy.frameworks_and_drivers.http.http_client import HttpClient
 from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 
 
@@ -40,7 +41,9 @@ def api_key():
 @pytest.fixture
 def gateway(base_url, api_key):
     """Create SonarrGateway instance."""
-    return SonarrGateway(_make_settings_provider(base_url, api_key))
+    return SonarrGateway(
+        _make_settings_provider(base_url, api_key), HttpClient()
+    )
 
 
 @pytest.mark.asyncio
@@ -298,7 +301,10 @@ async def test_delete_empty_series(gateway, base_url):
 
 def test_get_series_poster():
     """Test _get_series_poster extracts poster URL."""
-    gateway = SonarrGateway("http://test.com", "test-key")
+    gateway = SonarrGateway(
+        _make_settings_provider("http://test.com", "test-key"),
+        HttpClient(),
+    )
     images = [
         {"coverType": "poster", "remoteUrl": "http://test.com/poster.jpg"},
         {"coverType": "fanart", "remoteUrl": "http://test.com/fanart.jpg"},
@@ -311,7 +317,10 @@ def test_get_series_poster():
 
 def test_get_series_poster_no_poster():
     """Test _get_series_poster returns None when no poster."""
-    gateway = SonarrGateway("http://test.com", "test-key")
+    gateway = SonarrGateway(
+        _make_settings_provider("http://test.com", "test-key"),
+        HttpClient(),
+    )
     images = [{"coverType": "fanart", "remoteUrl": "http://test.com/fanart.jpg"}]
 
     poster = gateway._get_series_poster(images)
@@ -322,7 +331,8 @@ def test_get_series_poster_no_poster():
 def test_gateway_initialization(base_url, api_key):
     """Test gateway initialization with settings provider."""
     provider = _make_settings_provider(base_url, api_key)
-    gateway = SonarrGateway(provider)
+    http_client = HttpClient()
+    gateway = SonarrGateway(provider, http_client)
 
     assert gateway._settings_provider is provider
-    assert gateway.http_client is not None
+    assert gateway.http_client is http_client

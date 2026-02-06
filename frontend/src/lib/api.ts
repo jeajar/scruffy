@@ -62,6 +62,7 @@ export interface MediaListResponse {
   media: MediaItem[];
   count: number;
   overseerr_url?: string | null;
+  extension_days?: number;
 }
 
 /**

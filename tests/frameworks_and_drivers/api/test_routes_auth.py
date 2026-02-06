@@ -221,7 +221,11 @@ class TestLoginPage:
 
     def test_login_page_returns_html_with_pin_data(self, client):
         """When create_plex_pin succeeds, return HTML with pin_id and auth_url."""
-        pin_data = {"id": 999, "code": "ABCD", "auth_url": "https://app.plex.tv/auth#?code=ABCD"}
+        pin_data = {
+            "id": 999,
+            "code": "ABCD",
+            "auth_url": "https://app.plex.tv/auth#?code=ABCD",
+        }
         with patch(
             "scruffy.frameworks_and_drivers.api.routes.auth.create_plex_pin",
             new_callable=AsyncMock,
@@ -250,7 +254,11 @@ class TestCreatePin:
 
     def test_create_pin_returns_json_with_pin_data(self, client):
         """When create_plex_pin succeeds, return JSON with pin_id, code, auth_url."""
-        pin_data = {"id": 888, "code": "WXYZ", "auth_url": "https://app.plex.tv/auth#?..."}
+        pin_data = {
+            "id": 888,
+            "code": "WXYZ",
+            "auth_url": "https://app.plex.tv/auth#?...",
+        }
         with patch(
             "scruffy.frameworks_and_drivers.api.routes.auth.create_plex_pin",
             new_callable=AsyncMock,

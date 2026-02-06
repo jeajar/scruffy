@@ -24,7 +24,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useMedia } from "@/hooks/useMedia";
 import { formatDate } from "@/lib/utils";
-import { requestExtend, type MediaItem } from "@/lib/api";
+import { type MediaItem } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,15 +32,22 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { RequestExtensionModal } from "@/components/RequestExtensionModal";
 
 export const Route = createFileRoute("/")({
   component: HomePage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    extend: search.extend ? Number(search.extend) : undefined,
+  }),
 });
 
 function HomePage() {
   const navigate = useNavigate();
+  const { extend } = Route.useSearch();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { media, count, overseerrUrl, isLoading: mediaLoading, isFetched, refetch } = useMedia();
+  const { media, count, overseerrUrl, extensionDays, isLoading: mediaLoading, isFetched, refetch } = useMedia();
+  const [extendModalRequestId, setExtendModalRequestId] = useState<number | null>(null);
+  const [extendModalItem, setExtendModalItem] = useState<MediaItem | undefined>(undefined);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -48,6 +55,33 @@ function HomePage() {
       navigate({ to: "/login", search: {} });
     }
   }, [authLoading, isAuthenticated, navigate]);
+
+  // Open extension modal when extend search param is present (e.g. from email link after login)
+  useEffect(() => {
+    if (extend != null && !isNaN(extend) && isAuthenticated) {
+      const item = media.find(
+        (m) => m.request.id === extend || m.request.request_id === extend
+      );
+      setExtendModalRequestId(extend);
+      setExtendModalItem(item);
+    }
+  }, [extend, isAuthenticated, media]);
+
+  const handleExtendModalOpenChange = (open: boolean) => {
+    if (!open) {
+      setExtendModalRequestId(null);
+      setExtendModalItem(undefined);
+      if (extend != null) {
+        navigate({ to: "/", search: { extend: undefined } });
+      }
+    }
+  };
+
+  const handleOpenExtendModal = (item: MediaItem) => {
+    const requestId = item.request.id ?? item.request.request_id;
+    setExtendModalRequestId(requestId);
+    setExtendModalItem(item);
+  };
 
   // Show full loading screen during initial load (auth check or first media fetch)
   const isInitialLoading = authLoading || (mediaLoading && !isFetched);
@@ -115,7 +149,7 @@ function HomePage() {
                             key={`${item.request.id ?? item.request.request_id}-${item.media.id}`}
                             item={item}
                             overseerrUrl={overseerrUrl}
-                            onExtended={refetch}
+                            onOpenExtendModal={handleOpenExtendModal}
                           />
                         ))}
                       </TableBody>
@@ -168,35 +202,38 @@ function HomePage() {
             </div>
           </div>
         )}
+
+      <RequestExtensionModal
+        open={extendModalRequestId != null}
+        onOpenChange={handleExtendModalOpenChange}
+        requestId={extendModalRequestId ?? 0}
+        item={extendModalItem}
+        extensionDays={extensionDays}
+        onSuccess={refetch}
+      />
       </div>
     </Layout>
   );
 }
 
 function MediaRowActions({
+  item,
   overseerrUrl,
   mediaType,
   tmdbId,
   isExtended,
-  onExtended,
+  onRequestExtension,
 }: {
+  item: MediaItem;
   overseerrUrl: string | null;
   mediaType: string;
   tmdbId: number | null | undefined;
   isExtended: boolean;
-  onExtended?: () => void;
+  onRequestExtension?: (item: MediaItem) => void;
 }) {
-  const [isExtending, setIsExtending] = useState(false);
-
-  const handleRequestExtension = async () => {
-    if (isExtended || isExtending) return;
-    setIsExtending(true);
-    try {
-      await requestExtend(requestId);
-      onExtended?.();
-    } finally {
-      setIsExtending(false);
-    }
+  const handleRequestExtension = () => {
+    if (isExtended) return;
+    onRequestExtension?.(item);
   };
 
   return (
@@ -228,7 +265,7 @@ function MediaRowActions({
         )}
         <DropdownMenuItem
           onClick={handleRequestExtension}
-          disabled={isExtended || isExtending}
+          disabled={isExtended}
           className="text-gray-300 focus:bg-gray-700 focus:text-white"
         >
           <Clock className="h-4 w-4 mr-2" />
@@ -242,11 +279,11 @@ function MediaRowActions({
 function MediaRow({
   item,
   overseerrUrl,
-  onExtended,
+  onOpenExtendModal,
 }: {
   item: MediaItem;
   overseerrUrl: string | null;
-  onExtended?: () => void;
+  onOpenExtendModal?: (item: MediaItem) => void;
 }) {
   const { media, request, retention } = item;
   const isExtended = request.extended ?? retention.extended ?? false;
@@ -346,11 +383,12 @@ function MediaRow({
       </TableCell>
       <TableCell className="w-12">
         <MediaRowActions
+          item={item}
           overseerrUrl={overseerrUrl}
           mediaType={request.type}
           tmdbId={request.tmdb_id}
           isExtended={isExtended}
-          onExtended={onExtended}
+          onRequestExtension={onOpenExtendModal}
         />
       </TableCell>
     </TableRow>

@@ -109,7 +109,14 @@ function LoginPage() {
           await queryClient.invalidateQueries({ queryKey: ["auth"] });
 
           setTimeout(() => {
-            navigate({ to: return_url || "/" });
+            // Rewrite /extend?request_id=X to /?extend=X so user lands on home with modal
+            const extendMatch = return_url?.match(/^\/extend\?request_id=(\d+)$/);
+            if (extendMatch) {
+              const requestId = Number(extendMatch[1]);
+              navigate({ to: "/", search: { extend: requestId } });
+            } else {
+              navigate({ to: return_url || "/" });
+            }
           }, 1000);
         } else if (!result.authenticated && result.error) {
           clearInterval(pollInterval);

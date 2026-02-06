@@ -6,7 +6,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from scruffy.domain.value_objects.media_type import MediaType
-from scruffy.frameworks_and_drivers.http.http_client import HttpClient
+from scruffy.interface_adapters.interfaces.http_client_interface import (
+    HttpClientInterface,
+)
 from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
@@ -26,11 +28,11 @@ class SonarrGateway(MediaRepositoryInterface):
     def __init__(
         self,
         settings_provider: "SettingsProvider",
-        http_client: HttpClient | None = None,
+        http_client: HttpClientInterface,
     ):
         """Initialize Sonarr gateway with settings provider for runtime config."""
         self._settings_provider = settings_provider
-        self.http_client = http_client or HttpClient()
+        self.http_client = http_client
         logger.debug("Initialized SonarrGateway")
 
     def _get_config(self) -> tuple[str, dict]:

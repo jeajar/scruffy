@@ -11,34 +11,53 @@ import respx
 
 from scruffy.domain.entities.media import Media
 from scruffy.domain.entities.media_request import MediaRequest
+from scruffy.frameworks_and_drivers.config.settings import settings as app_settings
+from scruffy.frameworks_and_drivers.database.settings_store import (
+    ServicesConfig,
+    invalidate_services_config_cache,
+)
 from scruffy.frameworks_and_drivers.di.container import Container
+
+
+# Test URLs used by respx mocks; must match mock_settings patches
+OVERSEERR_BASE = "http://overseerr.test"
+RADARR_BASE = "http://radarr.test"
+SONARR_BASE = "http://sonarr.test"
 
 
 @pytest.fixture
 def mock_settings():
     """Mock settings for integration tests.
 
-    Patches settings_store's settings (used by SettingsProvider and
-    get_retention_policy).
+    Patches the real config.settings object so SettingsProvider and any
+    code using it (via settings_store or config) see test URLs.
     """
     mock_values = {
-        "overseerr_url": "http://overseerr.test",
+        "overseerr_url": OVERSEERR_BASE,
         "overseerr_api_key": "overseerr-key",
-        "sonarr_url": "http://sonarr.test",
+        "sonarr_url": SONARR_BASE,
         "sonarr_api_key": "sonarr-key",
-        "radarr_url": "http://radarr.test",
+        "radarr_url": RADARR_BASE,
         "radarr_api_key": "radarr-key",
         "retention_days": 30,
         "reminder_days": 7,
         "email_enabled": False,
     }
-
+    invalidate_services_config_cache()
+    patches = [
+        patch.object(app_settings, k, v) for k, v in mock_values.items()
+    ]
     with patch(
-        "scruffy.frameworks_and_drivers.database.settings_store.settings"
-    ) as store_mock:
-        for k, v in mock_values.items():
-            setattr(store_mock, k, v)
-        yield store_mock
+        "scruffy.frameworks_and_drivers.database.settings_store.settings",
+        app_settings,
+    ):
+        for p in patches:
+            p.start()
+        try:
+            yield app_settings
+        finally:
+            for p in reversed(patches):
+                p.stop()
 
 
 @pytest.fixture
@@ -128,10 +147,21 @@ async def test_complete_workflow_check_remind_delete(mock_settings, in_memory_en
                 return_value=httpx.Response(200)
             )
 
-            # Patch database engine
+            # Patch get_engine at source so Container and SettingsProvider use test DB
+            invalidate_services_config_cache()
+            test_config = ServicesConfig()
+            test_config.overseerr_url = overseerr_base
+            test_config.overseerr_api_key = "overseerr-key"
+            test_config.radarr_url = radarr_base
+            test_config.radarr_api_key = "radarr-key"
+            test_config.sonarr_url = SONARR_BASE
+            test_config.sonarr_api_key = "sonarr-key"
             with patch(
-                "scruffy.frameworks_and_drivers.di.container.get_engine",
+                "scruffy.frameworks_and_drivers.database.database.get_engine",
                 return_value=in_memory_engine,
+            ), patch(
+                "scruffy.frameworks_and_drivers.database.settings_store._services_config_cache",
+                test_config,
             ):
                 container = Container()
 
@@ -214,22 +244,33 @@ async def test_complete_workflow_remind_only(mock_settings, in_memory_engine):
                 )
             )
 
+            invalidate_services_config_cache()
+            test_config = ServicesConfig()
+            test_config.overseerr_url = overseerr_base
+            test_config.overseerr_api_key = "overseerr-key"
+            test_config.radarr_url = radarr_base
+            test_config.radarr_api_key = "radarr-key"
+            test_config.sonarr_url = SONARR_BASE
+            test_config.sonarr_api_key = "sonarr-key"
             with patch(
-                "scruffy.frameworks_and_drivers.di.container.get_engine",
+                "scruffy.frameworks_and_drivers.database.database.get_engine",
                 return_value=in_memory_engine,
+            ), patch(
+                "scruffy.frameworks_and_drivers.database.settings_store._services_config_cache",
+                test_config,
             ):
                 container = Container()
 
                 # Execute process use case (should remind, not delete)
                 await container.process_media_use_case.execute()
 
-                # Verify no delete was called
-                delete_calls = [
-                    call
-                    for call in radarr_mock.calls
-                    if call.request.method == "DELETE"
-                ]
-                assert len(delete_calls) == 0
+            # Verify no delete was called
+            delete_calls = [
+                call
+                for call in radarr_mock.calls
+                if call.request.method == "DELETE"
+            ]
+            assert len(delete_calls) == 0
 
-                # Verify reminder was added
-                assert container._reminder_gateway.has_reminder(request_id=1) is True
+            # Verify reminder was added
+            assert container._reminder_gateway.has_reminder(request_id=1) is True

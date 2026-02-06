@@ -1,7 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,7 +9,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { requestExtend } from "@/lib/api";
 import { Footer } from "@/components/layout/Footer";
 
 export const Route = createFileRoute("/extend")({
@@ -21,27 +18,10 @@ export const Route = createFileRoute("/extend")({
   }),
 });
 
-type ExtendState = "loading" | "success" | "error" | "extending";
-
 function ExtendPage() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { request_id } = Route.useSearch();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const [state, setState] = useState<ExtendState>("loading");
-  const [error, setError] = useState<string | null>(null);
-
-  const extendMutation = useMutation({
-    mutationFn: (id: number) => requestExtend(id),
-    onSuccess: () => {
-      setState("success");
-      queryClient.invalidateQueries({ queryKey: ["media"] });
-    },
-    onError: (err) => {
-      setError(err instanceof Error ? err.message : "Failed to request extension");
-      setState("error");
-    },
-  });
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -55,17 +35,14 @@ function ExtendPage() {
     }
   }, [authLoading, isAuthenticated, request_id, navigate]);
 
-  // Process extension when authenticated
+  // When authenticated, redirect to home with extend param to open the modal
   useEffect(() => {
     if (authLoading || !isAuthenticated || !request_id) return;
-    if (state !== "loading") return;
-
-    setState("extending");
-    extendMutation.mutate(request_id);
-  }, [authLoading, isAuthenticated, request_id, state]);
+    navigate({ to: "/", search: { extend: request_id }, replace: true });
+  }, [authLoading, isAuthenticated, request_id, navigate]);
 
   const handleGoHome = () => {
-    navigate({ to: "/" });
+    navigate({ to: "/", search: { extend: undefined } });
   };
 
   if (authLoading || (!isAuthenticated && request_id)) {
@@ -110,76 +87,9 @@ function ExtendPage() {
   }
 
   return (
-    <div className="min-h-full flex flex-col">
-      <div className="flex flex-1 flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
-          <img
-            className="mx-auto h-24 w-auto"
-            src="/static/scruffy.png"
-            alt="Scruffy"
-          />
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-white">
-            Request Extension
-          </h2>
-        </div>
-
-        <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-          <Card className="bg-scruffy-dark border-gray-700">
-            <CardHeader>
-              <CardTitle className="text-center text-white">
-                {state === "extending" && "Processing..."}
-                {state === "success" && "Extension Granted"}
-                {state === "error" && "Unable to Extend"}
-              </CardTitle>
-              <CardDescription className="text-center">
-                {state === "extending" &&
-                  "Requesting more time for this media..."}
-                {state === "success" &&
-                  "You've been granted more time. Scruffy will hold off on deletion."}
-                {state === "error" && error}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {state === "extending" && (
-                <div className="flex justify-center">
-                  <div className="plex-spinner" />
-                </div>
-              )}
-
-              {state === "success" && (
-                <div className="text-center space-y-4">
-                  <div className="flex justify-center">
-                    <CheckCircle2 className="w-12 h-12 text-green-500" />
-                  </div>
-                  <Button
-                    variant="plex"
-                    className="w-full"
-                    onClick={handleGoHome}
-                  >
-                    View Media Requests
-                  </Button>
-                </div>
-              )}
-
-              {state === "error" && (
-                <div className="text-center space-y-4">
-                  <div className="flex justify-center">
-                    <AlertCircle className="w-12 h-12 text-red-500" />
-                  </div>
-                  <Button
-                    variant="plex"
-                    className="w-full"
-                    onClick={handleGoHome}
-                  >
-                    Go to Media Requests
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-      <Footer />
+    <div className="min-h-full flex flex-col items-center justify-center">
+      <div className="plex-spinner" />
+      <p className="mt-4 text-gray-400">Redirecting to media requests...</p>
     </div>
   );
 }

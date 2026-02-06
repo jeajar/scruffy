@@ -41,7 +41,9 @@ def api_key():
 @pytest.fixture
 def gateway(base_url, api_key):
     """Create RadarrGateway instance."""
-    return RadarrGateway(_make_settings_provider(base_url, api_key))
+    return RadarrGateway(
+        _make_settings_provider(base_url, api_key), HttpClient()
+    )
 
 
 @pytest.mark.asyncio
@@ -152,7 +154,10 @@ async def test_delete_media_raises_for_tv(gateway):
 
 def test_get_movie_poster():
     """Test _get_movie_poster extracts poster URL."""
-    gateway = RadarrGateway("http://test.com", "test-key")
+    gateway = RadarrGateway(
+        _make_settings_provider("http://test.com", "test-key"),
+        HttpClient(),
+    )
     images = [
         {"coverType": "poster", "remoteUrl": "http://test.com/poster.jpg"},
         {"coverType": "fanart", "remoteUrl": "http://test.com/fanart.jpg"},
@@ -165,7 +170,10 @@ def test_get_movie_poster():
 
 def test_get_movie_poster_no_poster():
     """Test _get_movie_poster returns None when no poster."""
-    gateway = RadarrGateway("http://test.com", "test-key")
+    gateway = RadarrGateway(
+        _make_settings_provider("http://test.com", "test-key"),
+        HttpClient(),
+    )
     images = [{"coverType": "fanart", "remoteUrl": "http://test.com/fanart.jpg"}]
 
     poster = gateway._get_movie_poster(images)
@@ -175,7 +183,10 @@ def test_get_movie_poster_no_poster():
 
 def test_get_movie_poster_empty_images():
     """Test _get_movie_poster returns None for empty images."""
-    gateway = RadarrGateway("http://test.com", "test-key")
+    gateway = RadarrGateway(
+        _make_settings_provider("http://test.com", "test-key"),
+        HttpClient(),
+    )
 
     poster = gateway._get_movie_poster([])
 
@@ -185,7 +196,8 @@ def test_get_movie_poster_empty_images():
 def test_gateway_initialization(base_url, api_key):
     """Test gateway initialization with settings provider."""
     provider = _make_settings_provider(base_url, api_key)
-    gateway = RadarrGateway(provider)
+    http_client = HttpClient()
+    gateway = RadarrGateway(provider, http_client)
 
     assert gateway._settings_provider is provider
-    assert gateway.http_client is not None
+    assert gateway.http_client is http_client

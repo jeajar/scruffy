@@ -4,7 +4,10 @@ import logging
 from typing import TYPE_CHECKING
 
 from scruffy.domain.value_objects.media_status import MediaStatus
-from scruffy.frameworks_and_drivers.http.http_client import HttpClient
+from scruffy.interface_adapters.interfaces.http_client_interface import (
+    HttpClientInterface,
+    HttpRequestError,
+)
 from scruffy.use_cases.dtos.request_dto import RequestDTO
 from scruffy.use_cases.interfaces.request_repository_interface import (
     RequestRepositoryInterface,
@@ -24,11 +27,11 @@ class OverseerGateway(RequestRepositoryInterface):
     def __init__(
         self,
         settings_provider: "SettingsProvider",
-        http_client: HttpClient | None = None,
+        http_client: HttpClientInterface,
     ):
         """Initialize Overseerr gateway with settings provider for runtime config."""
         self._settings_provider = settings_provider
-        self.http_client = http_client or HttpClient()
+        self.http_client = http_client
         logger.debug("Initialized OverseerGateway")
 
     def _get_config(self) -> tuple[str, dict]:
@@ -216,37 +219,45 @@ class OverseerGateway(RequestRepositoryInterface):
 
         Returns the user dict (with id, permissions, etc.) or None if not found.
         Used to check admin/role from Overseerr (e.g. permissions & ADMIN).
+        Returns None when Overseerr is unreachable (connection/timeout errors).
         """
         base_url, headers = self._get_config()
         take = 100
         skip = 0
-        while True:
-            response = await self.http_client.get(
-                f"{base_url}/api/v1/user",
-                headers=headers,
-                params={"take": take, "skip": skip},
+        try:
+            while True:
+                response = await self.http_client.get(
+                    f"{base_url}/api/v1/user",
+                    headers=headers,
+                    params={"take": take, "skip": skip},
+                )
+                if isinstance(response, list):
+                    results = response
+                else:
+                    results = response.get("results", [])
+                for user in results:
+                    if user.get("plexId") == plex_user_id:
+                        logger.debug(
+                            "Overseerr user found by Plex ID",
+                            extra={"plex_user_id": plex_user_id},
+                        )
+                        return user
+                result_count = len(results)
+                if result_count < take:
+                    break
+                if isinstance(response, list):
+                    break
+                page_info = response.get("pageInfo", {})
+                skip += take
+                if skip >= page_info.get("total", skip + result_count):
+                    break
+            return None
+        except HttpRequestError as e:
+            logger.warning(
+                "Overseerr unreachable when resolving user by Plex ID",
+                extra={"plex_user_id": plex_user_id, "base_url": base_url, "error": str(e)},
             )
-            if isinstance(response, list):
-                results = response
-            else:
-                results = response.get("results", [])
-            for user in results:
-                if user.get("plexId") == plex_user_id:
-                    logger.debug(
-                        "Overseerr user found by Plex ID",
-                        extra={"plex_user_id": plex_user_id},
-                    )
-                    return user
-            result_count = len(results)
-            if result_count < take:
-                break
-            if isinstance(response, list):
-                break
-            page_info = response.get("pageInfo", {})
-            skip += take
-            if skip >= page_info.get("total", skip + result_count):
-                break
-        return None
+            return None
 
     # Overseerr Permission.ADMIN = 2 (from server/lib/permissions.ts)
     ADMIN_PERMISSION = 2
