@@ -117,11 +117,13 @@ class CheckMediaRequestsUseCase:
         extended_ids: set[int] = set()
         extension_days = 0
         if self.extension_repository is not None:
-            extended_ids = await asyncio.to_thread(
-                self.extension_repository.get_extended_request_ids
-            )
-            extension_days = await asyncio.to_thread(
-                self.extension_repository.get_extension_days
+            extended_ids, extension_days = await asyncio.gather(
+                asyncio.to_thread(
+                    self.extension_repository.get_extended_request_ids
+                ),
+                asyncio.to_thread(
+                    self.extension_repository.get_extension_days
+                ),
             )
 
         # Convert DTOs to entities for business logic

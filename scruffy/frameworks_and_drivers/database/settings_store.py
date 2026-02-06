@@ -3,7 +3,7 @@
 import logging
 from typing import TYPE_CHECKING, TypedDict
 
-from sqlmodel import Session
+from sqlmodel import Session, select, select
 
 from scruffy.frameworks_and_drivers.config.settings import settings
 
@@ -43,6 +43,18 @@ def _get(db_key: str) -> str | None:
     with Session(engine) as session:
         model = session.get(SettingsModel, db_key)
         return model.value if model is not None else None
+
+
+def _get_many(db_keys: list[str]) -> dict[str, str | None]:
+    """Get multiple keys from DB in a single session. Returns dict of key -> value (None if not set)."""
+    engine = get_engine()
+    with Session(engine) as session:
+        statement = select(SettingsModel).where(SettingsModel.key.in_(db_keys))
+        rows = session.exec(statement).all()
+        result = {k: None for k in db_keys}
+        for row in rows:
+            result[row.key] = row.value
+        return result
 
 
 def _set(key: str, value: str) -> None:
@@ -179,6 +191,15 @@ def get_sonarr_api_key() -> str | None:
     return val if val else settings.sonarr_api_key
 
 
+_services_config_cache: "ServicesConfig | None" = None
+
+
+def invalidate_services_config_cache() -> None:
+    """Invalidate the services config cache. Call when services config is updated."""
+    global _services_config_cache
+    _services_config_cache = None
+
+
 def set_services_config(
     *,
     overseerr_url: str | None = None,
@@ -201,6 +222,7 @@ def set_services_config(
         _set(SERVICES_SONARR_URL, sonarr_url)
     if sonarr_api_key is not None:
         _set(SERVICES_SONARR_API_KEY, sonarr_api_key)
+    invalidate_services_config_cache()
     logger.info("Updated services settings")
 
 
@@ -319,17 +341,39 @@ def set_email_config(
 
 # --- SettingsProvider (abstraction for gateways) ---
 
+_SERVICES_KEYS = [
+    SERVICES_OVERSEERR_URL,
+    SERVICES_OVERSEERR_API_KEY,
+    SERVICES_RADARR_URL,
+    SERVICES_RADARR_API_KEY,
+    SERVICES_SONARR_URL,
+    SERVICES_SONARR_API_KEY,
+]
+
+
+def _build_services_config() -> "ServicesConfig":
+    """Build ServicesConfig from DB using batched read. Used when cache is cold."""
+    vals = _get_many(_SERVICES_KEYS)
+    config = ServicesConfig()
+    config.overseerr_url = vals.get(SERVICES_OVERSEERR_URL) or str(settings.overseerr_url)
+    config.overseerr_api_key = vals.get(SERVICES_OVERSEERR_API_KEY) or settings.overseerr_api_key
+    config.radarr_url = vals.get(SERVICES_RADARR_URL) or str(settings.radarr_url)
+    config.radarr_api_key = vals.get(SERVICES_RADARR_API_KEY) or settings.radarr_api_key
+    config.sonarr_url = vals.get(SERVICES_SONARR_URL) or str(settings.sonarr_url)
+    config.sonarr_api_key = vals.get(SERVICES_SONARR_API_KEY) or settings.sonarr_api_key
+    return config
+
 
 class ServicesConfig:
     """Services configuration tuple: (overseerr_url, overseerr_api_key, radarr_url, radarr_api_key, sonarr_url, sonarr_api_key)."""
 
     def __init__(self) -> None:
-        self.overseerr_url = get_overseerr_url()
-        self.overseerr_api_key = get_overseerr_api_key()
-        self.radarr_url = get_radarr_url()
-        self.radarr_api_key = get_radarr_api_key()
-        self.sonarr_url = get_sonarr_url()
-        self.sonarr_api_key = get_sonarr_api_key()
+        self.overseerr_url: str = ""
+        self.overseerr_api_key: str | None = None
+        self.radarr_url: str = ""
+        self.radarr_api_key: str | None = None
+        self.sonarr_url: str = ""
+        self.sonarr_api_key: str | None = None
 
 
 class SettingsProvider:
@@ -341,8 +385,11 @@ class SettingsProvider:
     """
 
     def get_services_config(self) -> ServicesConfig:
-        """Get current services config (Overseerr, Radarr, Sonarr)."""
-        return ServicesConfig()
+        """Get current services config (Overseerr, Radarr, Sonarr). Cached until invalidated."""
+        global _services_config_cache
+        if _services_config_cache is None:
+            _services_config_cache = _build_services_config()
+        return _services_config_cache
 
     def get_email_config(self) -> EmailConfig:
         """Get current email config."""

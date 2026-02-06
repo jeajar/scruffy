@@ -23,12 +23,11 @@ Overseerr is an amazing request application but the project has decided, at leas
 ## Proposed Features:
 * Scruffy handles media requests like a library loan. Media on disk is deleted X days after they have been added (made available).
 * Scruffy don't punish the user if stuff takes time to download. The loan period starts when all the requested media is available.
-* A Request is either a Movie or a TV Request for any number of seasons. If a users asks for 97000 seasons of a 
-show, they will have 30 days to watch all of it. 
+* A Request is either a Movie or a TV Request for any number of seasons. If a user asks for 97000 seasons of a show, they will have 30 days to watch all of it.
 * Scruffy doesn't care about watch data. You request it, you don't watch it? Too bad, it's gone after 30 days.
-* Scruffy is at least going to notify you by email a week before stuff gets deleted.
-* The user should be able to click a link to ask for an extension, at least once.
-* Scuffy should remain simple and run as a cron or sceduled job, no fancy UI.
+* Scruffy notifies you by email a week before stuff gets deleted.
+* The user can click a link to ask for an extension, at least once.
+* Scruffy runs as a scheduled job (API + APScheduler or cron). A simple web UI lets admins manage settings and schedules.
 
 
 
@@ -145,6 +144,9 @@ With `docker-compose.override.yml` (included in the repo), the same command uses
 | `RADARR_API_KEY` | `None` | API key for Radarr (fallback) | Yes |
 | `RETENTION_DAYS` | `30` | Number of days to keep media before deletion | No |
 | `REMINDER_DAYS` | `7` | Days before deletion to send reminder | No |
+| `EXTENSION_DAYS` | `7` | Extra days granted when user requests an extension | No |
+| `APP_BASE_URL` | `http://localhost:5173` | Base URL for email links (e.g. extension link) | No |
+| `DATA_DIR` | `None` | Optional data directory (e.g. for SQLite, logs in Docker) | No |
 | `EMAIL_ENABLED` | `False` | Enable email notifications (fallback) | No |
 | `SMTP_HOST` | `localhost` | SMTP server hostname (fallback) | If email enabled |
 | `SMTP_PORT` | `25` | SMTP server port (fallback) | If email enabled |
@@ -165,8 +167,8 @@ With `docker-compose.override.yml` (included in the repo), the same command uses
 Those cron settings are only available if deploying using the docker image
 | Environment Variable | Default Value | Description | Required |
 |---------------------|---------------|-------------|-----------|
-| `PROCESS_SCHEDULE` | `None` | Cron string scedule to run check and delete | Yes |
-| `CHECK_SCHEDULE` | `None` | Cron string scedule to run check only (logs output) | Yes |
+| `PROCESS_SCHEDULE` | `None` | Cron string schedule to run check and delete | Yes |
+| `CHECK_SCHEDULE` | `None` | Cron string schedule to run check only (logs output) | Yes |
 
 ## Docker Compose
 Example `docker-compose.yaml`:

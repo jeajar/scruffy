@@ -14,6 +14,7 @@ from scruffy.frameworks_and_drivers.api.scheduler import (
     start_scheduler,
     update_job_in_scheduler,
 )
+from scruffy.frameworks_and_drivers.database.database import reset_engine_for_testing
 from scruffy.frameworks_and_drivers.database.schedule_model import ScheduleJobModel
 
 
@@ -43,6 +44,7 @@ def mock_app(mock_container):
 @pytest.fixture
 def schedule_db_with_temp_dir():
     """Provide temp dir for schedule DB (get_engine uses settings.data_dir)."""
+    reset_engine_for_testing()
     with tempfile.TemporaryDirectory() as tmpdir:
         with patch(
             "scruffy.frameworks_and_drivers.database.database.settings"

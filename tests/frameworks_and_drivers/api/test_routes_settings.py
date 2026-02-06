@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 
 from scruffy.frameworks_and_drivers.api.app import create_app
 from scruffy.frameworks_and_drivers.api.auth import PlexUser, require_admin
+from scruffy.frameworks_and_drivers.database.database import reset_engine_for_testing
 
 
 @pytest.fixture
@@ -39,6 +40,7 @@ def mock_container():
 @pytest.fixture
 def app_with_settings_db(mock_container):
     """Create app with mocked container and temp DB for settings."""
+    reset_engine_for_testing()
     with tempfile.TemporaryDirectory() as tmpdir:
         data_dir = Path(tmpdir)
         with patch(
