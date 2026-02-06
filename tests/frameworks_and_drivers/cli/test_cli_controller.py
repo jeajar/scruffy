@@ -77,9 +77,10 @@ class TestValidateCommand:
 class TestCheckCommand:
     """Tests for the check CLI command."""
 
+    @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_check_command_with_results(
-        self, mock_get_container, runner, mock_container, mock_settings
+        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
     ):
         """Test check command with media results."""
         from scruffy.domain.value_objects.media_status import MediaStatus
@@ -125,15 +126,17 @@ class TestCheckCommand:
         mock_container.check_media_requests_use_case.execute_with_retention = AsyncMock(
             return_value=[result_dto]
         )
+        mock_container.retention_calculator = Mock()
 
         result = runner.invoke(app, ["check"])
 
         assert result.exit_code == 0
         assert "Test Movie" in result.stdout or "Media Status" in result.stdout
 
+    @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_check_command_no_results(
-        self, mock_get_container, runner, mock_container, mock_settings
+        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
     ):
         """Test check command with no media results."""
         mock_get_container.return_value = mock_container
@@ -141,15 +144,17 @@ class TestCheckCommand:
         mock_container.check_media_requests_use_case.execute_with_retention = AsyncMock(
             return_value=[]
         )
+        mock_container.retention_calculator = Mock()
 
         result = runner.invoke(app, ["check"])
 
         assert result.exit_code == 0
         assert "No media found to process" in result.stdout
 
+    @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_check_command_validation_failure(
-        self, mock_get_container, runner, mock_container, mock_settings
+        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
     ):
         """Test check command fails when validation fails."""
         mock_get_container.return_value = mock_container
@@ -163,9 +168,10 @@ class TestCheckCommand:
 class TestProcessCommand:
     """Tests for the process CLI command."""
 
+    @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_process_command_success(
-        self, mock_get_container, runner, mock_container, mock_settings
+        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
     ):
         """Test process command succeeds."""
         mock_get_container.return_value = mock_container
@@ -177,9 +183,10 @@ class TestProcessCommand:
         assert result.exit_code == 0
         mock_container.process_media_use_case.execute.assert_called_once()
 
+    @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_process_command_validation_failure(
-        self, mock_get_container, runner, mock_container, mock_settings
+        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
     ):
         """Test process command fails when validation fails."""
         mock_get_container.return_value = mock_container

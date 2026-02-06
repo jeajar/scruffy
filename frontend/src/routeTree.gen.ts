@@ -14,6 +14,7 @@ import { Route as ExtendRouteImport } from './routes/extend'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminSchedulesRouteImport } from './routes/admin/schedules'
+import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
 import { Route as AdminSettingsRouteRouteImport } from './routes/admin/settings/route'
 import { Route as AdminSettingsIndexRouteImport } from './routes/admin/settings/index'
 import { Route as AdminSettingsServicesRouteImport } from './routes/admin/settings/services'
@@ -44,6 +45,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
 const AdminSchedulesRoute = AdminSchedulesRouteImport.update({
   id: '/admin/schedules',
   path: '/admin/schedules',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminJobsRoute = AdminJobsRouteImport.update({
+  id: '/admin/jobs',
+  path: '/admin/jobs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminSettingsRouteRoute = AdminSettingsRouteRouteImport.update({
@@ -83,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
   '/admin/settings': typeof AdminSettingsRouteRouteWithChildren
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/schedules': typeof AdminSchedulesRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
@@ -95,6 +102,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/schedules': typeof AdminSchedulesRoute
   '/admin': typeof AdminIndexRoute
   '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
@@ -109,6 +117,7 @@ export interface FileRoutesById {
   '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
   '/admin/settings': typeof AdminSettingsRouteRouteWithChildren
+  '/admin/jobs': typeof AdminJobsRoute
   '/admin/schedules': typeof AdminSchedulesRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
@@ -124,6 +133,7 @@ export interface FileRouteTypes {
     | '/extend'
     | '/login'
     | '/admin/settings'
+    | '/admin/jobs'
     | '/admin/schedules'
     | '/admin/'
     | '/admin/settings/notifications'
@@ -136,6 +146,7 @@ export interface FileRouteTypes {
     | '/'
     | '/extend'
     | '/login'
+    | '/admin/jobs'
     | '/admin/schedules'
     | '/admin'
     | '/admin/settings/notifications'
@@ -149,6 +160,7 @@ export interface FileRouteTypes {
     | '/extend'
     | '/login'
     | '/admin/settings'
+    | '/admin/jobs'
     | '/admin/schedules'
     | '/admin/'
     | '/admin/settings/notifications'
@@ -163,6 +175,7 @@ export interface RootRouteChildren {
   ExtendRoute: typeof ExtendRoute
   LoginRoute: typeof LoginRoute
   AdminSettingsRouteRoute: typeof AdminSettingsRouteRouteWithChildren
+  AdminJobsRoute: typeof AdminJobsRoute
   AdminSchedulesRoute: typeof AdminSchedulesRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
@@ -202,6 +215,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/schedules'
       fullPath: '/admin/schedules'
       preLoaderRoute: typeof AdminSchedulesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/jobs': {
+      id: '/admin/jobs'
+      path: '/admin/jobs'
+      fullPath: '/admin/jobs'
+      preLoaderRoute: typeof AdminJobsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/settings': {
@@ -273,6 +293,7 @@ const rootRouteChildren: RootRouteChildren = {
   ExtendRoute: ExtendRoute,
   LoginRoute: LoginRoute,
   AdminSettingsRouteRoute: AdminSettingsRouteRouteWithChildren,
+  AdminJobsRoute: AdminJobsRoute,
   AdminSchedulesRoute: AdminSchedulesRoute,
   AdminIndexRoute: AdminIndexRoute,
 }

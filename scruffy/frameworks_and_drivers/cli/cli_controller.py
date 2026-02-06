@@ -7,6 +7,7 @@ from rich.console import Console
 from rich.table import Table
 
 from scruffy.frameworks_and_drivers.config.settings import settings
+from scruffy.frameworks_and_drivers.database.job_run_store import record_job_run_sync
 from scruffy.frameworks_and_drivers.di.container import Container
 from scruffy.frameworks_and_drivers.utils.logging import configure_logging, get_logger
 from scruffy.interface_adapters.presenters.cli_presenter import CLIPresenter
@@ -41,9 +42,21 @@ async def async_check_media():
     container = get_container()
     if not await async_validate():
         raise typer.Exit(1)
-    return await container.check_media_requests_use_case.execute_with_retention(
-        container.retention_calculator
-    )
+    success = False
+    error_message: str | None = None
+    try:
+        result = await container.check_media_requests_use_case.execute_with_retention(
+            container.retention_calculator
+        )
+        success = True
+        return result
+    except Exception as e:
+        error_message = str(e)
+        raise
+    finally:
+        await asyncio.to_thread(
+            record_job_run_sync, "check", success, error_message
+        )
 
 
 async def async_process_media() -> None:
@@ -51,7 +64,18 @@ async def async_process_media() -> None:
     container = get_container()
     if not await async_validate():
         raise typer.Exit(1)
-    await container.process_media_use_case.execute()
+    success = False
+    error_message: str | None = None
+    try:
+        await container.process_media_use_case.execute()
+        success = True
+    except Exception as e:
+        error_message = str(e)
+        raise
+    finally:
+        await asyncio.to_thread(
+            record_job_run_sync, "process", success, error_message
+        )
 
 
 async def async_validate() -> bool:

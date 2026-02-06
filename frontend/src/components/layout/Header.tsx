@@ -9,6 +9,7 @@ import {
   Server,
   Mail,
   Clock,
+  ListChecks,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -143,6 +144,17 @@ export function Header() {
                         </DropdownMenuSubContent>
                       </DropdownMenuSub>
                     )}
+                    {isAdmin && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/admin/jobs"
+                          className="flex cursor-pointer items-center gap-2 text-gray-300 focus:bg-gray-700 focus:text-white"
+                        >
+                          <ListChecks className="mr-2 h-4 w-4" />
+                          Jobs
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onClick={() => logout()}
                       disabled={isLoggingOut}
@@ -255,6 +267,19 @@ export function Header() {
                         Retention
                       </Link>
                     </div>
+                  )}
+                  {isAdmin && (
+                    <Link
+                      to="/admin/jobs"
+                      className={cn(
+                        navLink,
+                        pathname === "/admin/jobs" && "bg-gray-700 text-white"
+                      )}
+                      onClick={closeMobileMenu}
+                    >
+                      <ListChecks className="h-5 w-5" />
+                      Jobs
+                    </Link>
                   )}
                   <Button
                     variant="ghost"

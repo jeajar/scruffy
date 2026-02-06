@@ -1,5 +1,6 @@
 """Background scheduler for scheduled check/process jobs."""
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -8,6 +9,7 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlmodel import Session, select
 
 from scruffy.frameworks_and_drivers.database.database import get_engine
+from scruffy.frameworks_and_drivers.database.job_run_store import record_job_run_sync
 from scruffy.frameworks_and_drivers.database.schedule_model import ScheduleJobModel
 
 if TYPE_CHECKING:
@@ -21,6 +23,8 @@ def _make_job_runner(app: "FastAPI", job_type: str):
 
     async def _run() -> None:
         container = app.state.container
+        success = False
+        error_message: str | None = None
         try:
             if job_type == "check":
                 await container.check_media_requests_use_case.execute_with_retention(
@@ -32,8 +36,15 @@ def _make_job_runner(app: "FastAPI", job_type: str):
                 logger.info("Scheduled process job completed")
             else:
                 logger.warning("Unknown job_type in schedule: %s", job_type)
+            success = True
         except Exception as e:
+            error_message = str(e)
             logger.exception("Scheduled job %s failed: %s", job_type, e)
+        finally:
+            if job_type in ("check", "process"):
+                await asyncio.to_thread(
+                    record_job_run_sync, job_type, success, error_message
+                )
 
     return _run
 

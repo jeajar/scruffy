@@ -16,6 +16,7 @@ from scruffy.frameworks_and_drivers.api.scheduler import (
     update_job_in_scheduler,
 )
 from scruffy.frameworks_and_drivers.database.database import get_engine
+from scruffy.frameworks_and_drivers.database.job_run_store import record_job_run_sync
 from scruffy.frameworks_and_drivers.database.schedule_model import ScheduleJobModel
 
 logger = logging.getLogger(__name__)
@@ -210,6 +211,8 @@ async def delete_schedule(
 
 async def _run_job_now(container: ContainerDep, job_type: str) -> None:
     """Background helper to run check or process once."""
+    success = False
+    error_message: str | None = None
     try:
         if job_type == "check":
             await container.check_media_requests_use_case.execute_with_retention(
@@ -218,8 +221,14 @@ async def _run_job_now(container: ContainerDep, job_type: str) -> None:
         elif job_type == "process":
             await container.process_media_use_case.execute()
         logger.info("Run-now job completed", extra={"job_type": job_type})
+        success = True
     except Exception as e:
+        error_message = str(e)
         logger.exception("Run-now job %s failed: %s", job_type, e)
+    finally:
+        await asyncio.to_thread(
+            record_job_run_sync, job_type, success, error_message
+        )
 
 
 @router.post("/{schedule_id}/run")

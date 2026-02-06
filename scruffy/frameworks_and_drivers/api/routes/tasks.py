@@ -1,5 +1,6 @@
 """Background task routes for cron job replacement."""
 
+import asyncio
 import logging
 from dataclasses import asdict
 
@@ -7,6 +8,7 @@ from fastapi import APIRouter, BackgroundTasks
 
 from scruffy.frameworks_and_drivers.api.auth import ApiKeyAuth
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
+from scruffy.frameworks_and_drivers.database.job_run_store import record_job_run_sync
 
 logger = logging.getLogger(__name__)
 
@@ -15,6 +17,8 @@ router = APIRouter(tags=["tasks"])
 
 async def _run_check_task(container):
     """Background task to run check use case."""
+    success = False
+    error_message: str | None = None
     try:
         results = await container.check_media_requests_use_case.execute_with_retention(
             container.retention_calculator
@@ -23,17 +27,31 @@ async def _run_check_task(container):
             "Check task completed",
             extra={"results_count": len(results)},
         )
+        success = True
     except Exception as e:
+        error_message = str(e)
         logger.error("Check task failed", extra={"error": str(e)})
+    finally:
+        await asyncio.to_thread(
+            record_job_run_sync, "check", success, error_message
+        )
 
 
 async def _run_process_task(container):
     """Background task to run process use case."""
+    success = False
+    error_message: str | None = None
     try:
         await container.process_media_use_case.execute()
         logger.info("Process task completed")
+        success = True
     except Exception as e:
+        error_message = str(e)
         logger.error("Process task failed", extra={"error": str(e)})
+    finally:
+        await asyncio.to_thread(
+            record_job_run_sync, "process", success, error_message
+        )
 
 
 @router.post("/check")
@@ -77,10 +95,13 @@ async def trigger_check_sync(
     """
     logger.info("Sync check task triggered via API")
 
+    success = False
+    error_message: str | None = None
     try:
         results = await container.check_media_requests_use_case.execute_with_retention(
             container.retention_calculator
         )
+        success = True
 
         # Sort by days_left ascending
         results_sorted = sorted(results, key=lambda r: r.retention.days_left)
@@ -119,12 +140,19 @@ async def trigger_check_sync(
         }
 
     except Exception as e:
+        error_message = str(e)
         logger.error("Sync check task failed", extra={"error": str(e)})
+        await asyncio.to_thread(
+            record_job_run_sync, "check", False, error_message
+        )
         return {
             "status": "failed",
             "task": "check",
             "error": str(e),
         }
+    finally:
+        if success:
+            await asyncio.to_thread(record_job_run_sync, "check", True, None)
 
 
 @router.post("/process")
@@ -169,8 +197,11 @@ async def trigger_process_sync(
     """
     logger.info("Sync process task triggered via API")
 
+    success = False
+    error_message: str | None = None
     try:
         await container.process_media_use_case.execute()
+        success = True
 
         logger.info("Sync process task completed")
 
@@ -181,9 +212,16 @@ async def trigger_process_sync(
         }
 
     except Exception as e:
+        error_message = str(e)
         logger.error("Sync process task failed", extra={"error": str(e)})
+        await asyncio.to_thread(
+            record_job_run_sync, "process", False, error_message
+        )
         return {
             "status": "failed",
             "task": "process",
             "error": str(e),
         }
+    finally:
+        if success:
+            await asyncio.to_thread(record_job_run_sync, "process", True, None)

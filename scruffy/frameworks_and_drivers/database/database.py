@@ -7,6 +7,7 @@ from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.database.extension_model import (
     RequestExtensionModel,
 )
+from scruffy.frameworks_and_drivers.database.job_run_model import JobRunModel
 from scruffy.frameworks_and_drivers.database.settings_model import SettingsModel
 
 _engine: Engine | None = None
