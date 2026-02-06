@@ -1,8 +1,17 @@
-"""Abstract interfaces for external dependencies (e.g. HTTP)."""
+"""Abstract interfaces for external dependencies (e.g. HTTP, settings)."""
 
 from scruffy.interface_adapters.interfaces.http_client_interface import (
     HttpRequestError,
-    HttpClientInterface,
+    IHttpClient,
+)
+from scruffy.interface_adapters.interfaces.settings_provider_interface import (
+    EmailConfig,
+    ISettingsProvider,
 )
 
-__all__ = ["HttpClientInterface", "HttpRequestError"]
+__all__ = [
+    "EmailConfig",
+    "HttpClientInterface",
+    "HttpRequestError",
+    "SettingsProviderInterface",
+]

@@ -1,23 +1,19 @@
-import random
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
 from jinja2 import Environment, FileSystemLoader
 
+from scruffy.domain.value_objects import SCRUFFY_QUOTES
 from scruffy.frameworks_and_drivers.config.settings import settings
-from scruffy.frameworks_and_drivers.utils.quotes import scruffy_quotes
-
-if TYPE_CHECKING:
-    from scruffy.frameworks_and_drivers.database.settings_store import (
-        SettingsProvider,
-    )
+from scruffy.interface_adapters.interfaces.settings_provider_interface import (
+    ISettingsProvider,
+)
 
 
 class EmailClient:
     """FastMail wrapper for sending emails."""
 
-    def __init__(self, settings_provider: "SettingsProvider | None" = None):
+    def __init__(self, settings_provider: "ISettingsProvider | None" = None):
         """Initialize email client. Uses settings_provider for DB-backed config, else env."""
         self._settings_provider = settings_provider
         templates_path = Path(__file__).parent.parent.parent / "templates"
@@ -71,7 +67,7 @@ class EmailClient:
         html = template.render(
             media={"title": title, "poster": poster},
             days_left=days_left,
-            quote=random.choice(scruffy_quotes),
+            quote=SCRUFFY_QUOTES.random(),
             reminder=False,
         )
 
@@ -104,7 +100,7 @@ class EmailClient:
         html = template.render(
             media={"title": title, "poster": poster},
             days_left=days_left,
-            quote=random.choice(scruffy_quotes),
+            quote=SCRUFFY_QUOTES.random(),
             reminder=True,
             extend_url=extend_url,
         )

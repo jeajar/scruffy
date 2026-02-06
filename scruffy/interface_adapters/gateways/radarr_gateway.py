@@ -2,21 +2,18 @@
 
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.interface_adapters.interfaces.http_client_interface import (
-    HttpClientInterface,
+    IHttpClient,
+)
+from scruffy.interface_adapters.interfaces.settings_provider_interface import (
+    ISettingsProvider,
 )
 from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
 )
-
-if TYPE_CHECKING:
-    from scruffy.frameworks_and_drivers.database.settings_store import (
-        SettingsProvider,
-    )
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +23,8 @@ class RadarrGateway(MediaRepositoryInterface):
 
     def __init__(
         self,
-        settings_provider: "SettingsProvider",
-        http_client: HttpClientInterface,
+        settings_provider: ISettingsProvider,
+        http_client: IHttpClient,
     ):
         """Initialize Radarr gateway with settings provider for runtime config."""
         self._settings_provider = settings_provider

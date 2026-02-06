@@ -3,21 +3,18 @@
 import asyncio
 import logging
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.interface_adapters.interfaces.http_client_interface import (
-    HttpClientInterface,
+    IHttpClient,
+)
+from scruffy.interface_adapters.interfaces.settings_provider_interface import (
+    ISettingsProvider,
 )
 from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
 )
-
-if TYPE_CHECKING:
-    from scruffy.frameworks_and_drivers.database.settings_store import (
-        SettingsProvider,
-    )
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +24,8 @@ class SonarrGateway(MediaRepositoryInterface):
 
     def __init__(
         self,
-        settings_provider: "SettingsProvider",
-        http_client: HttpClientInterface,
+        settings_provider: ISettingsProvider,
+        http_client: IHttpClient,
     ):
         """Initialize Sonarr gateway with settings provider for runtime config."""
         self._settings_provider = settings_provider
@@ -50,9 +47,7 @@ class SonarrGateway(MediaRepositoryInterface):
             await self.http_client.get(
                 f"{base_url}/api/v3/system/status", headers=headers
             )
-            logger.info(
-                "Sonarr connection successful", extra={"base_url": base_url}
-            )
+            logger.info("Sonarr connection successful", extra={"base_url": base_url})
             return True
         except Exception as e:
             logger.warning(

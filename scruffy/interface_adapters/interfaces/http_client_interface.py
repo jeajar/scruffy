@@ -17,7 +17,7 @@ class HttpRequestError(Exception):
     """
 
 
-class HttpClientInterface(ABC):
+class IHttpClient(ABC):
     """Abstract interface for making HTTP requests."""
 
     @abstractmethod

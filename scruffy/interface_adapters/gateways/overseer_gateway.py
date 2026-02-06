@@ -1,22 +1,19 @@
 """Gateway adapter for Overseerr API."""
 
 import logging
-from typing import TYPE_CHECKING
 
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.interface_adapters.interfaces.http_client_interface import (
-    HttpClientInterface,
     HttpRequestError,
+    IHttpClient,
+)
+from scruffy.interface_adapters.interfaces.settings_provider_interface import (
+    ISettingsProvider,
 )
 from scruffy.use_cases.dtos.request_dto import RequestDTO
 from scruffy.use_cases.interfaces.request_repository_interface import (
     RequestRepositoryInterface,
 )
-
-if TYPE_CHECKING:
-    from scruffy.frameworks_and_drivers.database.settings_store import (
-        SettingsProvider,
-    )
 
 logger = logging.getLogger(__name__)
 
@@ -26,8 +23,8 @@ class OverseerGateway(RequestRepositoryInterface):
 
     def __init__(
         self,
-        settings_provider: "SettingsProvider",
-        http_client: HttpClientInterface,
+        settings_provider: ISettingsProvider,
+        http_client: IHttpClient,
     ):
         """Initialize Overseerr gateway with settings provider for runtime config."""
         self._settings_provider = settings_provider
@@ -46,12 +43,8 @@ class OverseerGateway(RequestRepositoryInterface):
         """Test Overseerr connection status."""
         base_url, headers = self._get_config()
         try:
-            await self.http_client.get(
-                f"{base_url}/api/v1/status", headers=headers
-            )
-            logger.info(
-                "Overseerr connection successful", extra={"base_url": base_url}
-            )
+            await self.http_client.get(f"{base_url}/api/v1/status", headers=headers)
+            logger.info("Overseerr connection successful", extra={"base_url": base_url})
             return True
         except Exception as e:
             logger.warning(
@@ -255,7 +248,11 @@ class OverseerGateway(RequestRepositoryInterface):
         except HttpRequestError as e:
             logger.warning(
                 "Overseerr unreachable when resolving user by Plex ID",
-                extra={"plex_user_id": plex_user_id, "base_url": base_url, "error": str(e)},
+                extra={
+                    "plex_user_id": plex_user_id,
+                    "base_url": base_url,
+                    "error": str(e),
+                },
             )
             return None
 

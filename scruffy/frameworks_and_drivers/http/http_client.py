@@ -6,11 +6,11 @@ import httpx
 
 from scruffy.interface_adapters.interfaces.http_client_interface import (
     HttpRequestError,
-    HttpClientInterface,
+    IHttpClient,
 )
 
 
-class HttpClient(HttpClientInterface):
+class HttpClient(IHttpClient):
     """httpx-based implementation of HttpClientInterface."""
 
     def __init__(self, timeout: float = 30.0):
@@ -25,9 +25,7 @@ class HttpClient(HttpClientInterface):
     ) -> dict[str, Any]:
         """Make GET request and return JSON response."""
         try:
-            response = await self._client.get(
-                url, headers=headers, params=params
-            )
+            response = await self._client.get(url, headers=headers, params=params)
             response.raise_for_status()
             return response.json()
         except (httpx.RequestError, httpx.HTTPStatusError) as e:
@@ -41,9 +39,7 @@ class HttpClient(HttpClientInterface):
     ) -> None:
         """Make DELETE request."""
         try:
-            response = await self._client.delete(
-                url, headers=headers, params=params
-            )
+            response = await self._client.delete(url, headers=headers, params=params)
             response.raise_for_status()
         except (httpx.RequestError, httpx.HTTPStatusError) as e:
             raise HttpRequestError(str(e)) from e
@@ -56,9 +52,7 @@ class HttpClient(HttpClientInterface):
     ) -> dict[str, Any]:
         """Make PUT request and return JSON response."""
         try:
-            response = await self._client.put(
-                url, headers=headers, json=json
-            )
+            response = await self._client.put(url, headers=headers, json=json)
             response.raise_for_status()
             return response.json()
         except (httpx.RequestError, httpx.HTTPStatusError) as e:

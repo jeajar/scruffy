@@ -1,11 +1,14 @@
 """Helpers for reading/writing admin settings from database."""
 
 import logging
-from typing import TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING
 
-from sqlmodel import Session, select, select
+from sqlmodel import Session, select
 
 from scruffy.frameworks_and_drivers.config.settings import settings
+from scruffy.interface_adapters.interfaces.settings_provider_interface import (
+    EmailConfig,
+)
 
 if TYPE_CHECKING:
     from scruffy.domain.value_objects.retention_policy import RetentionPolicy
@@ -281,19 +284,6 @@ def get_smtp_starttls() -> bool:
     return settings.smtp_starttls
 
 
-class EmailConfig(TypedDict):
-    """Email configuration dict."""
-
-    enabled: bool
-    smtp_host: str
-    smtp_port: int
-    smtp_username: str | None
-    smtp_password: str | None
-    smtp_from_email: str
-    smtp_ssl_tls: bool
-    smtp_starttls: bool
-
-
 def get_email_config() -> EmailConfig:
     """Get full email config. DB first, else env fallback."""
     return EmailConfig(
@@ -355,8 +345,12 @@ def _build_services_config() -> "ServicesConfig":
     """Build ServicesConfig from DB using batched read. Used when cache is cold."""
     vals = _get_many(_SERVICES_KEYS)
     config = ServicesConfig()
-    config.overseerr_url = vals.get(SERVICES_OVERSEERR_URL) or str(settings.overseerr_url)
-    config.overseerr_api_key = vals.get(SERVICES_OVERSEERR_API_KEY) or settings.overseerr_api_key
+    config.overseerr_url = vals.get(SERVICES_OVERSEERR_URL) or str(
+        settings.overseerr_url
+    )
+    config.overseerr_api_key = (
+        vals.get(SERVICES_OVERSEERR_API_KEY) or settings.overseerr_api_key
+    )
     config.radarr_url = vals.get(SERVICES_RADARR_URL) or str(settings.radarr_url)
     config.radarr_api_key = vals.get(SERVICES_RADARR_API_KEY) or settings.radarr_api_key
     config.sonarr_url = vals.get(SERVICES_SONARR_URL) or str(settings.sonarr_url)
