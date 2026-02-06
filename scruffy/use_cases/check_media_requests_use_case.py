@@ -11,7 +11,6 @@ from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
     RetentionResultDTO,
 )
-from scruffy.frameworks_and_drivers.database.settings_store import get_extension_days
 from scruffy.use_cases.interfaces.extension_repository_interface import (
     ExtensionRepositoryInterface,
 )
@@ -121,7 +120,9 @@ class CheckMediaRequestsUseCase:
             extended_ids = await asyncio.to_thread(
                 self.extension_repository.get_extended_request_ids
             )
-            extension_days = await asyncio.to_thread(get_extension_days)
+            extension_days = await asyncio.to_thread(
+                self.extension_repository.get_extension_days
+            )
 
         # Convert DTOs to entities for business logic
         requests = [map_request_dto_to_entity(dto) for dto in request_dtos]
@@ -162,7 +163,9 @@ class CheckMediaRequestsUseCase:
             if media.is_available():
                 is_extended = req.request_id in extended_ids
                 ext_days = extension_days if is_extended else 0
-                retention_result = retention_calculator.evaluate(media, extension_days=ext_days)
+                retention_result = retention_calculator.evaluate(
+                    media, extension_days=ext_days
+                )
                 retention_dto = RetentionResultDTO(
                     remind=retention_result.remind,
                     delete=retention_result.delete,

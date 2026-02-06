@@ -1,12 +1,15 @@
 """Gateway adapter for request extension persistence."""
 
 import logging
+from collections.abc import Callable
 
 from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel, select
 
 from scruffy.frameworks_and_drivers.database.database import get_engine
-from scruffy.frameworks_and_drivers.database.extension_model import RequestExtensionModel
+from scruffy.frameworks_and_drivers.database.extension_model import (
+    RequestExtensionModel,
+)
 from scruffy.use_cases.interfaces.extension_repository_interface import (
     ExtensionRepositoryInterface,
 )
@@ -17,9 +20,14 @@ logger = logging.getLogger(__name__)
 class ExtensionGateway(ExtensionRepositoryInterface):
     """Adapter for request extension persistence using SQLModel."""
 
-    def __init__(self, engine: Engine | None = None):
-        """Initialize extension gateway with database engine."""
+    def __init__(
+        self,
+        engine: Engine | None = None,
+        extension_days_provider: Callable[[], int] | None = None,
+    ):
+        """Initialize extension gateway with database engine and optional extension_days provider."""
         self.engine = engine or get_engine()
+        self._extension_days_provider = extension_days_provider or (lambda: 0)
         SQLModel.metadata.create_all(self.engine)
         logger.debug("Initialized ExtensionGateway")
 
@@ -78,3 +86,7 @@ class ExtensionGateway(ExtensionRepositoryInterface):
                 extra={"count": len(ids)},
             )
             return ids
+
+    def get_extension_days(self) -> int:
+        """Get the configured extension days (for retention calculation)."""
+        return self._extension_days_provider()

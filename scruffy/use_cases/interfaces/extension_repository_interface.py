@@ -24,3 +24,8 @@ class ExtensionRepositoryInterface(ABC):
     def get_extended_request_ids(self) -> set[int]:
         """Get all request IDs that have been extended."""
         pass
+
+    @abstractmethod
+    def get_extension_days(self) -> int:
+        """Get the configured extension days (for retention calculation)."""
+        pass

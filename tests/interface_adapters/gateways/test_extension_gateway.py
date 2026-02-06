@@ -2,9 +2,6 @@
 
 import pytest
 
-from scruffy.frameworks_and_drivers.database.extension_model import (
-    RequestExtensionModel,
-)
 from scruffy.interface_adapters.gateways.extension_gateway import ExtensionGateway
 
 
@@ -51,3 +48,17 @@ def test_get_extended_request_ids_empty(gateway):
     ids = gateway.get_extended_request_ids()
 
     assert ids == set()
+
+
+def test_get_extension_days_default(gateway):
+    """Test get_extension_days returns 0 when no provider given."""
+    assert gateway.get_extension_days() == 0
+
+
+def test_get_extension_days_from_provider(in_memory_engine):
+    """Test get_extension_days returns value from injected provider."""
+    gateway = ExtensionGateway(
+        in_memory_engine,
+        extension_days_provider=lambda: 14,
+    )
+    assert gateway.get_extension_days() == 14

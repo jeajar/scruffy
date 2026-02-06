@@ -6,13 +6,16 @@ from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.database.database import get_engine
-from scruffy.frameworks_and_drivers.database.settings_store import SettingsProvider
+from scruffy.frameworks_and_drivers.database.settings_store import (
+    SettingsProvider,
+    get_extension_days,
+)
 from scruffy.frameworks_and_drivers.email.email_client import EmailClient
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
+from scruffy.interface_adapters.gateways.extension_gateway import ExtensionGateway
 from scruffy.interface_adapters.gateways.media_repository_composite import (
     MediaRepositoryComposite,
 )
-from scruffy.interface_adapters.gateways.extension_gateway import ExtensionGateway
 from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
 from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
 from scruffy.interface_adapters.gateways.reminder_gateway import ReminderGateway
@@ -48,17 +51,16 @@ class Container:
         self._overseer_gateway = OverseerGateway(
             self._settings_provider, self._http_client
         )
-        self._radarr_gateway = RadarrGateway(
-            self._settings_provider, self._http_client
-        )
-        self._sonarr_gateway = SonarrGateway(
-            self._settings_provider, self._http_client
-        )
+        self._radarr_gateway = RadarrGateway(self._settings_provider, self._http_client)
+        self._sonarr_gateway = SonarrGateway(self._settings_provider, self._http_client)
         self._media_repository = MediaRepositoryComposite(
             self._radarr_gateway, self._sonarr_gateway
         )
         self._reminder_gateway = ReminderGateway(self._database_engine)
-        self._extension_gateway = ExtensionGateway(self._database_engine)
+        self._extension_gateway = ExtensionGateway(
+            self._database_engine,
+            extension_days_provider=get_extension_days,
+        )
         self._notification_service = EmailNotificationService(self._email_client)
 
         # Use cases
