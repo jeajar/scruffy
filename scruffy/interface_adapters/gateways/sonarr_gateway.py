@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from datetime import datetime
+from typing import Any, cast
 
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.interface_adapters.interfaces.http_client_interface import (
@@ -174,7 +175,8 @@ class SonarrGateway(MediaRepositoryInterface):
             "Fetching episodes",
             extra={"series_id": series_id, "season_number": season_number},
         )
-        return await self.http_client.get(
+        # Sonarr /api/v3/episode returns a JSON array; IHttpClient.get is typed as dict
+        response: Any = await self.http_client.get(
             f"{base_url}/api/v3/episode",
             headers=headers,
             params={
@@ -183,6 +185,7 @@ class SonarrGateway(MediaRepositoryInterface):
                 "includeEpisodeFile": True,
             },
         )
+        return cast(list[dict], response)
 
     async def delete_season_files(self, series_id: int, season_list: list[int]) -> None:
         """Delete specific seasons from a series and their files."""

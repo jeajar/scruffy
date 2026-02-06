@@ -1,8 +1,9 @@
 """Helpers for reading/writing admin settings from database."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
+from sqlalchemy import ColumnElement
 from sqlmodel import Session, select
 
 from scruffy.frameworks_and_drivers.config.settings import settings
@@ -52,7 +53,9 @@ def _get_many(db_keys: list[str]) -> dict[str, str | None]:
     """Get multiple keys from DB in a single session. Returns dict of key -> value (None if not set)."""
     engine = get_engine()
     with Session(engine) as session:
-        statement = select(SettingsModel).where(SettingsModel.key.in_(db_keys))
+        # SQLModel types .key as str; at runtime it's a column with .in_()
+        key_col = cast(ColumnElement[str], SettingsModel.key)
+        statement = select(SettingsModel).where(key_col.in_(db_keys))
         rows = session.exec(statement).all()
         result = {k: None for k in db_keys}
         for row in rows:

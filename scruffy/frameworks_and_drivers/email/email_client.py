@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from fastapi_mail import ConnectionConfig, FastMail, MessageSchema
+from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from jinja2 import Environment, FileSystemLoader
+from pydantic import SecretStr
 
 from scruffy.domain.value_objects import SCRUFFY_QUOTES
 from scruffy.frameworks_and_drivers.config.settings import settings
@@ -44,7 +45,7 @@ class EmailClient:
         use_credentials = bool(username and password)
         conf = ConnectionConfig(
             MAIL_USERNAME=username,
-            MAIL_PASSWORD=password,
+            MAIL_PASSWORD=SecretStr(password),
             MAIL_FROM_NAME="Scruffy, the Janitor",
             MAIL_FROM=config.get("smtp_from_email", "scruffy@example.com"),
             MAIL_PORT=config.get("smtp_port", 25),
@@ -75,7 +76,7 @@ class EmailClient:
             subject=f"Gone!: {title}",
             recipients=[to_email],
             body=html,
-            subtype="html",
+            subtype=MessageType.html,
         )
 
         await fastmail.send_message(message)
@@ -109,7 +110,7 @@ class EmailClient:
             subject=f"Reminder: {title}",
             recipients=[to_email],
             body=html,
-            subtype="html",
+            subtype=MessageType.html,
         )
 
         await fastmail.send_message(message)
