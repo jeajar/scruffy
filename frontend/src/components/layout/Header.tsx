@@ -6,7 +6,9 @@ import {
   X,
   Settings,
   CalendarClock,
-  SlidersHorizontal,
+  Server,
+  Mail,
+  Clock,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -104,7 +106,7 @@ export function Header() {
                         >
                           <DropdownMenuItem asChild>
                             <Link
-                              to="/admin/schedules"
+                              to="/admin/settings/schedules"
                               className="flex cursor-pointer items-center gap-2 text-gray-300 focus:bg-gray-700 focus:text-white"
                             >
                               <CalendarClock className="h-4 w-4" />
@@ -113,11 +115,29 @@ export function Header() {
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link
-                              to="/admin/settings"
+                              to="/admin/settings/services"
                               className="flex cursor-pointer items-center gap-2 text-gray-300 focus:bg-gray-700 focus:text-white"
                             >
-                              <SlidersHorizontal className="h-4 w-4" />
-                              Settings
+                              <Server className="h-4 w-4" />
+                              Services
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/admin/settings/notifications"
+                              className="flex cursor-pointer items-center gap-2 text-gray-300 focus:bg-gray-700 focus:text-white"
+                            >
+                              <Mail className="h-4 w-4" />
+                              Notifications
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to="/admin/settings/retention"
+                              className="flex cursor-pointer items-center gap-2 text-gray-300 focus:bg-gray-700 focus:text-white"
+                            >
+                              <Clock className="h-4 w-4" />
+                              Retention
                             </Link>
                           </DropdownMenuItem>
                         </DropdownMenuSubContent>
@@ -191,10 +211,10 @@ export function Header() {
                         Settings
                       </span>
                       <Link
-                        to="/admin/schedules"
+                        to="/admin/settings/schedules"
                         className={cn(
                           navLink,
-                          pathname.startsWith("/admin") && "bg-gray-700 text-white"
+                          pathname === "/admin/settings/schedules" && "bg-gray-700 text-white"
                         )}
                         onClick={closeMobileMenu}
                       >
@@ -202,15 +222,37 @@ export function Header() {
                         Schedules
                       </Link>
                       <Link
-                        to="/admin/settings"
+                        to="/admin/settings/services"
                         className={cn(
                           navLink,
-                          pathname.startsWith("/admin") && "bg-gray-700 text-white"
+                          pathname === "/admin/settings/services" && "bg-gray-700 text-white"
                         )}
                         onClick={closeMobileMenu}
                       >
-                        <SlidersHorizontal className="h-5 w-5" />
-                        Settings
+                        <Server className="h-5 w-5" />
+                        Services
+                      </Link>
+                      <Link
+                        to="/admin/settings/notifications"
+                        className={cn(
+                          navLink,
+                          pathname === "/admin/settings/notifications" && "bg-gray-700 text-white"
+                        )}
+                        onClick={closeMobileMenu}
+                      >
+                        <Mail className="h-5 w-5" />
+                        Notifications
+                      </Link>
+                      <Link
+                        to="/admin/settings/retention"
+                        className={cn(
+                          navLink,
+                          pathname === "/admin/settings/retention" && "bg-gray-700 text-white"
+                        )}
+                        onClick={closeMobileMenu}
+                      >
+                        <Clock className="h-5 w-5" />
+                        Retention
                       </Link>
                     </div>
                   )}

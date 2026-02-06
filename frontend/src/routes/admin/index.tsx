@@ -18,7 +18,7 @@ function AdminIndexPage() {
       } else if (!isAdmin) {
         navigate({ to: "/" });
       } else {
-        navigate({ to: "/admin/schedules" });
+        navigate({ to: "/admin/settings/schedules" });
       }
     }
   }, [authLoading, isAuthenticated, isAdmin, navigate]);

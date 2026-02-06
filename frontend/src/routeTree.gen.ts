@@ -13,8 +13,13 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExtendRouteImport } from './routes/extend'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as AdminSettingsRouteImport } from './routes/admin/settings'
 import { Route as AdminSchedulesRouteImport } from './routes/admin/schedules'
+import { Route as AdminSettingsRouteRouteImport } from './routes/admin/settings/route'
+import { Route as AdminSettingsIndexRouteImport } from './routes/admin/settings/index'
+import { Route as AdminSettingsServicesRouteImport } from './routes/admin/settings/services'
+import { Route as AdminSettingsSchedulesRouteImport } from './routes/admin/settings/schedules'
+import { Route as AdminSettingsRetentionRouteImport } from './routes/admin/settings/retention'
+import { Route as AdminSettingsNotificationsRouteImport } from './routes/admin/settings/notifications'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -36,41 +41,81 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSettingsRoute = AdminSettingsRouteImport.update({
-  id: '/admin/settings',
-  path: '/admin/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AdminSchedulesRoute = AdminSchedulesRouteImport.update({
   id: '/admin/schedules',
   path: '/admin/schedules',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSettingsRouteRoute = AdminSettingsRouteRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSettingsIndexRoute = AdminSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminSettingsRouteRoute,
+} as any)
+const AdminSettingsServicesRoute = AdminSettingsServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AdminSettingsRouteRoute,
+} as any)
+const AdminSettingsSchedulesRoute = AdminSettingsSchedulesRouteImport.update({
+  id: '/schedules',
+  path: '/schedules',
+  getParentRoute: () => AdminSettingsRouteRoute,
+} as any)
+const AdminSettingsRetentionRoute = AdminSettingsRetentionRouteImport.update({
+  id: '/retention',
+  path: '/retention',
+  getParentRoute: () => AdminSettingsRouteRoute,
+} as any)
+const AdminSettingsNotificationsRoute =
+  AdminSettingsNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AdminSettingsRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
+  '/admin/settings': typeof AdminSettingsRouteRouteWithChildren
   '/admin/schedules': typeof AdminSchedulesRoute
-  '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
+  '/admin/settings/retention': typeof AdminSettingsRetentionRoute
+  '/admin/settings/schedules': typeof AdminSettingsSchedulesRoute
+  '/admin/settings/services': typeof AdminSettingsServicesRoute
+  '/admin/settings/': typeof AdminSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
   '/admin/schedules': typeof AdminSchedulesRoute
-  '/admin/settings': typeof AdminSettingsRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
+  '/admin/settings/retention': typeof AdminSettingsRetentionRoute
+  '/admin/settings/schedules': typeof AdminSettingsSchedulesRoute
+  '/admin/settings/services': typeof AdminSettingsServicesRoute
+  '/admin/settings': typeof AdminSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/extend': typeof ExtendRoute
   '/login': typeof LoginRoute
+  '/admin/settings': typeof AdminSettingsRouteRouteWithChildren
   '/admin/schedules': typeof AdminSchedulesRoute
-  '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
+  '/admin/settings/retention': typeof AdminSettingsRetentionRoute
+  '/admin/settings/schedules': typeof AdminSettingsSchedulesRoute
+  '/admin/settings/services': typeof AdminSettingsServicesRoute
+  '/admin/settings/': typeof AdminSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,33 +123,47 @@ export interface FileRouteTypes {
     | '/'
     | '/extend'
     | '/login'
-    | '/admin/schedules'
     | '/admin/settings'
+    | '/admin/schedules'
     | '/admin/'
+    | '/admin/settings/notifications'
+    | '/admin/settings/retention'
+    | '/admin/settings/schedules'
+    | '/admin/settings/services'
+    | '/admin/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/extend'
     | '/login'
     | '/admin/schedules'
-    | '/admin/settings'
     | '/admin'
+    | '/admin/settings/notifications'
+    | '/admin/settings/retention'
+    | '/admin/settings/schedules'
+    | '/admin/settings/services'
+    | '/admin/settings'
   id:
     | '__root__'
     | '/'
     | '/extend'
     | '/login'
-    | '/admin/schedules'
     | '/admin/settings'
+    | '/admin/schedules'
     | '/admin/'
+    | '/admin/settings/notifications'
+    | '/admin/settings/retention'
+    | '/admin/settings/schedules'
+    | '/admin/settings/services'
+    | '/admin/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExtendRoute: typeof ExtendRoute
   LoginRoute: typeof LoginRoute
+  AdminSettingsRouteRoute: typeof AdminSettingsRouteRouteWithChildren
   AdminSchedulesRoute: typeof AdminSchedulesRoute
-  AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
@@ -138,13 +197,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/settings': {
-      id: '/admin/settings'
-      path: '/admin/settings'
-      fullPath: '/admin/settings'
-      preLoaderRoute: typeof AdminSettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/admin/schedules': {
       id: '/admin/schedules'
       path: '/admin/schedules'
@@ -152,15 +204,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminSchedulesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/settings/': {
+      id: '/admin/settings/'
+      path: '/'
+      fullPath: '/admin/settings/'
+      preLoaderRoute: typeof AdminSettingsIndexRouteImport
+      parentRoute: typeof AdminSettingsRouteRoute
+    }
+    '/admin/settings/services': {
+      id: '/admin/settings/services'
+      path: '/services'
+      fullPath: '/admin/settings/services'
+      preLoaderRoute: typeof AdminSettingsServicesRouteImport
+      parentRoute: typeof AdminSettingsRouteRoute
+    }
+    '/admin/settings/schedules': {
+      id: '/admin/settings/schedules'
+      path: '/schedules'
+      fullPath: '/admin/settings/schedules'
+      preLoaderRoute: typeof AdminSettingsSchedulesRouteImport
+      parentRoute: typeof AdminSettingsRouteRoute
+    }
+    '/admin/settings/retention': {
+      id: '/admin/settings/retention'
+      path: '/retention'
+      fullPath: '/admin/settings/retention'
+      preLoaderRoute: typeof AdminSettingsRetentionRouteImport
+      parentRoute: typeof AdminSettingsRouteRoute
+    }
+    '/admin/settings/notifications': {
+      id: '/admin/settings/notifications'
+      path: '/notifications'
+      fullPath: '/admin/settings/notifications'
+      preLoaderRoute: typeof AdminSettingsNotificationsRouteImport
+      parentRoute: typeof AdminSettingsRouteRoute
+    }
   }
 }
+
+interface AdminSettingsRouteRouteChildren {
+  AdminSettingsNotificationsRoute: typeof AdminSettingsNotificationsRoute
+  AdminSettingsRetentionRoute: typeof AdminSettingsRetentionRoute
+  AdminSettingsSchedulesRoute: typeof AdminSettingsSchedulesRoute
+  AdminSettingsServicesRoute: typeof AdminSettingsServicesRoute
+  AdminSettingsIndexRoute: typeof AdminSettingsIndexRoute
+}
+
+const AdminSettingsRouteRouteChildren: AdminSettingsRouteRouteChildren = {
+  AdminSettingsNotificationsRoute: AdminSettingsNotificationsRoute,
+  AdminSettingsRetentionRoute: AdminSettingsRetentionRoute,
+  AdminSettingsSchedulesRoute: AdminSettingsSchedulesRoute,
+  AdminSettingsServicesRoute: AdminSettingsServicesRoute,
+  AdminSettingsIndexRoute: AdminSettingsIndexRoute,
+}
+
+const AdminSettingsRouteRouteWithChildren =
+  AdminSettingsRouteRoute._addFileChildren(AdminSettingsRouteRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExtendRoute: ExtendRoute,
   LoginRoute: LoginRoute,
+  AdminSettingsRouteRoute: AdminSettingsRouteRouteWithChildren,
   AdminSchedulesRoute: AdminSchedulesRoute,
-  AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
 }
 export const routeTree = rootRouteImport

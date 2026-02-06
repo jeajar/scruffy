@@ -18,8 +18,8 @@ from scruffy.frameworks_and_drivers.di.container import Container
 def mock_settings():
     """Mock settings for integration tests.
 
-    Patches settings_store's settings (used by SettingsProvider) and
-    container's settings (for retention, etc).
+    Patches settings_store's settings (used by SettingsProvider and
+    get_retention_policy).
     """
     mock_values = {
         "overseerr_url": "http://overseerr.test",
@@ -38,12 +38,7 @@ def mock_settings():
     ) as store_mock:
         for k, v in mock_values.items():
             setattr(store_mock, k, v)
-        with patch(
-            "scruffy.frameworks_and_drivers.di.container.settings"
-        ) as container_mock:
-            for k, v in mock_values.items():
-                setattr(container_mock, k, v)
-            yield container_mock
+        yield store_mock
 
 
 @pytest.fixture

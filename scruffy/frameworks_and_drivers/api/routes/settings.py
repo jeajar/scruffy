@@ -15,10 +15,14 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
     get_overseerr_url,
     get_radarr_api_key,
     get_radarr_url,
+    get_reminder_days,
+    get_retention_days,
     get_sonarr_api_key,
     get_sonarr_url,
     set_email_config,
     set_extension_days,
+    set_reminder_days,
+    set_retention_days,
     set_services_config,
 )
 
@@ -67,6 +71,8 @@ class NotificationsResponse(BaseModel):
 class SettingsResponse(BaseModel):
     """Settings as returned by API."""
 
+    retention_days: int
+    reminder_days: int
     extension_days: int
     services: ServicesResponse
     notifications: NotificationsResponse
@@ -109,6 +115,8 @@ class NotificationsUpdate(BaseModel):
 class SettingsUpdate(BaseModel):
     """Payload to update settings."""
 
+    retention_days: int | None = Field(None, ge=1, le=365)
+    reminder_days: int | None = Field(None, ge=1, le=365)
     extension_days: int | None = Field(None, ge=1, le=365)
     services: ServicesUpdate | None = None
     notifications: NotificationsUpdate | None = None
@@ -119,9 +127,13 @@ class SettingsUpdate(BaseModel):
 
 def _build_settings_response() -> SettingsResponse:
     """Build full settings response from store."""
+    retention_days = get_retention_days()
+    reminder_days = get_reminder_days()
     extension_days = get_extension_days()
     email_cfg = get_email_config()
     return SettingsResponse(
+        retention_days=retention_days,
+        reminder_days=reminder_days,
         extension_days=extension_days,
         services=ServicesResponse(
             overseerr=ServiceConfigResponse(
@@ -167,6 +179,18 @@ async def update_settings(
     _user: AdminUser,
 ) -> SettingsResponse:
     """Update admin settings. Admin only."""
+    if body.retention_days is not None:
+        await asyncio.to_thread(set_retention_days, body.retention_days)
+        logger.info(
+            "Settings updated",
+            extra={"retention_days": body.retention_days},
+        )
+    if body.reminder_days is not None:
+        await asyncio.to_thread(set_reminder_days, body.reminder_days)
+        logger.info(
+            "Settings updated",
+            extra={"reminder_days": body.reminder_days},
+        )
     if body.extension_days is not None:
         await asyncio.to_thread(set_extension_days, body.extension_days)
         logger.info(

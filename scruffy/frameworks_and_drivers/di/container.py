@@ -3,12 +3,11 @@
 import logging
 
 from scruffy.domain.services.retention_calculator import RetentionCalculator
-from scruffy.domain.value_objects.retention_policy import RetentionPolicy
-from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.database.database import get_engine
 from scruffy.frameworks_and_drivers.database.settings_store import (
     SettingsProvider,
     get_extension_days,
+    get_retention_policy,
 )
 from scruffy.frameworks_and_drivers.email.email_client import EmailClient
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
@@ -83,25 +82,21 @@ class Container:
             self._overseer_gateway,
         )
 
-        retention_policy = RetentionPolicy(
-            retention_days=settings.retention_days,
-            reminder_days=settings.reminder_days,
-        )
-        self._retention_calculator = RetentionCalculator(retention_policy)
+        self._retention_calculator = RetentionCalculator(get_retention_policy)
 
         self._process_use_case = ProcessMediaUseCase(
             self._check_use_case,
             self._send_reminder_use_case,
             self._delete_media_use_case,
-            retention_policy,
+            get_retention_policy,
         )
 
         logger.info(
             "Container initialized successfully",
             extra={
-                "retention_days": settings.retention_days,
-                "reminder_days": settings.reminder_days,
-                "email_enabled": settings.email_enabled,
+                "retention_days": get_retention_policy().retention_days,
+                "reminder_days": get_retention_policy().reminder_days,
+                "email_enabled": self._settings_provider.get_email_config()["enabled"],
             },
         )
 

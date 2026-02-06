@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import Callable, Union
 
 from scruffy.domain.services.retention_calculator import (
     RetentionCalculator,
@@ -23,18 +24,25 @@ class ProcessMediaUseCase:
         check_use_case: CheckMediaRequestsUseCase,
         send_reminder_use_case: SendReminderUseCase,
         delete_media_use_case: DeleteMediaUseCase,
-        retention_policy: RetentionPolicy,
+        retention_policy_or_provider: Union[
+            RetentionPolicy, Callable[[], RetentionPolicy]
+        ],
     ):
-        """Initialize with required use cases and policy."""
+        """Initialize with required use cases and policy (or policy provider)."""
         self.check_use_case = check_use_case
         self.send_reminder_use_case = send_reminder_use_case
         self.delete_media_use_case = delete_media_use_case
-        self.retention_calculator = RetentionCalculator(retention_policy)
+        self.retention_calculator = RetentionCalculator(retention_policy_or_provider)
+        policy = (
+            retention_policy_or_provider()
+            if callable(retention_policy_or_provider)
+            else retention_policy_or_provider
+        )
         logger.debug(
             "Initialized ProcessMediaUseCase",
             extra={
-                "retention_days": retention_policy.retention_days,
-                "reminder_days": retention_policy.reminder_days,
+                "retention_days": policy.retention_days,
+                "reminder_days": policy.reminder_days,
             },
         )
 

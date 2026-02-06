@@ -1,17 +1,22 @@
 """Helpers for reading/writing admin settings from database."""
 
 import logging
-from typing import TypedDict
+from typing import TYPE_CHECKING, TypedDict
 
 from sqlmodel import Session
 
 from scruffy.frameworks_and_drivers.config.settings import settings
+
+if TYPE_CHECKING:
+    from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.frameworks_and_drivers.database.database import get_engine
 from scruffy.frameworks_and_drivers.database.settings_model import SettingsModel
 
 logger = logging.getLogger(__name__)
 
 EXTENSION_DAYS_KEY = "extension_days"
+RETENTION_DAYS_KEY = "retention.retention_days"
+REMINDER_DAYS_KEY = "retention.reminder_days"
 
 # Services keys
 SERVICES_OVERSEERR_URL = "services.overseerr_url"
@@ -75,6 +80,64 @@ def set_extension_days(value: int) -> None:
     """Set extension_days in database."""
     _set(EXTENSION_DAYS_KEY, str(value))
     logger.info("Updated extension_days setting", extra={"value": value})
+
+
+def get_retention_days() -> int:
+    """
+    Get retention_days setting.
+
+    Resolution order: DB value if set, else env (settings.retention_days), else default 30.
+    """
+    val = _get(RETENTION_DAYS_KEY)
+    if val is not None:
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            logger.warning(
+                "Invalid retention_days in DB, using env default",
+                extra={"value": val},
+            )
+    return settings.retention_days
+
+
+def set_retention_days(value: int) -> None:
+    """Set retention_days in database."""
+    _set(RETENTION_DAYS_KEY, str(value))
+    logger.info("Updated retention_days setting", extra={"value": value})
+
+
+def get_reminder_days() -> int:
+    """
+    Get reminder_days setting.
+
+    Resolution order: DB value if set, else env (settings.reminder_days), else default 7.
+    """
+    val = _get(REMINDER_DAYS_KEY)
+    if val is not None:
+        try:
+            return int(val)
+        except (ValueError, TypeError):
+            logger.warning(
+                "Invalid reminder_days in DB, using env default",
+                extra={"value": val},
+            )
+    return settings.reminder_days
+
+
+def set_reminder_days(value: int) -> None:
+    """Set reminder_days in database."""
+    _set(REMINDER_DAYS_KEY, str(value))
+    logger.info("Updated reminder_days setting", extra={"value": value})
+
+
+def get_retention_policy() -> "RetentionPolicy":
+    """Get current retention policy from DB (with env fallback)."""
+    from scruffy.domain.value_objects.retention_policy import RetentionPolicy
+
+    return RetentionPolicy(
+        retention_days=get_retention_days(),
+        reminder_days=get_reminder_days(),
+    )
 
 
 # --- Services ---

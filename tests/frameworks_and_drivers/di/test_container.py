@@ -9,17 +9,26 @@ from scruffy.frameworks_and_drivers.di.container import Container
 
 @pytest.fixture
 def mock_settings():
-    """Mock settings."""
-    with patch("scruffy.frameworks_and_drivers.di.container.settings") as mock:
-        mock.overseerr_url = "http://test.com"
-        mock.overseerr_api_key = "test-key"
-        mock.sonarr_url = "http://test.com"
-        mock.sonarr_api_key = "test-key"
-        mock.radarr_url = "http://test.com"
-        mock.radarr_api_key = "test-key"
-        mock.retention_days = 30
-        mock.reminder_days = 7
-        yield mock
+    """Mock settings store for retention policy (container uses get_retention_policy)."""
+    from scruffy.domain.value_objects.retention_policy import RetentionPolicy
+
+    def fake_get_retention_policy():
+        return RetentionPolicy(retention_days=30, reminder_days=7)
+
+    with patch(
+        "scruffy.frameworks_and_drivers.di.container.get_retention_policy",
+        side_effect=fake_get_retention_policy,
+    ):
+        with patch("scruffy.frameworks_and_drivers.database.settings_store.settings") as mock:
+            mock.overseerr_url = "http://test.com"
+            mock.overseerr_api_key = "test-key"
+            mock.sonarr_url = "http://test.com"
+            mock.sonarr_api_key = "test-key"
+            mock.radarr_url = "http://test.com"
+            mock.radarr_api_key = "test-key"
+            mock.retention_days = 30
+            mock.reminder_days = 7
+            yield mock
 
 
 @pytest.fixture

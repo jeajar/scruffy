@@ -102,11 +102,13 @@ class TestSettingsGet:
     """Tests for GET /api/admin/settings."""
 
     def test_get_settings_returns_full_shape(self, client):
-        """Test GET returns extension_days, services, and notifications."""
+        """Test GET returns retention_days, reminder_days, extension_days, services, and notifications."""
         response = client.get("/api/admin/settings")
 
         assert response.status_code == 200
         data = response.json()
+        assert "retention_days" in data
+        assert "reminder_days" in data
         assert "extension_days" in data
         assert "services" in data
         assert "notifications" in data
@@ -132,6 +134,18 @@ class TestSettingsPatch:
         assert response.status_code == 200
         data = response.json()
         assert data["extension_days"] == 14
+
+    def test_patch_retention_days(self, client):
+        """Test PATCH updates retention_days and reminder_days."""
+        response = client.patch(
+            "/api/admin/settings",
+            json={"retention_days": 45, "reminder_days": 10},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["retention_days"] == 45
+        assert data["reminder_days"] == 10
 
 
 class TestSettingsTestService:
