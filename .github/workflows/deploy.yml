@@ -15,6 +15,19 @@ env:
   IMAGE_NAME: ${{ github.repository }}
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version
+        run: |
+          git fetch --tags
+          ./scripts/check_version.sh
+
   tag-release:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -24,13 +37,13 @@ jobs:
       version: ${{ steps.get_version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-        
+
       - name: Get version from pyproject.toml
         id: get_version
         run: |
           VERSION=$(grep -m1 'version = ' pyproject.toml | cut -d'"' -f2)
           echo "version=v${VERSION}" >> "$GITHUB_OUTPUT"
-          
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         if: ${{ !contains(github.ref, steps.get_version.outputs.version) }}
@@ -39,25 +52,44 @@ jobs:
           generate_release_notes: true
 
   build:
-    needs: tag-release
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
 
     steps:
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}},value=${{ needs.tag-release.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ needs.tag-release.outputs.version }}
-            type=sha,format=long
-
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: resolve_version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+          else
+            VERSION=$(grep -m1 'version = ' pyproject.toml | cut -d'"' -f2)
+            echo "version=v${VERSION}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract metadata (tags, labels) for backend
+        id: meta_backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.resolve_version.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.resolve_version.outputs.version }}
+            type=sha,format=long
+
+      - name: Extract metadata (tags, labels) for frontend
+        id: meta_frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.resolve_version.outputs.version }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.resolve_version.outputs.version }}
+            type=sha,format=long
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -69,12 +101,24 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push backend
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta_backend.outputs.tags }}
+          labels: ${{ steps.meta_backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          file: ./frontend/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta_frontend.outputs.tags }}
+          labels: ${{ steps.meta_frontend.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -1,43 +1,45 @@
-FROM python:3.13-slim
+# Build stage: install dependencies and application
+FROM python:3.13-slim AS builder
 
-# Set working directory
 WORKDIR /app
 
-RUN mkdir -p /data && \
-    chmod 777 /data
-
-# Install cron and curl
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    cron \
-    curl && \
-    rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /data && \
-    chmod 777 /data && \
-    touch /var/log/cron.log
-
-# Download the latest installer
+# Install curl for uv installer, then uv
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 ADD https://astral.sh/uv/install.sh /uv-installer.sh
-
-# Run the installer then remove it
 RUN sh /uv-installer.sh && rm /uv-installer.sh
-
-# Ensure the installed binary is on the `PATH`
 ENV PATH="/root/.local/bin/:$PATH"
 
-# Copy project files
-COPY . .
+# Copy only what's needed for the install (smaller context, no frontend/tests)
+COPY pyproject.toml uv.lock README.md ./
+COPY scruffy/ ./scruffy/
 
-# Install dependencies using uv
-RUN uv venv
-RUN uv pip install -e .
+# Create venv and install production dependencies only (no dev deps, no editable)
+RUN uv venv && uv pip install .
+# Strip caches and bytecode to reduce size
+RUN find /app/.venv -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true \
+    && find /app/.venv -name "*.pyc" -delete \
+    && rm -rf /root/.cache/uv
 
-COPY scripts/crontab /etc/cron.d/crontab
-RUN chmod 0644 /etc/cron.d/crontab
-RUN crontab /etc/cron.d/crontab
+# Production stage: minimal runtime
+FROM python:3.13-slim
 
+WORKDIR /app
+
+# Runtime deps only (curl for healthcheck)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /data \
+    && chmod 777 /data
+
+# Copy venv from builder (no uv, no build tools)
+COPY --from=builder /app/.venv /app/.venv
+ENV PATH="/app/.venv/bin:$PATH"
+
+# Copy scripts
 COPY scripts/healthcheck.sh /healthcheck.sh
 COPY scripts/entrypoint.sh /entrypoint.sh
 RUN chmod +x /healthcheck.sh /entrypoint.sh
 
-# Set entrypoint
 ENTRYPOINT ["/entrypoint.sh"]

@@ -14,8 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -141,3 +141,6 @@ dmypy.json
 .scruffy_data/
 .DS_Store
 .github/
+
+# Node
+node_modules/

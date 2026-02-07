@@ -1,31 +1,40 @@
 [project]
 name = "scruffy"
-version = "0.3.2"
+version = "0.4.0"
 description = "An opiniated Media cleaner for Overseerr"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "apscheduler>=3.10.4",
     "fastapi-mail>=1.4.2",
+    "fastapi>=0.115.0",
     "httpx>=0.28.1",
+    "jinja2>=3.1.0",
     "pydantic-settings>=2.7.1",
     "pydantic>=2.10.4",
+    "python-multipart>=0.0.18",
     "rich>=13.9.4",
     "sqlmodel>=0.0.22",
     "typer>=0.15.1",
+    "uvicorn[standard]>=0.34.0",
 ]
 
 [tool.uv]
 dev-dependencies = [
+    "pre-commit>=4.0.0",
     "pytest-asyncio>=0.25.2",
     "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
     "pytest>=8.3.4",
     "respx>=0.22.0",
     "ruff>=0.9.5",
     "mypy>=1.15.0",
+    "ty>=0.0.15",
 ]
 # Define CLI entry points
 [project.scripts]
-scruffy = "scruffy.app.cli:app"
+scruffy = "scruffy.frameworks_and_drivers.cli.cli_controller:app"
+scruffy-api = "scruffy.frameworks_and_drivers.api.app:main"
 
 # Define the build system
 [build-system]
@@ -33,10 +42,57 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
+# Modern pytest-asyncio configuration
 asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+# Test discovery
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+# Markers
 markers = [
-    "asyncio: mark test as async"
+    "asyncio: mark test as async",
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
 ]
+
+# Output configuration
+addopts = [
+    "-ra",  # Show extra test summary for all except passed
+    "--strict-markers",  # Fail on unknown markers
+    "--strict-config",  # Fail on config errors
+]
+
+# Filter warnings
+filterwarnings = [
+    "ignore::DeprecationWarning",  # Ignore deprecation warnings from dependencies
+    "ignore::PendingDeprecationWarning",
+    "ignore::ResourceWarning",  # Ignore resource warnings (unclosed files/connections)
+]
+
+[tool.coverage.run]
+source = ["scruffy"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+show_missing = true
+fail_under = 0  # Set to desired coverage threshold
 
 [tool.ruff]
 target-version = "py313"

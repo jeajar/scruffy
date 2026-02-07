@@ -1,0 +1,23 @@
+# Development overrides - automatically loaded by docker-compose
+# This enables hot-reload for both frontend and backend
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://backend:8080
+
+  backend:
+    build: .
+    command: uvicorn scruffy.frameworks_and_drivers.api.app:create_app --factory --host 0.0.0.0 --port 8080 --reload
+    volumes:
+      - ./scruffy:/app/scruffy
+    ports:
+      - "8080:8080"

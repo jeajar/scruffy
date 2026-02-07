@@ -1,2 +1,0 @@
-0 */6 * * * root cd /app && /root/.local/bin/uv run python -m scruffy.app.cli check >> $DATA_DIR/scruffy.log 2>&1
-0 4 * * * root cd /app && /root/.local/bin/uv run python -m scruffy.app.cli process >> $DATA_DIR/scruffy.log 2>&1
