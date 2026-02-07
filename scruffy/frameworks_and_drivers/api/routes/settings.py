@@ -200,6 +200,7 @@ async def update_settings(
 
     if body.services is not None:
         services = body.services  # Narrow type for closure
+
         def _apply_services() -> None:
             overseerr = services.overseerr
             if overseerr is not None:

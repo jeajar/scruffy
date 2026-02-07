@@ -52,7 +52,11 @@ def sample_media():
 
 @pytest.mark.asyncio
 async def test_execute_sends_reminder_when_no_reminder_exists(
-    use_case, mock_reminder_repository, mock_notification_service, sample_request, sample_media
+    use_case,
+    mock_reminder_repository,
+    mock_notification_service,
+    sample_request,
+    sample_media,
 ):
     """Test execute sends reminder when no reminder exists."""
     mock_reminder_repository.has_reminder.return_value = False
@@ -60,7 +64,9 @@ async def test_execute_sends_reminder_when_no_reminder_exists(
 
     await use_case.execute(sample_request, sample_media, days_left=7)
 
-    mock_reminder_repository.has_reminder.assert_called_once_with(sample_request.request_id)
+    mock_reminder_repository.has_reminder.assert_called_once_with(
+        sample_request.request_id
+    )
     mock_notification_service.send_reminder_notice.assert_called_once()
     call_args = mock_notification_service.send_reminder_notice.call_args
     assert call_args[0][0] == sample_request.user_email
@@ -72,7 +78,11 @@ async def test_execute_sends_reminder_when_no_reminder_exists(
 
 @pytest.mark.asyncio
 async def test_execute_adds_reminder_after_sending(
-    use_case, mock_reminder_repository, mock_notification_service, sample_request, sample_media
+    use_case,
+    mock_reminder_repository,
+    mock_notification_service,
+    sample_request,
+    sample_media,
 ):
     """Test execute adds reminder record after sending notification."""
     mock_reminder_repository.has_reminder.return_value = False
@@ -88,7 +98,11 @@ async def test_execute_adds_reminder_after_sending(
 
 @pytest.mark.asyncio
 async def test_execute_skips_when_reminder_already_exists(
-    use_case, mock_reminder_repository, mock_notification_service, sample_request, sample_media
+    use_case,
+    mock_reminder_repository,
+    mock_notification_service,
+    sample_request,
+    sample_media,
 ):
     """Test execute skips sending when reminder already exists."""
     mock_reminder_repository.has_reminder.return_value = True
@@ -96,14 +110,20 @@ async def test_execute_skips_when_reminder_already_exists(
 
     await use_case.execute(sample_request, sample_media, days_left=7)
 
-    mock_reminder_repository.has_reminder.assert_called_once_with(sample_request.request_id)
+    mock_reminder_repository.has_reminder.assert_called_once_with(
+        sample_request.request_id
+    )
     mock_notification_service.send_reminder_notice.assert_not_called()
     mock_reminder_repository.add_reminder.assert_not_called()
 
 
 @pytest.mark.asyncio
 async def test_execute_with_different_days_left(
-    use_case, mock_reminder_repository, mock_notification_service, sample_request, sample_media
+    use_case,
+    mock_reminder_repository,
+    mock_notification_service,
+    sample_request,
+    sample_media,
 ):
     """Test execute works with different days_left values."""
     mock_reminder_repository.has_reminder.return_value = False

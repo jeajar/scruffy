@@ -35,7 +35,12 @@ def mock_delete_media_use_case():
 
 
 @pytest.fixture
-def use_case(mock_check_use_case, mock_send_reminder_use_case, mock_delete_media_use_case, retention_policy):
+def use_case(
+    mock_check_use_case,
+    mock_send_reminder_use_case,
+    mock_delete_media_use_case,
+    retention_policy,
+):
     """Create ProcessMediaUseCase instance."""
     return ProcessMediaUseCase(
         mock_check_use_case,
@@ -78,7 +83,10 @@ def sample_media():
 
 @pytest.mark.asyncio
 async def test_execute_calls_check_use_case(
-    use_case, mock_check_use_case, sample_request, sample_media  # noqa: ARG001
+    use_case,
+    mock_check_use_case,
+    sample_request,
+    sample_media,  # noqa: ARG001
 ):
     """Test execute calls check use case."""
     # Use media that does not trigger remind/delete (5 days old; retention 30, reminder 7)
@@ -103,7 +111,11 @@ async def test_execute_calls_check_use_case(
 
 @pytest.mark.asyncio
 async def test_execute_calls_send_reminder_when_remind_true(
-    use_case, mock_check_use_case, mock_send_reminder_use_case, sample_request, sample_media  # noqa: ARG001
+    use_case,
+    mock_check_use_case,
+    mock_send_reminder_use_case,
+    sample_request,
+    sample_media,  # noqa: ARG001
 ):
     """Test execute calls send_reminder_use_case when remind is True."""
     # Media that should trigger reminder (24 days old, 6 days left)
@@ -116,7 +128,9 @@ async def test_execute_calls_send_reminder_when_remind_true(
         poster="",
         seasons=[],
     )
-    mock_check_use_case.execute = AsyncMock(return_value=[(sample_request, reminder_media)])
+    mock_check_use_case.execute = AsyncMock(
+        return_value=[(sample_request, reminder_media)]
+    )
     mock_send_reminder_use_case.execute = AsyncMock()
 
     summary = await use_case.execute()
@@ -135,10 +149,16 @@ async def test_execute_calls_send_reminder_when_remind_true(
 
 @pytest.mark.asyncio
 async def test_execute_calls_delete_media_when_delete_true(
-    use_case, mock_check_use_case, mock_delete_media_use_case, sample_request, sample_media
+    use_case,
+    mock_check_use_case,
+    mock_delete_media_use_case,
+    sample_request,
+    sample_media,
 ):
     """Test execute calls delete_media_use_case when delete is True (media 31 days old)."""
-    mock_check_use_case.execute = AsyncMock(return_value=[(sample_request, sample_media)])
+    mock_check_use_case.execute = AsyncMock(
+        return_value=[(sample_request, sample_media)]
+    )
     mock_delete_media_use_case.execute = AsyncMock()
 
     summary = await use_case.execute()
@@ -157,10 +177,17 @@ async def test_execute_calls_delete_media_when_delete_true(
 
 @pytest.mark.asyncio
 async def test_execute_calls_both_remind_and_delete_when_both_true(
-    use_case, mock_check_use_case, mock_send_reminder_use_case, mock_delete_media_use_case, sample_request, sample_media
+    use_case,
+    mock_check_use_case,
+    mock_send_reminder_use_case,
+    mock_delete_media_use_case,
+    sample_request,
+    sample_media,
 ):
     """Test execute calls both remind and delete when both are True."""
-    mock_check_use_case.execute = AsyncMock(return_value=[(sample_request, sample_media)])
+    mock_check_use_case.execute = AsyncMock(
+        return_value=[(sample_request, sample_media)]
+    )
     mock_send_reminder_use_case.execute = AsyncMock()
     mock_delete_media_use_case.execute = AsyncMock()
 
@@ -173,7 +200,10 @@ async def test_execute_calls_both_remind_and_delete_when_both_true(
 
 @pytest.mark.asyncio
 async def test_execute_handles_multiple_media(
-    use_case, mock_check_use_case, mock_send_reminder_use_case, mock_delete_media_use_case
+    use_case,
+    mock_check_use_case,
+    mock_send_reminder_use_case,
+    mock_delete_media_use_case,
 ):
     """Test execute handles multiple media requests."""
     request1 = MediaRequest(
@@ -219,7 +249,9 @@ async def test_execute_handles_multiple_media(
         seasons=[],
     )
 
-    mock_check_use_case.execute = AsyncMock(return_value=[(request1, media1), (request2, media2)])
+    mock_check_use_case.execute = AsyncMock(
+        return_value=[(request1, media1), (request2, media2)]
+    )
     mock_send_reminder_use_case.execute = AsyncMock()
     mock_delete_media_use_case.execute = AsyncMock()
 
@@ -227,7 +259,9 @@ async def test_execute_handles_multiple_media(
 
     # Should process both
     assert mock_send_reminder_use_case.execute.call_count == 2
-    assert mock_delete_media_use_case.execute.call_count == 1  # Only first one should be deleted
+    assert (
+        mock_delete_media_use_case.execute.call_count == 1
+    )  # Only first one should be deleted
 
 
 @pytest.mark.asyncio

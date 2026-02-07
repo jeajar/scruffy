@@ -31,7 +31,9 @@ def composite(mock_radarr_gateway, mock_sonarr_gateway):
 
 
 @pytest.mark.asyncio
-async def test_get_media_delegates_to_radarr_for_movie(composite, mock_radarr_gateway, sample_media_info_dto):
+async def test_get_media_delegates_to_radarr_for_movie(
+    composite, mock_radarr_gateway, sample_media_info_dto
+):
     """Test get_media delegates to RadarrGateway for movies."""
     mock_radarr_gateway.get_media = AsyncMock(return_value=sample_media_info_dto)
 
@@ -42,7 +44,9 @@ async def test_get_media_delegates_to_radarr_for_movie(composite, mock_radarr_ga
 
 
 @pytest.mark.asyncio
-async def test_get_media_delegates_to_sonarr_for_tv(composite, mock_sonarr_gateway, sample_media_info_dto_tv):
+async def test_get_media_delegates_to_sonarr_for_tv(
+    composite, mock_sonarr_gateway, sample_media_info_dto_tv
+):
     """Test get_media delegates to SonarrGateway for TV shows."""
     mock_sonarr_gateway.get_media = AsyncMock(return_value=sample_media_info_dto_tv)
 
@@ -53,7 +57,9 @@ async def test_get_media_delegates_to_sonarr_for_tv(composite, mock_sonarr_gatew
 
 
 @pytest.mark.asyncio
-async def test_delete_media_delegates_to_radarr_for_movie(composite, mock_radarr_gateway):
+async def test_delete_media_delegates_to_radarr_for_movie(
+    composite, mock_radarr_gateway
+):
     """Test delete_media delegates to RadarrGateway for movies."""
     mock_radarr_gateway.delete_media = AsyncMock()
 

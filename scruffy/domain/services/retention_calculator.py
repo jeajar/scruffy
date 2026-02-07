@@ -47,9 +47,7 @@ class RetentionCalculator:
         assert self._policy is not None
         return self._policy
 
-    def evaluate(
-        self, media: Media, extension_days: int = 0
-    ) -> RetentionResult:
+    def evaluate(self, media: Media, extension_days: int = 0) -> RetentionResult:
         """
         Evaluate retention policy for media.
 

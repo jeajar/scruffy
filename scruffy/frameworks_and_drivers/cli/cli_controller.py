@@ -34,7 +34,7 @@ CLI_DEPRECATION_MSG = (
 
 
 @app.callback(invoke_without_command=True)
-def _cli_deprecation_warning(ctx: typer.Context) -> None:
+def _cli_deprecation_warning(_ctx: typer.Context) -> None:
     """Emit deprecation warning when CLI is used."""
     warnings.warn(CLI_DEPRECATION_MSG, DeprecationWarning, stacklevel=2)
     print(CLI_DEPRECATION_MSG, file=sys.stderr)

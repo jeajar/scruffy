@@ -43,17 +43,13 @@ def api_key():
 @pytest.fixture
 def gateway(base_url, api_key):
     """Create OverseerGateway instance."""
-    return OverseerGateway(
-        _make_settings_provider(base_url, api_key), HttpClient()
-    )
+    return OverseerGateway(_make_settings_provider(base_url, api_key), HttpClient())
 
 
 @pytest.fixture
 def gateway_with_http_client(base_url, api_key, mock_http_client):
     """Create OverseerGateway with mocked HTTP client."""
-    return OverseerGateway(
-        _make_settings_provider(base_url, api_key), mock_http_client
-    )
+    return OverseerGateway(_make_settings_provider(base_url, api_key), mock_http_client)
 
 
 @pytest.mark.asyncio

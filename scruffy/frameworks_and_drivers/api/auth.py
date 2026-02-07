@@ -13,7 +13,7 @@ import httpx
 from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyCookie, APIKeyHeader
 
-from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep, get_container
+from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.database.settings_store import get_overseerr_api_key
 

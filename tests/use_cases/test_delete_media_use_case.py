@@ -89,8 +89,12 @@ async def test_execute_deletes_from_request_repository(
 
     await use_case.execute(sample_request, sample_media)
 
-    mock_request_repository.delete_request.assert_called_once_with(sample_request.request_id)
-    mock_request_repository.delete_media.assert_called_once_with(sample_request.media_id)
+    mock_request_repository.delete_request.assert_called_once_with(
+        sample_request.request_id
+    )
+    mock_request_repository.delete_media.assert_called_once_with(
+        sample_request.media_id
+    )
 
 
 @pytest.mark.asyncio
@@ -116,7 +120,12 @@ async def test_execute_sends_deletion_notice(
 
 @pytest.mark.asyncio
 async def test_execute_calls_in_correct_order(
-    use_case, mock_media_repository, mock_request_repository, mock_notification_service, sample_request, sample_media
+    use_case,
+    mock_media_repository,
+    mock_request_repository,
+    mock_notification_service,
+    sample_request,
+    sample_media,
 ):
     """Test execute calls methods in correct order."""
     mock_media_repository.delete_media = AsyncMock()
@@ -138,7 +147,10 @@ async def test_execute_calls_in_correct_order(
 
 @pytest.mark.asyncio
 async def test_execute_handles_tv_with_seasons(
-    use_case, mock_media_repository, sample_request, sample_media  # noqa: ARG001
+    use_case,
+    mock_media_repository,
+    sample_request,  # noqa: ARG001
+    sample_media,  # noqa: ARG001
 ):
     """Test execute handles TV shows with seasons."""
     tv_request = MediaRequest(

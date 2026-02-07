@@ -41,9 +41,7 @@ def api_key():
 @pytest.fixture
 def gateway(base_url, api_key):
     """Create RadarrGateway instance."""
-    return RadarrGateway(
-        _make_settings_provider(base_url, api_key), HttpClient()
-    )
+    return RadarrGateway(_make_settings_provider(base_url, api_key), HttpClient())
 
 
 @pytest.mark.asyncio
@@ -63,9 +61,7 @@ async def test_status_success(gateway, base_url):
 async def test_status_failure(gateway, base_url):
     """Test status returns False on connection failure."""
     with respx.mock(base_url=base_url) as respx_mock:
-        respx_mock.get("/api/v3/system/status").mock(
-            return_value=httpx.Response(500)
-        )
+        respx_mock.get("/api/v3/system/status").mock(return_value=httpx.Response(500))
 
         result = await gateway.status()
 

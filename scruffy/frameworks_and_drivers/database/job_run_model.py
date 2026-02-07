@@ -20,4 +20,6 @@ class JobRunModel(SQLModel, table=True):
     finished_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     success: bool = Field()
     error_message: str | None = Field(default=None)
-    summary: str | None = Field(default=None)  # JSON: reminders/deletions or items_checked
+    summary: str | None = Field(
+        default=None
+    )  # JSON: reminders/deletions or items_checked

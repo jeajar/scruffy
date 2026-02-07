@@ -66,7 +66,9 @@ async def test_execute_returns_false_when_already_extended(
 
 @pytest.mark.asyncio
 async def test_execute_raises_when_request_not_found(
-    use_case, mock_extension_repository, mock_request_repository  # noqa: ARG001
+    use_case,
+    mock_extension_repository,  # noqa: ARG001
+    mock_request_repository,  # noqa: ARG001
 ):
     """Test execute raises ValueError when request does not exist."""
     mock_request_repository.get_request = AsyncMock(return_value=None)
@@ -77,7 +79,9 @@ async def test_execute_raises_when_request_not_found(
 
 @pytest.mark.asyncio
 async def test_execute_raises_when_media_not_available(
-    use_case, mock_extension_repository, mock_request_repository  # noqa: ARG001
+    use_case,
+    mock_extension_repository,  # noqa: ARG001
+    mock_request_repository,  # noqa: ARG001
 ):
     """Test execute raises ValueError when media is not yet available."""
     pending_request = RequestDTO(

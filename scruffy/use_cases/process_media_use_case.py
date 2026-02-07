@@ -121,11 +121,13 @@ class ProcessMediaUseCase:
                 request, media, retention_result.days_left
             )
             action = "reminder"
-            summary_entries.append({
-                "email": request.user_email,
-                "title": media.title,
-                "days_left": retention_result.days_left,
-            })
+            summary_entries.append(
+                {
+                    "email": request.user_email,
+                    "title": media.title,
+                    "days_left": retention_result.days_left,
+                }
+            )
 
         if retention_result.delete:
             logger.info(
@@ -138,9 +140,11 @@ class ProcessMediaUseCase:
             )
             await self.delete_media_use_case.execute(request, media)
             action = "deletion"
-            summary_entries.append({
-                "email": request.user_email,
-                "title": media.title,
-            })
+            summary_entries.append(
+                {
+                    "email": request.user_email,
+                    "title": media.title,
+                }
+            )
 
         return (action, summary_entries)

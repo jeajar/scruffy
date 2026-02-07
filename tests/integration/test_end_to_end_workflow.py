@@ -43,9 +43,7 @@ def _mock_settings():
         "email_enabled": False,
     }
     invalidate_services_config_cache()
-    patches = [
-        patch.object(app_settings, k, v) for k, v in mock_values.items()
-    ]
+    patches = [patch.object(app_settings, k, v) for k, v in mock_values.items()]
     with patch(
         "scruffy.frameworks_and_drivers.database.settings_store.settings",
         app_settings,
@@ -155,12 +153,15 @@ async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_e
             test_config.radarr_api_key = "radarr-key"
             test_config.sonarr_url = SONARR_BASE
             test_config.sonarr_api_key = "sonarr-key"
-            with patch(
-                "scruffy.frameworks_and_drivers.database.database.get_engine",
-                return_value=in_memory_engine,
-            ), patch(
-                "scruffy.frameworks_and_drivers.database.settings_store._services_config_cache",
-                test_config,
+            with (
+                patch(
+                    "scruffy.frameworks_and_drivers.database.database.get_engine",
+                    return_value=in_memory_engine,
+                ),
+                patch(
+                    "scruffy.frameworks_and_drivers.database.settings_store._services_config_cache",
+                    test_config,
+                ),
             ):
                 container = Container()
 
@@ -251,12 +252,15 @@ async def test_complete_workflow_remind_only(_mock_settings, in_memory_engine):
             test_config.radarr_api_key = "radarr-key"
             test_config.sonarr_url = SONARR_BASE
             test_config.sonarr_api_key = "sonarr-key"
-            with patch(
-                "scruffy.frameworks_and_drivers.database.database.get_engine",
-                return_value=in_memory_engine,
-            ), patch(
-                "scruffy.frameworks_and_drivers.database.settings_store._services_config_cache",
-                test_config,
+            with (
+                patch(
+                    "scruffy.frameworks_and_drivers.database.database.get_engine",
+                    return_value=in_memory_engine,
+                ),
+                patch(
+                    "scruffy.frameworks_and_drivers.database.settings_store._services_config_cache",
+                    test_config,
+                ),
             ):
                 container = Container()
 
@@ -265,9 +269,7 @@ async def test_complete_workflow_remind_only(_mock_settings, in_memory_engine):
 
             # Verify no delete was called
             delete_calls = [
-                call
-                for call in radarr_mock.calls
-                if call.request.method == "DELETE"
+                call for call in radarr_mock.calls if call.request.method == "DELETE"
             ]
             assert len(delete_calls) == 0
 

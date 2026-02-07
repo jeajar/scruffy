@@ -6,6 +6,7 @@ Use this to test the reminder email and the "I need more time!" link.
 Usage (from repo root, with .env configured for email):
   uv run --env-file .env python scripts/send_test_reminder.py
 """
+
 import asyncio
 import logging
 import sys
@@ -35,8 +36,7 @@ async def main() -> None:
                 break
         if not match:
             logger.error(
-                "No media request found with title containing %r. "
-                "Available titles: %s",
+                "No media request found with title containing %r. Available titles: %s",
                 TITLE_MATCH,
                 [r.media.title for r in results],
             )
@@ -51,7 +51,9 @@ async def main() -> None:
         await container.notification_service.send_reminder_notice(
             TO_EMAIL,
             match.media,
-            days_left=match.retention.days_left if match.retention.days_left > 0 else DAYS_LEFT,
+            days_left=match.retention.days_left
+            if match.retention.days_left > 0
+            else DAYS_LEFT,
             request_id=match.request.request_id,
         )
         logger.info(

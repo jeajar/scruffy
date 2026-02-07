@@ -136,9 +136,7 @@ class TestCheckSyncTask:
 
         assert response.status_code == 401
 
-    def test_valid_api_key_runs_check_and_returns_results(
-        self, client, mock_container
-    ):
+    def test_valid_api_key_runs_check_and_returns_results(self, client, mock_container):
         """Test that valid API key runs check and returns results."""
         with patch(
             "scruffy.frameworks_and_drivers.api.auth.get_overseerr_api_key",
@@ -158,8 +156,8 @@ class TestCheckSyncTask:
 
     def test_check_failure_returns_error(self, client, mock_container):
         """Test that check failure returns error status."""
-        mock_container.check_media_requests_use_case.execute_with_retention = (
-            AsyncMock(side_effect=Exception("Test error"))
+        mock_container.check_media_requests_use_case.execute_with_retention = AsyncMock(
+            side_effect=Exception("Test error")
         )
 
         with patch(

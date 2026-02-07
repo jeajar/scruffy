@@ -75,9 +75,7 @@ def _to_response(model: ScheduleJobModel) -> ScheduleResponse:
 def _list_schedules_sync() -> list[ScheduleJobModel]:
     engine = get_engine()
     with Session(engine) as session:
-        return list(
-            session.exec(select(ScheduleJobModel).order_by("id"))
-        )
+        return list(session.exec(select(ScheduleJobModel).order_by("id")))
 
 
 def _create_schedule_sync(body: ScheduleCreate) -> ScheduleJobModel:
@@ -102,9 +100,7 @@ def _get_schedule_sync(schedule_id: int) -> ScheduleJobModel | None:
         return session.get(ScheduleJobModel, schedule_id)
 
 
-def _update_schedule_sync(
-    schedule_id: int, body: ScheduleUpdate
-) -> ScheduleJobModel:
+def _update_schedule_sync(schedule_id: int, body: ScheduleUpdate) -> ScheduleJobModel:
     engine = get_engine()
     with Session(engine) as session:
         model = session.get(ScheduleJobModel, schedule_id)
@@ -216,8 +212,10 @@ async def _run_job_now(container: ContainerDep, job_type: str) -> None:
     summary = None
     try:
         if job_type == "check":
-            results = await container.check_media_requests_use_case.execute_with_retention(
-                container.retention_calculator
+            results = (
+                await container.check_media_requests_use_case.execute_with_retention(
+                    container.retention_calculator
+                )
             )
             summary = {
                 "items_checked": len(results),
@@ -246,9 +244,7 @@ async def run_schedule_now(
     _user: AdminUser,
 ) -> dict:
     """Run this schedule's job once now (in background). Admin only."""
-    job_type = await asyncio.to_thread(
-        _get_schedule_job_type_sync, schedule_id
-    )
+    job_type = await asyncio.to_thread(_get_schedule_job_type_sync, schedule_id)
     if not job_type:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Schedule not found"

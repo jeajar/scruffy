@@ -15,4 +15,6 @@ class RequestExtensionModel(SQLModel, table=True):
 
     request_id: int = Field(primary_key=True)
     extended_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
-    extended_by_plex_id: int = Field(description="Plex user ID who requested the extension")
+    extended_by_plex_id: int = Field(
+        description="Plex user ID who requested the extension"
+    )

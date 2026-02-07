@@ -82,7 +82,9 @@ class TestEmailClientInitialization:
             mock_settings.smtp_ssl_tls = False
             mock_settings.smtp_starttls = True
 
-            with patch("scruffy.frameworks_and_drivers.email.email_client.FastMail") as mock_fm:
+            with patch(
+                "scruffy.frameworks_and_drivers.email.email_client.FastMail"
+            ) as mock_fm:
                 with patch(
                     "scruffy.frameworks_and_drivers.email.email_client.Environment"
                 ):

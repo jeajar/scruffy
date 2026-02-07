@@ -185,9 +185,7 @@ class TestSchedulerAddRemoveUpdate:
         # Should not raise
 
     @pytest.mark.asyncio
-    async def test_remove_job_from_scheduler(
-        self, mock_app, schedule_db_with_temp_dir
-    ):
+    async def test_remove_job_from_scheduler(self, mock_app, schedule_db_with_temp_dir):
         """Test remove_job_from_scheduler removes the job."""
         start_scheduler(mock_app)
         model = ScheduleJobModel(

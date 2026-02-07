@@ -117,23 +117,25 @@ async def trigger_check_sync(
         # Convert to JSON-serializable format
         media_list = []
         for result in results_sorted:
-            media_list.append({
-                "request": result.request.json(),
-                "media": {
-                    "id": result.media.id,
-                    "title": result.media.title,
-                    "poster": result.media.poster,
-                    "seasons": result.media.seasons,
-                    "size_on_disk": result.media.size_on_disk,
-                    "available_since": (
-                        result.media.available_since.isoformat()
-                        if result.media.available_since
-                        else None
-                    ),
-                    "available": result.media.available,
-                },
-                "retention": asdict(result.retention),
-            })
+            media_list.append(
+                {
+                    "request": result.request.json(),
+                    "media": {
+                        "id": result.media.id,
+                        "title": result.media.title,
+                        "poster": result.media.poster,
+                        "seasons": result.media.seasons,
+                        "size_on_disk": result.media.size_on_disk,
+                        "available_since": (
+                            result.media.available_since.isoformat()
+                            if result.media.available_since
+                            else None
+                        ),
+                        "available": result.media.available,
+                    },
+                    "retention": asdict(result.retention),
+                }
+            )
 
         logger.info(
             "Sync check task completed",
@@ -241,6 +243,4 @@ async def trigger_process_sync(
         }
     finally:
         if success:
-            await asyncio.to_thread(
-                record_job_run_sync, "process", True, None, summary
-            )
+            await asyncio.to_thread(record_job_run_sync, "process", True, None, summary)

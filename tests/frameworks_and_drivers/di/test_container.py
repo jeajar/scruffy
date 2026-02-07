@@ -19,7 +19,9 @@ def mock_settings():
         "scruffy.frameworks_and_drivers.di.container.get_retention_policy",
         side_effect=fake_get_retention_policy,
     ):
-        with patch("scruffy.frameworks_and_drivers.database.settings_store.settings") as mock:
+        with patch(
+            "scruffy.frameworks_and_drivers.database.settings_store.settings"
+        ) as mock:
             mock.overseerr_url = "http://test.com"
             mock.overseerr_api_key = "test-key"
             mock.sonarr_url = "http://test.com"

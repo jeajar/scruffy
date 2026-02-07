@@ -41,9 +41,7 @@ def api_key():
 @pytest.fixture
 def gateway(base_url, api_key):
     """Create SonarrGateway instance."""
-    return SonarrGateway(
-        _make_settings_provider(base_url, api_key), HttpClient()
-    )
+    return SonarrGateway(_make_settings_provider(base_url, api_key), HttpClient())
 
 
 @pytest.mark.asyncio
@@ -63,9 +61,7 @@ async def test_status_success(gateway, base_url):
 async def test_status_failure(gateway, base_url):
     """Test status returns False on connection failure."""
     with respx.mock(base_url=base_url) as respx_mock:
-        respx_mock.get("/api/v3/system/status").mock(
-            return_value=httpx.Response(500)
-        )
+        respx_mock.get("/api/v3/system/status").mock(return_value=httpx.Response(500))
 
         result = await gateway.status()
 
@@ -114,7 +110,9 @@ def mock_episodes_response():
 
 
 @pytest.mark.asyncio
-async def test_get_media_complete(gateway, base_url, mock_series_response, mock_episodes_response):
+async def test_get_media_complete(
+    gateway, base_url, mock_series_response, mock_episodes_response
+):
     """Test get_media returns complete MediaInfoDTO."""
     with respx.mock(base_url=base_url) as respx_mock:
         respx_mock.get("/api/v3/series/1").mock(
@@ -195,7 +193,10 @@ async def test_delete_media(gateway, base_url, mock_series_response):
 
         # Verify monitoring was updated and files deleted
         assert any(call.request.method == "PUT" for call in respx_mock.calls)
-        assert any(call.request.url.path == "/api/v3/episodefile/101" for call in respx_mock.calls)
+        assert any(
+            call.request.url.path == "/api/v3/episodefile/101"
+            for call in respx_mock.calls
+        )
 
 
 @pytest.mark.asyncio
@@ -252,7 +253,9 @@ async def test_delete_season_files(gateway, base_url, mock_episodes_response):
         await gateway.delete_season_files(1, [1])
 
         # Verify both episode files were deleted
-        delete_calls = [call for call in respx_mock.calls if call.request.method == "DELETE"]
+        delete_calls = [
+            call for call in respx_mock.calls if call.request.method == "DELETE"
+        ]
         assert len(delete_calls) == 2
 
 
@@ -270,7 +273,9 @@ async def test_update_season_monitoring(gateway, base_url, mock_series_response)
         await gateway.update_season_monitoring(1, [1])
 
         # Verify PUT was called
-        put_call = next(call for call in respx_mock.calls if call.request.method == "PUT")
+        put_call = next(
+            call for call in respx_mock.calls if call.request.method == "PUT"
+        )
         assert put_call is not None
 
 
@@ -290,13 +295,15 @@ async def test_delete_empty_series(gateway, base_url):
         respx_mock.get("/api/v3/series/1").mock(
             return_value=httpx.Response(200, json=series_with_unmonitored)
         )
-        respx_mock.delete("/api/v3/series/1").mock(
-            return_value=httpx.Response(204)
-        )
+        respx_mock.delete("/api/v3/series/1").mock(return_value=httpx.Response(204))
 
         await gateway._delete_empty_series(1)
 
-        assert any(call.request.url.path == "/api/v3/series/1" for call in respx_mock.calls if call.request.method == "DELETE")
+        assert any(
+            call.request.url.path == "/api/v3/series/1"
+            for call in respx_mock.calls
+            if call.request.method == "DELETE"
+        )
 
 
 def test_get_series_poster():

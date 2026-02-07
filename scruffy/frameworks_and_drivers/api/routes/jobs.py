@@ -7,6 +7,7 @@ from datetime import datetime
 
 from fastapi import APIRouter
 from pydantic import BaseModel
+from sqlalchemy import desc
 from sqlmodel import Session, select
 
 from scruffy.frameworks_and_drivers.api.auth import AdminUser
@@ -37,7 +38,7 @@ def _list_job_runs_sync(limit: int = LIMIT) -> list[JobRunModel]:
         return list(
             session.exec(
                 select(JobRunModel)
-                .order_by(JobRunModel.finished_at.desc())  # ty: ignore[unresolved-attribute]
+                .order_by(desc(JobRunModel.finished_at))  # type: ignore[invalid-argument-type]
                 .limit(limit)
             )
         )

@@ -34,7 +34,9 @@ def test_retention_result_dto_default_days_left():
     assert dto.days_left == 0
 
 
-def test_media_check_result_dto_creation(sample_request_dto_movie, sample_media_info_dto):
+def test_media_check_result_dto_creation(
+    sample_request_dto_movie, sample_media_info_dto
+):
     """Test MediaCheckResultDTO can be created."""
     retention = RetentionResultDTO(remind=True, delete=False, days_left=7)
     result = MediaCheckResultDTO(
@@ -48,7 +50,9 @@ def test_media_check_result_dto_creation(sample_request_dto_movie, sample_media_
     assert result.retention == retention
 
 
-def test_media_check_result_dto_is_immutable(sample_request_dto_movie, sample_media_info_dto):
+def test_media_check_result_dto_is_immutable(
+    sample_request_dto_movie, sample_media_info_dto
+):
     """Test MediaCheckResultDTO is immutable (frozen dataclass)."""
     retention = RetentionResultDTO(remind=True, delete=False, days_left=7)
     result = MediaCheckResultDTO(
@@ -58,10 +62,14 @@ def test_media_check_result_dto_is_immutable(sample_request_dto_movie, sample_me
     )
 
     with pytest.raises(dataclasses.FrozenInstanceError):
-        result.retention = RetentionResultDTO(remind=False, delete=True)  # ty: ignore[invalid-assignment]
+        result.retention = RetentionResultDTO(  # type: ignore[assignment]
+            remind=False, delete=True
+        )
 
 
-def test_media_check_result_dto_with_delete_retention(sample_request_dto_movie, sample_media_info_dto):
+def test_media_check_result_dto_with_delete_retention(
+    sample_request_dto_movie, sample_media_info_dto
+):
     """Test MediaCheckResultDTO with delete retention."""
     retention = RetentionResultDTO(remind=True, delete=True, days_left=-5)
     result = MediaCheckResultDTO(

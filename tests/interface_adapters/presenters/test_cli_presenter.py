@@ -168,13 +168,17 @@ def test_format_media_table_season_formatting(sample_result_tv):
     assert "s01" in title_str.lower() or "s1" in title_str.lower()
 
 
-def test_format_media_table_multiple_results(sample_result_delete, sample_result_remind, sample_result_tv):
+def test_format_media_table_multiple_results(
+    sample_result_delete, sample_result_remind, sample_result_tv
+):
     """Test format_media_table handles multiple results."""
-    table = CLIPresenter.format_media_table([
-        sample_result_delete,
-        sample_result_remind,
-        sample_result_tv,
-    ])
+    table = CLIPresenter.format_media_table(
+        [
+            sample_result_delete,
+            sample_result_remind,
+            sample_result_tv,
+        ]
+    )
 
     rows = list(table.rows)
     assert len(rows) == 3

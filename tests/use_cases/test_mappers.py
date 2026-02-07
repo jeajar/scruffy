@@ -1,7 +1,5 @@
 """Tests for mapper functions."""
 
-
-
 from scruffy.domain.entities.media import Media
 from scruffy.domain.entities.media_request import MediaRequest
 from scruffy.domain.value_objects.media_type import MediaType

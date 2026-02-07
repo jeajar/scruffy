@@ -81,7 +81,12 @@ class TestCheckCommand:
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_check_command_with_results(
-        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
+        self,
+        mock_get_container,
+        mock_record_job_run,
+        runner,
+        mock_container,
+        mock_settings,
     ):
         """Test check command with media results."""
         from scruffy.domain.value_objects.media_status import MediaStatus
@@ -137,7 +142,12 @@ class TestCheckCommand:
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_check_command_no_results(
-        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
+        self,
+        mock_get_container,
+        mock_record_job_run,
+        runner,
+        mock_container,
+        mock_settings,
     ):
         """Test check command with no media results."""
         mock_get_container.return_value = mock_container
@@ -155,7 +165,12 @@ class TestCheckCommand:
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_check_command_validation_failure(
-        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
+        self,
+        mock_get_container,
+        mock_record_job_run,
+        runner,
+        mock_container,
+        mock_settings,
     ):
         """Test check command fails when validation fails."""
         mock_get_container.return_value = mock_container
@@ -172,7 +187,12 @@ class TestProcessCommand:
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_process_command_success(
-        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
+        self,
+        mock_get_container,
+        mock_record_job_run,
+        runner,
+        mock_container,
+        mock_settings,
     ):
         """Test process command succeeds."""
         mock_get_container.return_value = mock_container
@@ -187,7 +207,12 @@ class TestProcessCommand:
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.record_job_run_sync")
     @patch("scruffy.frameworks_and_drivers.cli.cli_controller.get_container")
     def test_process_command_validation_failure(
-        self, mock_get_container, mock_record_job_run, runner, mock_container, mock_settings
+        self,
+        mock_get_container,
+        mock_record_job_run,
+        runner,
+        mock_container,
+        mock_settings,
     ):
         """Test process command fails when validation fails."""
         mock_get_container.return_value = mock_container

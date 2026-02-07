@@ -3,13 +3,15 @@ FROM python:3.13-slim AS builder
 
 WORKDIR /app
 
-# Install uv
+# Install curl for uv installer, then uv
+RUN apt-get update && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
 ADD https://astral.sh/uv/install.sh /uv-installer.sh
 RUN sh /uv-installer.sh && rm /uv-installer.sh
 ENV PATH="/root/.local/bin/:$PATH"
 
 # Copy only what's needed for the install (smaller context, no frontend/tests)
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock README.md ./
 COPY scruffy/ ./scruffy/
 
 # Create venv and install production dependencies only (no dev deps, no editable)

@@ -48,11 +48,14 @@ def app_with_settings_db(mock_container):
             return_value=mock_container,
         ):
             with patch("scruffy.frameworks_and_drivers.api.app.configure_logging"):
-                with patch(
-                    "scruffy.frameworks_and_drivers.database.database.settings"
-                ) as mock_settings, patch(
-                    "scruffy.frameworks_and_drivers.database.settings_store.settings"
-                ) as store_mock:
+                with (
+                    patch(
+                        "scruffy.frameworks_and_drivers.database.database.settings"
+                    ) as mock_settings,
+                    patch(
+                        "scruffy.frameworks_and_drivers.database.settings_store.settings"
+                    ) as store_mock,
+                ):
                     for mock_obj in (mock_settings, store_mock):
                         mock_obj.data_dir = str(data_dir)
                         mock_obj.api_secret_key = "test-secret"
@@ -95,9 +98,9 @@ def client(app_with_settings_db, mock_admin_user):
     async def override_require_admin():
         return mock_admin_user
 
-    client.app.dependency_overrides[require_admin] = override_require_admin  # ty: ignore[possibly-missing-attribute]
+    client.app.dependency_overrides[require_admin] = override_require_admin  # type: ignore[possibly-missing-attribute]
     yield client
-    client.app.dependency_overrides.clear()  # ty: ignore[possibly-missing-attribute]
+    client.app.dependency_overrides.clear()  # type: ignore[possibly-missing-attribute]
 
 
 class TestSettingsGet:
