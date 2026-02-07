@@ -1,0 +1,9 @@
+# See https://pre-commit.com for more information
+repos:
+  - repo: local
+    hooks:
+      - id: lint
+        name: lint
+        entry: bash scripts/lint.sh
+        language: system
+        pass_filenames: false
