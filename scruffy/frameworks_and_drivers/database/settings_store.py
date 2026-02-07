@@ -38,6 +38,9 @@ NOTIFICATIONS_EMAIL_SMTP_FROM_EMAIL = "notifications.email.smtp_from_email"
 NOTIFICATIONS_EMAIL_SMTP_SSL_TLS = "notifications.email.smtp_ssl_tls"
 NOTIFICATIONS_EMAIL_SMTP_STARTTLS = "notifications.email.smtp_starttls"
 
+# Application keys
+APPLICATION_APP_BASE_URL = "application.app_base_url"
+
 
 def _get(db_key: str) -> str | None:
     """Get raw value from DB. Returns None if not set."""
@@ -297,6 +300,18 @@ def get_email_config() -> EmailConfig:
     )
 
 
+def get_app_base_url() -> str:
+    """Get app base URL for email links etc. DB first, else env fallback."""
+    val = _get(APPLICATION_APP_BASE_URL)
+    return val if val else settings.app_base_url
+
+
+def set_app_base_url(value: str) -> None:
+    """Set app base URL in database."""
+    _set(APPLICATION_APP_BASE_URL, value)
+    logger.info("Updated app_base_url setting", extra={"value": value})
+
+
 def set_email_config(
     *,
     enabled: bool | None = None,
@@ -387,3 +402,7 @@ class SettingsProvider:
     def get_email_config(self) -> EmailConfig:
         """Get current email config."""
         return get_email_config()
+
+    def get_app_base_url(self) -> str:
+        """Get app base URL for email links (instance address)."""
+        return get_app_base_url()

@@ -56,6 +56,12 @@ function SchedulesPage() {
     enabled: true,
   });
 
+  const configuredJobTypes = schedules.map((s) => s.job_type);
+  const availableJobTypes = (["check", "process"] as const).filter(
+    (t) => !configuredJobTypes.includes(t)
+  );
+  const bothConfigured = configuredJobTypes.includes("check") && configuredJobTypes.includes("process");
+
   const handleCreate = async () => {
     setFormError(null);
     try {
@@ -118,16 +124,24 @@ function SchedulesPage() {
             </CardTitle>
             <CardDescription>
               Configure when Scruffy runs reminder and process jobs
-              (Overseerr-style).
+              (Overseerr-style). At most one of each job type can be configured.
+              {bothConfigured && " Both types are configured."}
             </CardDescription>
           </div>
           <Button
             onClick={() => {
               setShowForm(!showForm);
               setEditingId(null);
+              if (!showForm && availableJobTypes.length > 0) {
+                setForm((f) => ({
+                  ...f,
+                  job_type: availableJobTypes[0],
+                }));
+              }
             }}
             variant="default"
-            className="shrink-0 bg-scruffy-teal hover:bg-scruffy-teal/90"
+            disabled={bothConfigured}
+            className="shrink-0 bg-scruffy-teal hover:bg-scruffy-teal/90 disabled:opacity-50"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add schedule
@@ -160,8 +174,12 @@ function SchedulesPage() {
                       }))
                     }
                   >
-                    <option value="check">Send Reminder</option>
-                    <option value="process">Process</option>
+                    {availableJobTypes.includes("check") && (
+                      <option value="check">Send Reminder</option>
+                    )}
+                    {availableJobTypes.includes("process") && (
+                      <option value="process">Process</option>
+                    )}
                   </select>
                 </label>
                 <label className="flex flex-col gap-1">
@@ -191,8 +209,8 @@ function SchedulesPage() {
                 </label>
                 <Button
                   onClick={handleCreate}
-                  disabled={isCreating}
-                  className="bg-scruffy-teal hover:bg-scruffy-teal/90"
+                  disabled={isCreating || availableJobTypes.length === 0}
+                  className="bg-scruffy-teal hover:bg-scruffy-teal/90 disabled:opacity-50"
                 >
                   {isCreating ? "Creating..." : "Create"}
                 </Button>
@@ -253,8 +271,22 @@ function SchedulesPage() {
                               })
                             }
                           >
-                            <option value="check">Send Reminder</option>
-                            <option value="process">Process</option>
+                            <option
+                              value="check"
+                              disabled={schedules.some(
+                                (o) => o.id !== s.id && o.job_type === "check"
+                              )}
+                            >
+                              Send Reminder
+                            </option>
+                            <option
+                              value="process"
+                              disabled={schedules.some(
+                                (o) => o.id !== s.id && o.job_type === "process"
+                              )}
+                            >
+                              Process
+                            </option>
                           </select>
                         ) : (
                           <Badge

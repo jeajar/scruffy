@@ -72,6 +72,18 @@ def _to_response(model: ScheduleJobModel) -> ScheduleResponse:
 # --- Sync DB helpers (run in thread pool to avoid blocking event loop) ---
 
 
+def _exists_schedule_with_job_type_sync(
+    job_type: str, exclude_id: int | None = None
+) -> bool:
+    """Return True if a schedule with the given job_type exists (optionally excluding one by id)."""
+    engine = get_engine()
+    with Session(engine) as session:
+        stmt = select(ScheduleJobModel).where(ScheduleJobModel.job_type == job_type)
+        if exclude_id is not None:
+            stmt = stmt.where(ScheduleJobModel.id != exclude_id)
+        return session.exec(stmt).first() is not None
+
+
 def _list_schedules_sync() -> list[ScheduleJobModel]:
     engine = get_engine()
     with Session(engine) as session:
@@ -79,6 +91,11 @@ def _list_schedules_sync() -> list[ScheduleJobModel]:
 
 
 def _create_schedule_sync(body: ScheduleCreate) -> ScheduleJobModel:
+    if _exists_schedule_with_job_type_sync(body.job_type):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"A schedule for job type '{body.job_type}' already exists",
+        )
     engine = get_engine()
     model = ScheduleJobModel(
         job_type=body.job_type,
@@ -101,6 +118,12 @@ def _get_schedule_sync(schedule_id: int) -> ScheduleJobModel | None:
 
 
 def _update_schedule_sync(schedule_id: int, body: ScheduleUpdate) -> ScheduleJobModel:
+    if body.job_type is not None:
+        if _exists_schedule_with_job_type_sync(body.job_type, exclude_id=schedule_id):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"A schedule for job type '{body.job_type}' already exists",
+            )
     engine = get_engine()
     with Session(engine) as session:
         model = session.get(ScheduleJobModel, schedule_id)

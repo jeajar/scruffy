@@ -13,3 +13,8 @@ class ReminderRepositoryInterface(ABC):
     def add_reminder(self, request_id: int, user_id: int) -> None:
         """Add a reminder record."""
         pass
+
+    @abstractmethod
+    def get_request_ids_with_reminders(self, request_ids: list[int]) -> set[int]:
+        """Return set of request_ids that have reminder records."""
+        pass

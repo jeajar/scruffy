@@ -89,7 +89,7 @@ class TestAuthCallback:
     def test_callback_creates_session_when_user_imported(
         self, client, mock_container, plex_user
     ):
-        """When user is imported in Overseerr, create session and redirect to close page."""
+        """When user is imported in Overseerr, create session and redirect to SPA completion page."""
         with patch(
             "scruffy.frameworks_and_drivers.api.routes.auth.check_plex_pin",
             new_callable=AsyncMock,
@@ -97,7 +97,7 @@ class TestAuthCallback:
         ):
             response = client.get("/auth/callback?pin_id=123", follow_redirects=False)
         assert response.status_code == 302
-        assert response.headers["location"] == "/auth/close"
+        assert response.headers["location"] == "/login/complete"
         assert "scruffy_session" in response.headers.get("set-cookie", "")
         mock_container.overseer_gateway.user_imported_by_plex_id.assert_called_once_with(
             42
@@ -286,11 +286,11 @@ class TestCreatePin:
 class TestAuthClose:
     """Tests for GET /auth/close."""
 
-    def test_auth_close_returns_html(self, client):
-        """Close page returns HTML (for popup auto-close)."""
-        response = client.get("/auth/close")
-        assert response.status_code == 200
-        assert "text/html" in response.headers.get("content-type", "")
+    def test_auth_close_redirects_to_spa_complete(self, client):
+        """Legacy /auth/close redirects to SPA /login/complete."""
+        response = client.get("/auth/close", follow_redirects=False)
+        assert response.status_code == 302
+        assert response.headers["location"] == "/login/complete"
 
 
 class TestLogout:

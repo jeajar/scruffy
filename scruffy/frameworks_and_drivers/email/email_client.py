@@ -94,7 +94,11 @@ class EmailClient:
         if not fastmail:
             return
 
-        base_url = settings.app_base_url.rstrip("/")
+        base_url = (
+            self._settings_provider.get_app_base_url()
+            if self._settings_provider
+            else settings.app_base_url
+        ).rstrip("/")
         extend_url = f"{base_url}/extend?request_id={request_id}"
 
         template = self.template_env.get_template("base.html.j2")

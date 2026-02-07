@@ -20,6 +20,7 @@ def mock_settings():
         mock.smtp_host = "smtp.test.com"
         mock.smtp_ssl_tls = False
         mock.smtp_starttls = True
+        mock.app_base_url = "http://test.example.com"
         yield mock
 
 

@@ -145,7 +145,8 @@
                     </p>
                     <a href="{{ auth_url }}" 
                        target="_blank"
-                       onclick="startPolling()"
+                       id="plex-signin-link"
+                       onclick="handlePlexClick(event)"
                        class="flex w-full justify-center items-center rounded-md bg-plex-orange px-4 py-3 text-sm font-semibold text-black shadow-sm hover:bg-yellow-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-plex-orange transition-colors">
                         <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
@@ -202,6 +203,17 @@
             ['signin', 'waiting', 'error'].forEach(s => {
                 document.getElementById(s + '-state').classList.toggle('hidden', s !== state);
             });
+        }
+
+        function handlePlexClick(e) {
+            const isNarrow = window.innerWidth < 768;
+            const isTouch = 'ontouchstart' in window || (navigator.maxTouchPoints != null && navigator.maxTouchPoints > 0);
+            if (isNarrow || isTouch) {
+                e.preventDefault();
+                window.location.href = document.getElementById('plex-signin-link').href;
+                return;
+            }
+            startPolling();
         }
 
         function showLoading() {

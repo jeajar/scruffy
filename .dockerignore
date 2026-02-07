@@ -1,5 +1,8 @@
-# Backend build context: exclude frontend, tests, and dev artifacts
-frontend/
+# Backend build context: exclude tests and dev artifacts
+# Include frontend/ for single-image build; exclude heavy artifacts
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/
 tests/
 .git/
 .github/

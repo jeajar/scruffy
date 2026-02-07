@@ -1,7 +1,7 @@
 """Tests for CheckMediaRequestsUseCase."""
 
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 
@@ -160,6 +160,89 @@ async def test_execute_with_retention_returns_dtos(
     assert result.retention.remind is not None
     assert result.retention.delete is not None
     assert isinstance(result.retention.days_left, int)
+
+
+@pytest.mark.asyncio
+async def test_execute_with_retention_reminder_sent_false_when_no_repository(
+    use_case,
+    mock_request_repository,
+    mock_media_repository,
+    sample_request_dto_movie,
+    sample_media_info_dto,
+    retention_policy,
+):
+    """Test execute_with_retention sets reminder_sent=False when reminder_repository is None."""
+    mock_request_repository.get_requests = AsyncMock(
+        return_value=[sample_request_dto_movie]
+    )
+    mock_media_repository.get_media = AsyncMock(return_value=sample_media_info_dto)
+    calculator = RetentionCalculator(retention_policy)
+
+    results = await use_case.execute_with_retention(calculator)
+
+    assert len(results) == 1
+    assert results[0].retention.reminder_sent is False
+
+
+@pytest.mark.asyncio
+async def test_execute_with_retention_reminder_sent_true_when_reminder_exists(
+    mock_request_repository,
+    mock_media_repository,
+    sample_request_dto_movie,
+    sample_media_info_dto,
+    retention_policy,
+):
+    """Test execute_with_retention sets reminder_sent=True when reminder was sent."""
+    mock_reminder_repository = Mock()
+    mock_reminder_repository.get_request_ids_with_reminders = Mock(
+        return_value={sample_request_dto_movie.request_id}
+    )
+    use_case = CheckMediaRequestsUseCase(
+        mock_request_repository,
+        mock_media_repository,
+        reminder_repository=mock_reminder_repository,
+    )
+    mock_request_repository.get_requests = AsyncMock(
+        return_value=[sample_request_dto_movie]
+    )
+    mock_media_repository.get_media = AsyncMock(return_value=sample_media_info_dto)
+    calculator = RetentionCalculator(retention_policy)
+
+    results = await use_case.execute_with_retention(calculator)
+
+    assert len(results) == 1
+    assert results[0].retention.reminder_sent is True
+    mock_reminder_repository.get_request_ids_with_reminders.assert_called_once_with(
+        [sample_request_dto_movie.request_id]
+    )
+
+
+@pytest.mark.asyncio
+async def test_execute_with_retention_reminder_sent_false_when_no_reminder(
+    mock_request_repository,
+    mock_media_repository,
+    sample_request_dto_movie,
+    sample_media_info_dto,
+    retention_policy,
+):
+    """Test execute_with_retention sets reminder_sent=False when no reminder was sent."""
+    mock_reminder_repository = Mock()
+    mock_reminder_repository.get_request_ids_with_reminders = Mock(return_value=set())
+    use_case = CheckMediaRequestsUseCase(
+        mock_request_repository,
+        mock_media_repository,
+        reminder_repository=mock_reminder_repository,
+    )
+    mock_request_repository.get_requests = AsyncMock(
+        return_value=[sample_request_dto_movie]
+    )
+    mock_media_repository.get_media = AsyncMock(return_value=sample_media_info_dto)
+    calculator = RetentionCalculator(retention_policy)
+
+    results = await use_case.execute_with_retention(calculator)
+
+    assert len(results) == 1
+    assert results[0].retention.reminder_sent is False
 
 
 @pytest.mark.asyncio

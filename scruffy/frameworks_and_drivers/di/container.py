@@ -71,6 +71,7 @@ class Container:
             self._overseer_gateway,
             self._media_repository,
             self._extension_gateway,
+            self._reminder_gateway,
         )
         self._send_reminder_use_case = SendReminderUseCase(
             self._reminder_gateway, self._notification_service

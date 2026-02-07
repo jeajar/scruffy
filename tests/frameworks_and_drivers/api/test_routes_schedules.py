@@ -79,7 +79,7 @@ def app_with_schedule_db(mock_container):
                     mock_settings.loki_url = None
                     mock_settings.loki_labels = None
                     mock_settings.api_host = "0.0.0.0"
-                    mock_settings.api_port = 8000
+                    mock_settings.api_port = 3000
                     mock_settings.api_enabled = True
                     mock_settings.cors_origins = None
                     app = create_app()
@@ -286,6 +286,95 @@ class TestScheduleCrud:
         """Test deleting non-existent schedule returns 404."""
         response = client.delete("/api/admin/schedules/99999")
         assert response.status_code == 404
+
+    def test_create_schedule_duplicate_job_type_returns_409(self, client):
+        """Test creating second schedule with same job_type returns 409."""
+        client.post(
+            "/api/admin/schedules",
+            json={
+                "job_type": "check",
+                "cron_expression": "0 */6 * * *",
+                "enabled": True,
+            },
+        )
+        response = client.post(
+            "/api/admin/schedules",
+            json={
+                "job_type": "check",
+                "cron_expression": "0 0 * * *",
+                "enabled": True,
+            },
+        )
+        assert response.status_code == 409
+        assert "already exists" in response.json()["detail"].lower()
+
+    def test_update_schedule_to_duplicate_job_type_returns_409(self, client):
+        """Test updating schedule to change job_type to one already used returns 409."""
+        client.post(
+            "/api/admin/schedules",
+            json={
+                "job_type": "check",
+                "cron_expression": "0 */6 * * *",
+                "enabled": True,
+            },
+        )
+        process_resp = client.post(
+            "/api/admin/schedules",
+            json={
+                "job_type": "process",
+                "cron_expression": "0 0 * * *",
+                "enabled": True,
+            },
+        )
+        process_id = process_resp.json()["id"]
+        # Try to change process schedule to check (already exists)
+        response = client.patch(
+            f"/api/admin/schedules/{process_id}",
+            json={"job_type": "check"},
+        )
+        assert response.status_code == 409
+        assert "already exists" in response.json()["detail"].lower()
+
+    def test_update_schedule_same_job_type_succeeds(self, client):
+        """Test updating schedule with same job_type (no change) succeeds."""
+        create_resp = client.post(
+            "/api/admin/schedules",
+            json={
+                "job_type": "check",
+                "cron_expression": "0 */6 * * *",
+                "enabled": True,
+            },
+        )
+        schedule_id = create_resp.json()["id"]
+
+        response = client.patch(
+            f"/api/admin/schedules/{schedule_id}",
+            json={"job_type": "check", "enabled": False},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["job_type"] == "check"
+        assert data["enabled"] is False
+
+    def test_update_schedule_to_unused_job_type_succeeds(self, client):
+        """Test updating schedule to change job_type to unused type succeeds."""
+        create_resp = client.post(
+            "/api/admin/schedules",
+            json={
+                "job_type": "check",
+                "cron_expression": "0 */6 * * *",
+                "enabled": True,
+            },
+        )
+        schedule_id = create_resp.json()["id"]
+
+        response = client.patch(
+            f"/api/admin/schedules/{schedule_id}",
+            json={"job_type": "process"},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["job_type"] == "process"
 
 
 class TestScheduleAuth:

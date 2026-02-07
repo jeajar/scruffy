@@ -1,4 +1,5 @@
-const API_BASE = "";
+/** Base URL for API requests. Use VITE_API_BASE (or VITE_API_URL) when frontend and API are on different origins. */
+const API_BASE = (import.meta.env.VITE_API_BASE ?? import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
 export interface User {
   id: number;
@@ -55,6 +56,7 @@ export interface MediaItem {
     remind: boolean;
     extended?: boolean;
     deletion_date?: string;
+    reminder_sent?: boolean;
   };
 }
 
@@ -82,12 +84,18 @@ export async function getAuthStatus(): Promise<AuthStatusResponse> {
  * Create a new Plex PIN for authentication
  */
 export async function createPin(): Promise<PinResponse> {
-  const response = await fetch(`${API_BASE}/auth/pin`, {
+  const url = `${API_BASE}/auth/pin`;
+  const response = await fetch(url, {
     method: "POST",
     credentials: "include",
   });
   if (!response.ok) {
-    throw new Error("Failed to create Plex PIN");
+    const body = await response.json().catch(() => ({}));
+    const detail = typeof body?.detail === "string" ? body.detail : body?.detail;
+    const message = detail
+      ? `Failed to create Plex PIN: ${detail}`
+      : `Failed to create Plex PIN (${response.status})`;
+    throw new Error(message);
   }
   return response.json();
 }
@@ -191,6 +199,15 @@ export async function getSchedules(): Promise<Schedule[]> {
   return response.json();
 }
 
+function parseApiDetail(data: { detail?: unknown }, fallback: string): string {
+  const d = data?.detail;
+  if (typeof d === "string") return d;
+  if (Array.isArray(d) && d.length > 0 && d[0] && typeof d[0] === "object" && "msg" in d[0]) {
+    return String((d[0] as { msg?: string }).msg) || fallback;
+  }
+  return fallback;
+}
+
 export async function createSchedule(body: ScheduleCreate): Promise<Schedule> {
   const response = await fetch(`${API_BASE}/api/admin/schedules`, {
     method: "POST",
@@ -202,7 +219,7 @@ export async function createSchedule(body: ScheduleCreate): Promise<Schedule> {
     if (response.status === 401) throw new Error("Unauthorized");
     if (response.status === 403) throw new Error("Forbidden");
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.detail ?? "Failed to create schedule");
+    throw new Error(parseApiDetail(data, "Failed to create schedule"));
   }
   return response.json();
 }
@@ -222,7 +239,7 @@ export async function updateSchedule(
     if (response.status === 403) throw new Error("Forbidden");
     if (response.status === 404) throw new Error("Schedule not found");
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.detail ?? "Failed to update schedule");
+    throw new Error(parseApiDetail(data, "Failed to update schedule"));
   }
   return response.json();
 }
@@ -323,6 +340,7 @@ export interface AdminSettings {
   retention_days: number;
   reminder_days: number;
   extension_days: number;
+  app_base_url: string;
   services: ServicesConfig;
   notifications: {
     email: EmailConfig;
@@ -355,6 +373,7 @@ export interface AdminSettingsUpdate {
   retention_days?: number;
   reminder_days?: number;
   extension_days?: number;
+  app_base_url?: string;
   services?: ServicesUpdate;
   notifications?: {
     email?: EmailConfigUpdate;

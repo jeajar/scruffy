@@ -8,6 +8,7 @@ import logging
 import time
 from dataclasses import asdict, dataclass
 from typing import Annotated
+from urllib.parse import quote
 
 import httpx
 from fastapi import Depends, HTTPException, status
@@ -15,7 +16,10 @@ from fastapi.security import APIKeyCookie, APIKeyHeader
 
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 from scruffy.frameworks_and_drivers.config.settings import settings
-from scruffy.frameworks_and_drivers.database.settings_store import get_overseerr_api_key
+from scruffy.frameworks_and_drivers.database.settings_store import (
+    get_app_base_url,
+    get_overseerr_api_key,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -156,12 +160,16 @@ async def create_plex_pin() -> dict:
         pin_id = data["id"]
         pin_code = data["code"]
 
-        # Build the auth URL
+        # Build the auth URL with forwardUrl so Plex redirects back after sign-in (standard OAuth flow)
+        base_url = get_app_base_url().rstrip("/")
+        callback_url = f"{base_url}/auth/callback?pin_id={pin_id}"
+        forward_url_encoded = quote(callback_url, safe="")
         auth_url = (
-            f"https://app.plex.tv/auth#?"
+            f"https://app.plex.tv/auth#!?"
             f"clientID={PLEX_CLIENT_ID}&"
             f"code={pin_code}&"
-            f"context%5Bdevice%5D%5Bproduct%5D={PLEX_APP_NAME}"
+            f"context%5Bdevice%5D%5Bproduct%5D={PLEX_APP_NAME}&"
+            f"forwardUrl={forward_url_encoded}"
         )
 
         return {

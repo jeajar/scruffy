@@ -1,23 +1,12 @@
 # Development overrides - automatically loaded by docker-compose
-# This enables hot-reload for both frontend and backend
+# Enables hot-reload for backend when developing with Docker.
+# For frontend dev, run `cd frontend && npm run dev` locally (proxies to backend on 3000).
 
 services:
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
+  scruffy:
+    command: uvicorn scruffy.frameworks_and_drivers.api.app:create_app --factory --host 0.0.0.0 --port 3000 --reload
     volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      # Mount local scruffy over installed package for hot-reload
+      - ./scruffy:/app/.venv/lib/python3.13/site-packages/scruffy
     ports:
-      - "5173:5173"
-    environment:
-      - VITE_API_URL=http://backend:8080
-
-  backend:
-    build: .
-    command: uvicorn scruffy.frameworks_and_drivers.api.app:create_app --factory --host 0.0.0.0 --port 8080 --reload
-    volumes:
-      - ./scruffy:/app/scruffy
-    ports:
-      - "8080:8080"
+      - "3000:3000"

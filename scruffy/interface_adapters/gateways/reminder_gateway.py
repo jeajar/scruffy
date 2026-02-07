@@ -1,8 +1,9 @@
 """Gateway adapter for reminder persistence."""
 
 import logging
+from typing import cast
 
-from sqlalchemy import Engine
+from sqlalchemy import ColumnElement, Engine
 from sqlmodel import Session, SQLModel, select
 
 from scruffy.frameworks_and_drivers.database.database import get_engine
@@ -51,3 +52,24 @@ class ReminderGateway(ReminderRepositoryInterface):
             "Reminder record added successfully",
             extra={"request_id": request_id, "user_id": user_id},
         )
+
+    def get_request_ids_with_reminders(self, request_ids: list[int]) -> set[int]:
+        """Return set of request_ids that have reminder records."""
+        if not request_ids:
+            return set()
+        with Session(self.engine) as session:
+            # SQLModel types request_id as int; at runtime it's a column with .in_()
+            request_id_col = cast(ColumnElement[int], ReminderModel.request_id)
+            statement = select(ReminderModel.request_id).where(
+                request_id_col.in_(request_ids)
+            )
+            rows = session.exec(statement).all()
+            result = set(rows)
+            logger.debug(
+                "Batch checked reminder status",
+                extra={
+                    "requested_count": len(request_ids),
+                    "with_reminders_count": len(result),
+                },
+            )
+            return result

@@ -14,6 +14,31 @@ def _migrate_job_run_summary(engine: Engine) -> None:
         conn.commit()
 
 
+def _migrate_schedule_job_type_unique(engine: Engine) -> None:
+    """Add unique constraint on schedulejobmodel.job_type (one-off migration for existing DBs)."""
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("DROP INDEX IF EXISTS ix_schedulejobmodel_job_type"))
+            conn.commit()
+        except OperationalError:
+            conn.rollback()
+        try:
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS ix_schedulejobmodel_job_type "
+                    "ON schedulejobmodel (job_type)"
+                )
+            )
+            conn.commit()
+        except OperationalError as e:
+            conn.rollback()
+            if (
+                "already exists" not in str(e).lower()
+                and "duplicate" not in str(e).lower()
+            ):
+                raise
+
+
 def get_engine() -> Engine:
     """Get or create database engine."""
     db_path = Path("scruffy.db")
@@ -26,6 +51,10 @@ def get_engine() -> Engine:
     except OperationalError as e:
         if "duplicate column name" not in str(e).lower():
             raise
+    try:
+        _migrate_schedule_job_type_unique(engine)
+    except OperationalError:
+        pass  # Fresh installs: create_all already created unique index
     return engine
 
 

@@ -71,21 +71,11 @@ jobs:
             echo "version=v${VERSION}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Extract metadata (tags, labels) for backend
-        id: meta_backend
+      - name: Extract metadata (tags, labels) for scruffy
+        id: meta_scruffy
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend
-          tags: |
-            type=semver,pattern={{version}},value=${{ steps.resolve_version.outputs.version }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ steps.resolve_version.outputs.version }}
-            type=sha,format=long
-
-      - name: Extract metadata (tags, labels) for frontend
-        id: meta_frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/scruffy
           tags: |
             type=semver,pattern={{version}},value=${{ steps.resolve_version.outputs.version }}
             type=semver,pattern={{major}}.{{minor}},value=${{ steps.resolve_version.outputs.version }}
@@ -101,24 +91,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push backend
+      - name: Build and push scruffy
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta_backend.outputs.tags }}
-          labels: ${{ steps.meta_backend.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Build and push frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta_frontend.outputs.tags }}
-          labels: ${{ steps.meta_frontend.outputs.labels }}
+          tags: ${{ steps.meta_scruffy.outputs.tags }}
+          labels: ${{ steps.meta_scruffy.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

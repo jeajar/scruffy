@@ -8,7 +8,9 @@ from pydantic import BaseModel, Field
 
 from scruffy.frameworks_and_drivers.api.auth import AdminUser
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
+from scruffy.frameworks_and_drivers.api.routes.media import invalidate_media_list_cache
 from scruffy.frameworks_and_drivers.database.settings_store import (
+    get_app_base_url,
     get_email_config,
     get_extension_days,
     get_overseerr_api_key,
@@ -19,6 +21,7 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
     get_retention_days,
     get_sonarr_api_key,
     get_sonarr_url,
+    set_app_base_url,
     set_email_config,
     set_extension_days,
     set_reminder_days,
@@ -74,6 +77,7 @@ class SettingsResponse(BaseModel):
     retention_days: int
     reminder_days: int
     extension_days: int
+    app_base_url: str
     services: ServicesResponse
     notifications: NotificationsResponse
 
@@ -118,6 +122,7 @@ class SettingsUpdate(BaseModel):
     retention_days: int | None = Field(None, ge=1, le=365)
     reminder_days: int | None = Field(None, ge=1, le=365)
     extension_days: int | None = Field(None, ge=1, le=365)
+    app_base_url: str | None = None
     services: ServicesUpdate | None = None
     notifications: NotificationsUpdate | None = None
 
@@ -135,6 +140,7 @@ def _build_settings_response() -> SettingsResponse:
         retention_days=retention_days,
         reminder_days=reminder_days,
         extension_days=extension_days,
+        app_base_url=get_app_base_url(),
         services=ServicesResponse(
             overseerr=ServiceConfigResponse(
                 url=get_overseerr_url(),
@@ -196,6 +202,18 @@ async def update_settings(
         logger.info(
             "Settings updated",
             extra={"extension_days": body.extension_days},
+        )
+    if (
+        body.retention_days is not None
+        or body.reminder_days is not None
+        or body.extension_days is not None
+    ):
+        invalidate_media_list_cache()
+    if body.app_base_url is not None:
+        await asyncio.to_thread(set_app_base_url, body.app_base_url)
+        logger.info(
+            "Settings updated",
+            extra={"app_base_url": body.app_base_url},
         )
 
     if body.services is not None:

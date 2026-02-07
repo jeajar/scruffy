@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ExtendRouteImport } from './routes/extend'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as LoginCompleteRouteImport } from './routes/login.complete'
 import { Route as AdminSchedulesRouteImport } from './routes/admin/schedules'
 import { Route as AdminJobsRouteImport } from './routes/admin/jobs'
 import { Route as AdminSettingsRouteRouteImport } from './routes/admin/settings/route'
@@ -41,6 +42,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const LoginCompleteRoute = LoginCompleteRouteImport.update({
+  id: '/complete',
+  path: '/complete',
+  getParentRoute: () => LoginRoute,
 } as any)
 const AdminSchedulesRoute = AdminSchedulesRouteImport.update({
   id: '/admin/schedules',
@@ -87,10 +93,11 @@ const AdminSettingsNotificationsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/extend': typeof ExtendRoute
-  '/login': typeof LoginRoute
+  '/login': typeof LoginRouteWithChildren
   '/admin/settings': typeof AdminSettingsRouteRouteWithChildren
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/schedules': typeof AdminSchedulesRoute
+  '/login/complete': typeof LoginCompleteRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
   '/admin/settings/retention': typeof AdminSettingsRetentionRoute
@@ -101,9 +108,10 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/extend': typeof ExtendRoute
-  '/login': typeof LoginRoute
+  '/login': typeof LoginRouteWithChildren
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/schedules': typeof AdminSchedulesRoute
+  '/login/complete': typeof LoginCompleteRoute
   '/admin': typeof AdminIndexRoute
   '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
   '/admin/settings/retention': typeof AdminSettingsRetentionRoute
@@ -115,10 +123,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/extend': typeof ExtendRoute
-  '/login': typeof LoginRoute
+  '/login': typeof LoginRouteWithChildren
   '/admin/settings': typeof AdminSettingsRouteRouteWithChildren
   '/admin/jobs': typeof AdminJobsRoute
   '/admin/schedules': typeof AdminSchedulesRoute
+  '/login/complete': typeof LoginCompleteRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/settings/notifications': typeof AdminSettingsNotificationsRoute
   '/admin/settings/retention': typeof AdminSettingsRetentionRoute
@@ -135,6 +144,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/jobs'
     | '/admin/schedules'
+    | '/login/complete'
     | '/admin/'
     | '/admin/settings/notifications'
     | '/admin/settings/retention'
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/admin/jobs'
     | '/admin/schedules'
+    | '/login/complete'
     | '/admin'
     | '/admin/settings/notifications'
     | '/admin/settings/retention'
@@ -162,6 +173,7 @@ export interface FileRouteTypes {
     | '/admin/settings'
     | '/admin/jobs'
     | '/admin/schedules'
+    | '/login/complete'
     | '/admin/'
     | '/admin/settings/notifications'
     | '/admin/settings/retention'
@@ -173,7 +185,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExtendRoute: typeof ExtendRoute
-  LoginRoute: typeof LoginRoute
+  LoginRoute: typeof LoginRouteWithChildren
   AdminSettingsRouteRoute: typeof AdminSettingsRouteRouteWithChildren
   AdminJobsRoute: typeof AdminJobsRoute
   AdminSchedulesRoute: typeof AdminSchedulesRoute
@@ -209,6 +221,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/login/complete': {
+      id: '/login/complete'
+      path: '/complete'
+      fullPath: '/login/complete'
+      preLoaderRoute: typeof LoginCompleteRouteImport
+      parentRoute: typeof LoginRoute
     }
     '/admin/schedules': {
       id: '/admin/schedules'
@@ -269,6 +288,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface LoginRouteChildren {
+  LoginCompleteRoute: typeof LoginCompleteRoute
+}
+
+const LoginRouteChildren: LoginRouteChildren = {
+  LoginCompleteRoute: LoginCompleteRoute,
+}
+
+const LoginRouteWithChildren = LoginRoute._addFileChildren(LoginRouteChildren)
+
 interface AdminSettingsRouteRouteChildren {
   AdminSettingsNotificationsRoute: typeof AdminSettingsNotificationsRoute
   AdminSettingsRetentionRoute: typeof AdminSettingsRetentionRoute
@@ -291,7 +320,7 @@ const AdminSettingsRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExtendRoute: ExtendRoute,
-  LoginRoute: LoginRoute,
+  LoginRoute: LoginRouteWithChildren,
   AdminSettingsRouteRoute: AdminSettingsRouteRouteWithChildren,
   AdminJobsRoute: AdminJobsRoute,
   AdminSchedulesRoute: AdminSchedulesRoute,

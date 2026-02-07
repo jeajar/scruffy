@@ -306,7 +306,8 @@ function MediaRow({
 
   const getStatusText = () => {
     if (retention.delete) return "Scheduled for deletion";
-    if (retention.remind) return "Reminder sent";
+    if (retention.remind && retention.reminder_sent) return "Reminder sent";
+    if (retention.remind && !retention.reminder_sent) return "Approaching deletion";
     return "Safe";
   };
 

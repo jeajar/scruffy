@@ -14,6 +14,7 @@ class RetentionResultDTO:
     delete: bool
     days_left: int = 0
     extended: bool = False
+    reminder_sent: bool = False
 
 
 @dataclass(frozen=True)

@@ -14,7 +14,7 @@ class ScheduleJobModel(SQLModel, table=True):
     """
 
     id: int | None = Field(default=None, primary_key=True)
-    job_type: str = Field(index=True)  # "check" | "process"
+    job_type: str = Field(index=True, unique=True)  # "check" | "process"
     cron_expression: str = Field(min_length=9)  # e.g. "0 */6 * * *"
     enabled: bool = Field(default=True)
     created_at: datetime = Field(default_factory=lambda: datetime.now(UTC))

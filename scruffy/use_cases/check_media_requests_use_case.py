@@ -17,6 +17,9 @@ from scruffy.use_cases.interfaces.extension_repository_interface import (
 from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
 )
+from scruffy.use_cases.interfaces.reminder_repository_interface import (
+    ReminderRepositoryInterface,
+)
 from scruffy.use_cases.interfaces.request_repository_interface import (
     RequestRepositoryInterface,
 )
@@ -33,11 +36,13 @@ class CheckMediaRequestsUseCase:
         request_repository: RequestRepositoryInterface,
         media_repository: MediaRepositoryInterface,
         extension_repository: ExtensionRepositoryInterface | None = None,
+        reminder_repository: ReminderRepositoryInterface | None = None,
     ):
         """Initialize with required repositories."""
         self.request_repository = request_repository
         self.media_repository = media_repository
         self.extension_repository = extension_repository
+        self.reminder_repository = reminder_repository
         logger.debug("Initialized CheckMediaRequestsUseCase")
 
     async def execute(self) -> list[tuple[MediaRequest, Media]]:
@@ -164,18 +169,16 @@ class CheckMediaRequestsUseCase:
                 retention_result = retention_calculator.evaluate(
                     media, extension_days=ext_days
                 )
-                retention_dto = RetentionResultDTO(
-                    remind=retention_result.remind,
-                    delete=retention_result.delete,
-                    days_left=retention_result.days_left,
-                    extended=is_extended,
-                )
                 request_dto = next(
                     dto for dto in request_dtos if dto.request_id == req.request_id
                 )
                 result.append(
-                    MediaCheckResultDTO(
-                        request=request_dto, media=media_dto, retention=retention_dto
+                    (
+                        req.request_id,
+                        request_dto,
+                        media_dto,
+                        retention_result,
+                        is_extended,
                     )
                 )
                 logger.debug(
@@ -190,8 +193,32 @@ class CheckMediaRequestsUseCase:
                     },
                 )
 
+        # Batch lookup which requests have reminders sent
+        ids_with_reminders: set[int] = set()
+        if self.reminder_repository is not None and result:
+            request_ids = [r[0] for r in result]
+            ids_with_reminders = await asyncio.to_thread(
+                self.reminder_repository.get_request_ids_with_reminders, request_ids
+            )
+
+        # Build final MediaCheckResultDTO list with reminder_sent
+        final_result = []
+        for request_id, request_dto, media_dto, retention_result, is_extended in result:
+            retention_dto = RetentionResultDTO(
+                remind=retention_result.remind,
+                delete=retention_result.delete,
+                days_left=retention_result.days_left,
+                extended=is_extended,
+                reminder_sent=request_id in ids_with_reminders,
+            )
+            final_result.append(
+                MediaCheckResultDTO(
+                    request=request_dto, media=media_dto, retention=retention_dto
+                )
+            )
+
         logger.info(
             "Completed retention check",
-            extra={"results_count": len(result)},
+            extra={"results_count": len(final_result)},
         )
-        return result
+        return final_result
