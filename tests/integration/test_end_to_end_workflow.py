@@ -18,7 +18,6 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
 )
 from scruffy.frameworks_and_drivers.di.container import Container
 
-
 # Test URLs used by respx mocks; must match mock_settings patches
 OVERSEERR_BASE = "http://overseerr.test"
 RADARR_BASE = "http://radarr.test"
@@ -26,7 +25,7 @@ SONARR_BASE = "http://sonarr.test"
 
 
 @pytest.fixture
-def mock_settings():
+def _mock_settings():
     """Mock settings for integration tests.
 
     Patches the real config.settings object so SettingsProvider and any
@@ -82,7 +81,7 @@ def in_memory_engine():
 
 
 @pytest.mark.asyncio
-async def test_complete_workflow_check_remind_delete(mock_settings, in_memory_engine):
+async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_engine):
     """Test complete workflow: check → remind → delete."""
     # Mock Overseerr API
     overseerr_base = "http://overseerr.test"
@@ -192,7 +191,7 @@ async def test_complete_workflow_check_remind_delete(mock_settings, in_memory_en
 
 
 @pytest.mark.asyncio
-async def test_complete_workflow_remind_only(mock_settings, in_memory_engine):
+async def test_complete_workflow_remind_only(_mock_settings, in_memory_engine):
     """Test complete workflow: check → remind (no delete)."""
     # Mock Overseerr API
     overseerr_base = "http://overseerr.test"

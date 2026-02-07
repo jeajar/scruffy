@@ -1,17 +1,19 @@
 """Tests for CLIPresenter."""
 
+from datetime import UTC, datetime
+
 import pytest
 from rich.table import Table
 
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.request_status import RequestStatus
+from scruffy.interface_adapters.presenters.cli_presenter import CLIPresenter
 from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
     RetentionResultDTO,
 )
 from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.dtos.request_dto import RequestDTO
-from scruffy.interface_adapters.presenters.cli_presenter import CLIPresenter
 
 
 @pytest.fixture
@@ -23,7 +25,7 @@ def sample_result_delete():
         type="movie",
         request_id=1,
         request_status=RequestStatus.APPROVED,
-        updated_at=None,
+        updated_at=datetime(2020, 1, 1, tzinfo=UTC),
         media_status=MediaStatus.AVAILABLE,
         media_id=99,
         external_service_id=101,
@@ -51,7 +53,7 @@ def sample_result_remind():
         type="movie",
         request_id=2,
         request_status=RequestStatus.APPROVED,
-        updated_at=None,
+        updated_at=datetime(2020, 1, 1, tzinfo=UTC),
         media_status=MediaStatus.AVAILABLE,
         media_id=100,
         external_service_id=102,
@@ -79,7 +81,7 @@ def sample_result_tv():
         type="tv",
         request_id=3,
         request_status=RequestStatus.APPROVED,
-        updated_at=None,
+        updated_at=datetime(2020, 1, 1, tzinfo=UTC),
         media_status=MediaStatus.AVAILABLE,
         media_id=101,
         external_service_id=103,
@@ -159,7 +161,6 @@ def test_format_media_table_season_formatting(sample_result_tv):
     """Test format_media_table formats seasons correctly."""
     table = CLIPresenter.format_media_table([sample_result_tv])
 
-    rows = list(table.rows)
     # Access cell data via column._cells (column index 1 is Title)
     title_cell = table.columns[1]._cells[0]
     title_str = str(title_cell)

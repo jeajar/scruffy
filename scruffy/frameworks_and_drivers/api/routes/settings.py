@@ -199,21 +199,25 @@ async def update_settings(
         )
 
     if body.services is not None:
+        services = body.services  # Narrow type for closure
         def _apply_services() -> None:
-            if body.services.overseerr:
+            overseerr = services.overseerr
+            if overseerr is not None:
                 set_services_config(
-                    overseerr_url=body.services.overseerr.url,
-                    overseerr_api_key=body.services.overseerr.api_key,
+                    overseerr_url=overseerr.url,
+                    overseerr_api_key=overseerr.api_key,
                 )
-            if body.services.radarr:
+            radarr = services.radarr
+            if radarr is not None:
                 set_services_config(
-                    radarr_url=body.services.radarr.url,
-                    radarr_api_key=body.services.radarr.api_key,
+                    radarr_url=radarr.url,
+                    radarr_api_key=radarr.api_key,
                 )
-            if body.services.sonarr:
+            sonarr = services.sonarr
+            if sonarr is not None:
                 set_services_config(
-                    sonarr_url=body.services.sonarr.url,
-                    sonarr_api_key=body.services.sonarr.api_key,
+                    sonarr_url=sonarr.url,
+                    sonarr_api_key=sonarr.api_key,
                 )
 
         await asyncio.to_thread(_apply_services)

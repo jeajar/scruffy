@@ -37,7 +37,7 @@ def _list_job_runs_sync(limit: int = LIMIT) -> list[JobRunModel]:
         return list(
             session.exec(
                 select(JobRunModel)
-                .order_by(JobRunModel.finished_at.desc())
+                .order_by(JobRunModel.finished_at.desc())  # ty: ignore[unresolved-attribute]
                 .limit(limit)
             )
         )

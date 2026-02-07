@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from scruffy.domain.value_objects.media_type import MediaType
-from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.interface_adapters.gateways.media_repository_composite import (
     MediaRepositoryComposite,
 )

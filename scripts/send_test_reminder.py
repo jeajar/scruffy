@@ -41,6 +41,7 @@ async def main() -> None:
                 [r.media.title for r in results],
             )
             sys.exit(1)
+        assert match is not None  # Narrow type after guard
         logger.info(
             "Sending test reminder for %s (request_id=%s) to %s",
             match.media.title,

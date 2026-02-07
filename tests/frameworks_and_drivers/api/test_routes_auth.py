@@ -22,7 +22,7 @@ def plex_user():
 
 
 @pytest.fixture
-def mock_container(plex_user):
+def mock_container(plex_user):  # noqa: ARG001
     """Mock container with overseer_gateway.user_imported_by_plex_id and get_user_by_plex_id."""
     container = Mock()
     container.overseer_gateway = Mock()

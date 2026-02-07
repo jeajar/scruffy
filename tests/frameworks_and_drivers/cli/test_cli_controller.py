@@ -1,5 +1,6 @@
 """Tests for CLI controller."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -101,7 +102,7 @@ class TestCheckCommand:
             type="movie",
             request_id=1,
             request_status=RequestStatus.APPROVED,
-            updated_at=None,
+            updated_at=datetime(2020, 1, 1, tzinfo=UTC),
             media_status=MediaStatus.AVAILABLE,
             media_id=99,
             external_service_id=101,

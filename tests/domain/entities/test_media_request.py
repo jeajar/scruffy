@@ -1,5 +1,6 @@
 """Tests for MediaRequest domain entity."""
 
+import dataclasses
 from datetime import UTC, datetime
 
 import pytest
@@ -51,8 +52,8 @@ def test_media_request_is_immutable():
         seasons=[],
     )
 
-    with pytest.raises(Exception):  # noqa: PT011
-        request.user_email = "changed@example.com"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        request.user_email = "changed@example.com"  # ty: ignore[invalid-assignment]
 
 
 def test_media_request_tv_with_seasons():

@@ -1,5 +1,6 @@
 """Tests for RequestDTO."""
 
+import dataclasses
 from datetime import UTC, datetime
 
 import pytest
@@ -50,8 +51,8 @@ def test_request_dto_is_immutable():
         seasons=[],
     )
 
-    with pytest.raises(Exception):  # noqa: PT011
-        dto.user_email = "changed@example.com"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        dto.user_email = "changed@example.com"  # ty: ignore[invalid-assignment]
 
 
 def test_from_overseer_response_movie():

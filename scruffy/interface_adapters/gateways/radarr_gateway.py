@@ -88,12 +88,12 @@ class RadarrGateway(MediaRepositoryInterface):
         )
 
         return MediaInfoDTO(
-            title=title,
-            available=data.get("hasFile"),
+            title=title or "",
+            available=bool(data.get("hasFile", False)),
             poster=poster or "",
             available_since=datetime.fromisoformat(added_at) if added_at else None,
-            size_on_disk=data.get("sizeOnDisk", 0),
-            id=data.get("id"),
+            size_on_disk=int(data.get("sizeOnDisk", 0)),
+            id=int(data.get("id", external_service_id)),
             seasons=[],
         )
 

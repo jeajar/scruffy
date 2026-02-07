@@ -1,5 +1,6 @@
 """Tests for RetentionPolicy value object."""
 
+import dataclasses
 from datetime import UTC, datetime, timedelta
 
 import pytest
@@ -19,8 +20,8 @@ def test_retention_policy_is_immutable():
     """Test RetentionPolicy is immutable (frozen dataclass)."""
     policy = RetentionPolicy(retention_days=30, reminder_days=7)
 
-    with pytest.raises(Exception):  # noqa: PT011
-        policy.retention_days = 60
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        policy.retention_days = 60  # ty: ignore[invalid-assignment]
 
 
 def test_should_remind_when_within_reminder_window():

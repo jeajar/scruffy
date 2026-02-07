@@ -1,5 +1,6 @@
 """Tests for Reminder domain entity."""
 
+import dataclasses
 from datetime import UTC, datetime
 
 import pytest
@@ -28,5 +29,5 @@ def test_reminder_is_immutable():
         date_sent=datetime.now(UTC),
     )
 
-    with pytest.raises(Exception):  # noqa: PT011
-        reminder.user_id = 200
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        reminder.user_id = 200  # ty: ignore[invalid-assignment]

@@ -84,9 +84,9 @@ def client(app_with_jobs_db, mock_admin_user):
     async def override_require_admin():
         return mock_admin_user
 
-    client.app.dependency_overrides[require_admin] = override_require_admin
+    client.app.dependency_overrides[require_admin] = override_require_admin  # ty: ignore[possibly-missing-attribute]
     yield client
-    client.app.dependency_overrides.clear()
+    client.app.dependency_overrides.clear()  # ty: ignore[possibly-missing-attribute]
 
 
 class TestListJobRuns:

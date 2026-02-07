@@ -3,6 +3,6 @@
 set -e
 set -x
 
-# TODO: Add mypy here
-ruff check scruffy
-ruff format scruffy --check
+ruff check
+ruff format --check
+ty check

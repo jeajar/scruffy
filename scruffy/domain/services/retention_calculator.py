@@ -1,6 +1,6 @@
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Callable, Union
 
 from scruffy.domain.entities.media import Media
 from scruffy.domain.value_objects.retention_policy import RetentionPolicy
@@ -23,7 +23,7 @@ class RetentionCalculator:
 
     def __init__(
         self,
-        policy_or_provider: Union[RetentionPolicy, PolicyProvider],
+        policy_or_provider: RetentionPolicy | PolicyProvider,
     ):
         """
         Initialize with retention policy or policy provider.

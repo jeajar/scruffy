@@ -2,8 +2,6 @@
 
 from datetime import UTC, datetime, timedelta
 
-import pytest
-
 from scruffy.domain.entities.media import Media
 from scruffy.domain.services.retention_calculator import (
     RetentionCalculator,

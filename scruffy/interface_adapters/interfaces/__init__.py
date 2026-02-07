@@ -11,7 +11,7 @@ from scruffy.interface_adapters.interfaces.settings_provider_interface import (
 
 __all__ = [
     "EmailConfig",
-    "HttpClientInterface",
     "HttpRequestError",
-    "SettingsProviderInterface",
+    "IHttpClient",
+    "ISettingsProvider",
 ]

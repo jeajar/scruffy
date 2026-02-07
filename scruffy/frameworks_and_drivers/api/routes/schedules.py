@@ -76,7 +76,7 @@ def _list_schedules_sync() -> list[ScheduleJobModel]:
     engine = get_engine()
     with Session(engine) as session:
         return list(
-            session.exec(select(ScheduleJobModel).order_by(ScheduleJobModel.id))
+            session.exec(select(ScheduleJobModel).order_by("id"))
         )
 
 

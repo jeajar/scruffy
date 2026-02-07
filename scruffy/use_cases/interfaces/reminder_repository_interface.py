@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
 
-from scruffy.domain.entities.reminder import Reminder
-
 
 class ReminderRepositoryInterface(ABC):
     """Abstract interface for reminder persistence."""

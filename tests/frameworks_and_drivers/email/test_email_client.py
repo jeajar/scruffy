@@ -164,7 +164,7 @@ class TestEmailClientTemplatePath:
         self, mock_settings, mock_fastmail, mock_template_env
     ):
         """Test template path is correctly set."""
-        client = EmailClient()
+        EmailClient()
 
         # Verify template path exists (or at least the directory structure)
         template_path = (

@@ -1,16 +1,11 @@
 """Tests for mapper functions."""
 
-from datetime import UTC, datetime
 
-import pytest
 
 from scruffy.domain.entities.media import Media
 from scruffy.domain.entities.media_request import MediaRequest
-from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.media_type import MediaType
-from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
-from scruffy.use_cases.dtos.request_dto import RequestDTO
 from scruffy.use_cases.mappers import (
     map_media_dto_to_entity,
     map_media_entity_to_dto,

@@ -5,10 +5,10 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from scruffy.frameworks_and_drivers.email.email_client import EmailClient
-from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.interface_adapters.notifications.email_notification_service import (
     EmailNotificationService,
 )
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 
 
 @pytest.fixture

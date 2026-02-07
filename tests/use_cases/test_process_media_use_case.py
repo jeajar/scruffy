@@ -7,11 +7,9 @@ import pytest
 
 from scruffy.domain.entities.media import Media
 from scruffy.domain.entities.media_request import MediaRequest
-from scruffy.domain.services.retention_calculator import RetentionResult
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.domain.value_objects.request_status import RequestStatus
-from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.use_cases.check_media_requests_use_case import CheckMediaRequestsUseCase
 from scruffy.use_cases.delete_media_use_case import DeleteMediaUseCase
 from scruffy.use_cases.process_media_use_case import ProcessMediaUseCase
@@ -79,7 +77,9 @@ def sample_media():
 
 
 @pytest.mark.asyncio
-async def test_execute_calls_check_use_case(use_case, mock_check_use_case, sample_request, sample_media):
+async def test_execute_calls_check_use_case(
+    use_case, mock_check_use_case, sample_request, sample_media  # noqa: ARG001
+):
     """Test execute calls check use case."""
     # Use media that does not trigger remind/delete (5 days old; retention 30, reminder 7)
     media_no_action = Media(
@@ -103,7 +103,7 @@ async def test_execute_calls_check_use_case(use_case, mock_check_use_case, sampl
 
 @pytest.mark.asyncio
 async def test_execute_calls_send_reminder_when_remind_true(
-    use_case, mock_check_use_case, mock_send_reminder_use_case, sample_request, sample_media
+    use_case, mock_check_use_case, mock_send_reminder_use_case, sample_request, sample_media  # noqa: ARG001
 ):
     """Test execute calls send_reminder_use_case when remind is True."""
     # Media that should trigger reminder (24 days old, 6 days left)

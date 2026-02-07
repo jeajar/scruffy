@@ -1,5 +1,6 @@
 """Tests for MediaInfoDTO."""
 
+import dataclasses
 from datetime import UTC, datetime
 
 import pytest
@@ -40,8 +41,8 @@ def test_media_info_dto_is_immutable():
         seasons=[],
     )
 
-    with pytest.raises(Exception):  # noqa: PT011
-        dto.title = "Changed"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        dto.title = "Changed"  # ty: ignore[invalid-assignment]
 
 
 def test_media_info_dto_with_none_available_since():

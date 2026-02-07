@@ -17,7 +17,7 @@ from scruffy.frameworks_and_drivers.database.job_run_store import record_job_run
 
 
 @pytest.fixture
-def temp_db():
+def _temp_db():
     """Provide temp dir for DB and patch settings."""
     reset_engine_for_testing()
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -28,7 +28,7 @@ def temp_db():
             yield
 
 
-def test_record_job_run_sync_persists_summary(temp_db):
+def test_record_job_run_sync_persists_summary(_temp_db):
     """Test that record_job_run_sync stores summary JSON."""
     summary = {
         "reminders": [{"email": "a@b.com", "title": "X", "days_left": 3}],
@@ -48,7 +48,7 @@ def test_record_job_run_sync_persists_summary(temp_db):
     assert parsed["deletions"] == summary["deletions"]
 
 
-def test_record_job_run_sync_without_summary(temp_db):
+def test_record_job_run_sync_without_summary(_temp_db):
     """Test that record_job_run_sync with no summary stores None."""
     record_job_run_sync("check", True, None)
 

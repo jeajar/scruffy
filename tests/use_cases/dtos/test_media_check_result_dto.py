@@ -1,15 +1,13 @@
 """Tests for MediaCheckResultDTO and RetentionResultDTO."""
 
+import dataclasses
+
 import pytest
 
-from scruffy.domain.value_objects.media_status import MediaStatus
-from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.use_cases.dtos.media_check_result_dto import (
     MediaCheckResultDTO,
     RetentionResultDTO,
 )
-from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
-from scruffy.use_cases.dtos.request_dto import RequestDTO
 
 
 def test_retention_result_dto_creation():
@@ -25,8 +23,8 @@ def test_retention_result_dto_is_immutable():
     """Test RetentionResultDTO is immutable (frozen dataclass)."""
     dto = RetentionResultDTO(remind=True, delete=False, days_left=7)
 
-    with pytest.raises(Exception):  # noqa: PT011
-        dto.remind = False
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        dto.remind = False  # ty: ignore[invalid-assignment]
 
 
 def test_retention_result_dto_default_days_left():
@@ -59,8 +57,8 @@ def test_media_check_result_dto_is_immutable(sample_request_dto_movie, sample_me
         retention=retention,
     )
 
-    with pytest.raises(Exception):  # noqa: PT011
-        result.retention = RetentionResultDTO(remind=False, delete=True)
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        result.retention = RetentionResultDTO(remind=False, delete=True)  # ty: ignore[invalid-assignment]
 
 
 def test_media_check_result_dto_with_delete_retention(sample_request_dto_movie, sample_media_info_dto):

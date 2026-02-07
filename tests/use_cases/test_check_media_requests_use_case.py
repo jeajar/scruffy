@@ -1,5 +1,6 @@
 """Tests for CheckMediaRequestsUseCase."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 import pytest
@@ -10,9 +11,8 @@ from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.domain.value_objects.request_status import RequestStatus
-from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
-from scruffy.use_cases.dtos.request_dto import RequestDTO
 from scruffy.use_cases.check_media_requests_use_case import CheckMediaRequestsUseCase
+from scruffy.use_cases.dtos.request_dto import RequestDTO
 
 
 @pytest.fixture
@@ -50,7 +50,7 @@ async def test_execute_filters_by_media_status(
         type="movie",
         request_id=1,
         request_status=RequestStatus.APPROVED,
-        updated_at=None,
+        updated_at=datetime(2020, 1, 1, tzinfo=UTC),
         media_status=MediaStatus.AVAILABLE,
         media_id=99,
         external_service_id=101,
@@ -62,7 +62,7 @@ async def test_execute_filters_by_media_status(
         type="movie",
         request_id=2,
         request_status=RequestStatus.APPROVED,
-        updated_at=None,
+        updated_at=datetime(2020, 1, 1, tzinfo=UTC),
         media_status=MediaStatus.PARTIALLY_AVAILABLE,
         media_id=100,
         external_service_id=102,
@@ -74,7 +74,7 @@ async def test_execute_filters_by_media_status(
         type="movie",
         request_id=3,
         request_status=RequestStatus.APPROVED,
-        updated_at=None,
+        updated_at=datetime(2020, 1, 1, tzinfo=UTC),
         media_status=MediaStatus.PENDING,
         media_id=101,
         external_service_id=103,

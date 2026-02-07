@@ -27,6 +27,9 @@ from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.domain.value_objects.retention_policy import RetentionPolicy
 from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.dtos.request_dto import RequestDTO
+from scruffy.use_cases.interfaces.extension_repository_interface import (
+    ExtensionRepositoryInterface,
+)
 from scruffy.use_cases.interfaces.media_repository_interface import (
     MediaRepositoryInterface,
 )
@@ -36,13 +39,9 @@ from scruffy.use_cases.interfaces.notification_service_interface import (
 from scruffy.use_cases.interfaces.reminder_repository_interface import (
     ReminderRepositoryInterface,
 )
-from scruffy.use_cases.interfaces.extension_repository_interface import (
-    ExtensionRepositoryInterface,
-)
 from scruffy.use_cases.interfaces.request_repository_interface import (
     RequestRepositoryInterface,
 )
-
 
 # =============================================================================
 # Mock Repository Fixtures
@@ -105,7 +104,7 @@ def mock_email_client() -> AsyncMock:
 
 
 @pytest.fixture
-def in_memory_engine() -> Generator[Engine, None, None]:
+def in_memory_engine() -> Generator[Engine]:
     """Create an in-memory SQLite database engine for testing.
 
     Yields:

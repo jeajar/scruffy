@@ -138,7 +138,7 @@ async def test_execute_calls_in_correct_order(
 
 @pytest.mark.asyncio
 async def test_execute_handles_tv_with_seasons(
-    use_case, mock_media_repository, sample_request, sample_media
+    use_case, mock_media_repository, sample_request, sample_media  # noqa: ARG001
 ):
     """Test execute handles TV shows with seasons."""
     tv_request = MediaRequest(

@@ -1,6 +1,7 @@
 """Tests for Media domain entity."""
 
-from datetime import UTC, datetime, timedelta
+import dataclasses
+from datetime import UTC, datetime
 
 import pytest
 
@@ -40,8 +41,8 @@ def test_media_is_immutable():
         seasons=[],
     )
 
-    with pytest.raises(Exception):  # noqa: PT011
-        media.title = "Changed"
+    with pytest.raises(dataclasses.FrozenInstanceError):
+        media.title = "Changed"  # ty: ignore[invalid-assignment]
 
 
 def test_is_available_when_available_and_has_date():

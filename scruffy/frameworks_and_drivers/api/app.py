@@ -3,6 +3,7 @@
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Any, cast
 
 import uvicorn
 from fastapi import FastAPI
@@ -66,7 +67,7 @@ def create_app() -> FastAPI:
     # Add CORS middleware for frontend development
     if settings.cors_origins:
         app.add_middleware(
-            CORSMiddleware,
+            cast(Any, CORSMiddleware),
             allow_origins=settings.cors_origins,
             allow_credentials=True,
             allow_methods=["*"],
