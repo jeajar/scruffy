@@ -1,5 +1,6 @@
 """Tests for FastAPI application factory."""
 
+from importlib.metadata import version
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -58,7 +59,7 @@ class TestAppFactory:
         app = app_with_mock_container
 
         assert app.title == "Scruffy API"
-        assert app.version == "0.3.2"
+        assert app.version == version("scruffy")
 
     def test_health_endpoint_exists(self, client):
         """Test that health endpoint is registered."""

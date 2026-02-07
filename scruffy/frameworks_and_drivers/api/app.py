@@ -2,6 +2,7 @@
 
 import logging
 from contextlib import asynccontextmanager
+from importlib.metadata import version as get_version
 from pathlib import Path
 from typing import Any, cast
 
@@ -60,7 +61,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title="Scruffy API",
         description="Media retention management for Overseerr",
-        version="0.3.2",
+        version=get_version("scruffy"),
         lifespan=lifespan,
     )
 
