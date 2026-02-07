@@ -18,7 +18,7 @@ services:
       - SMTP_USERNAME=${SMTP_USERNAME}
       - SMTP_PASSWORD=${SMTP_PASSWORD}
       - SMTP_FROM_EMAIL=${SMTP_FROM_EMAIL}
-      - APP_BASE_URL=http://192.168.1.40:3000
+      - APP_BASE_URL=http://localhost:3000
       - API_SECRET_KEY=${API_SECRET_KEY:-change-me-in-production}
       - TZ=America/New_York
       - DATA_DIR=/data

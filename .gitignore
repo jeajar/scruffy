@@ -144,3 +144,5 @@ dmypy.json
 
 # Node
 *node_modules/
+
+*.vite/
