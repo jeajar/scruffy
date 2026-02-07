@@ -21,7 +21,11 @@
 <body>
     <p id="message">Sign-in complete. You can close this window.</p>
     <script>
-        window.close();
+        if (window.opener) {
+            window.close();
+        } else {
+            window.location.href = '/';
+        }
     </script>
 </body>
 </html>

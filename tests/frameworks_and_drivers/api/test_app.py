@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from fastapi.testclient import TestClient
 
-from scruffy.frameworks_and_drivers.api.app import create_app
+from scruffy.frameworks_and_drivers.api.app import FRONTEND_DIST, create_app
 
 
 @pytest.fixture
@@ -127,3 +127,25 @@ class TestHealthRoutes:
         data = response.json()
         assert data["status"] == "degraded"
         assert data["services"]["sonarr"] == "unhealthy"
+
+
+@pytest.mark.skipif(
+    not FRONTEND_DIST.exists(),
+    reason="Frontend dist not built; run npm run build in frontend/",
+)
+class TestSpaRoutes:
+    """Tests for SPA fallback (index.html for client-side routes)."""
+
+    def test_login_returns_index_html(self, client):
+        """GET /login should serve index.html for SPA routing."""
+        response = client.get("/login")
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert "<!DOCTYPE html>" in response.text or "<html" in response.text
+
+    def test_login_complete_returns_index_html(self, client):
+        """GET /login/complete should serve index.html for SPA routing."""
+        response = client.get("/login/complete")
+        assert response.status_code == 200
+        assert "text/html" in response.headers["content-type"]
+        assert "<!DOCTYPE html>" in response.text or "<html" in response.text

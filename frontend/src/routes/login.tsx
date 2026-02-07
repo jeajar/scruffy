@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
@@ -10,13 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { createPin, checkPin, type PinResponse } from "@/lib/api";
+import { createPin, checkPin, getAuthStatus, type PinResponse } from "@/lib/api";
 import { Footer } from "@/components/layout/Footer";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
-  validateSearch: (search: Record<string, unknown>): { return_url?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { return_url?: string; error?: string } => ({
     return_url: typeof search.return_url === "string" ? search.return_url : undefined,
+    error: typeof search.error === "string" ? search.error : undefined,
   }),
 });
 
@@ -25,30 +26,57 @@ type LoginState = "idle" | "waiting" | "success" | "error";
 function LoginPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { return_url } = Route.useSearch();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { return_url, error: errorParam } = Route.useSearch();
+
+  // When on /login/complete (child route), render Outlet so LoginCompletePage mounts and runs goHome
+  if (pathname === "/login/complete") {
+    return <Outlet />;
+  }
   const [state, setState] = useState<LoginState>("idle");
   const [pinData, setPinData] = useState<PinResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pollCount, setPollCount] = useState(0);
   const authPopupRef = useRef<Window | null>(null);
 
-  const MAX_POLLS = 120; // 2 minutes at 1 second intervals
+  const MAX_POLLS = 120;
+
+  // Show error from callback redirect (e.g. /login?error=not_claimed)
+  useEffect(() => {
+    if (!errorParam) return;
+    const message =
+      errorParam === "not_claimed"
+        ? "Please complete the Plex sign-in first."
+        : errorParam === "not_imported"
+          ? "Your Plex account is not imported on this server. Ask an admin to import users from Plex in Overseerr."
+          : "Authentication failed.";
+    setError(message);
+    setState("error");
+  }, [errorParam]); // 2 minutes at 1 second intervals
 
   const createPinMutation = useMutation({
     mutationFn: createPin,
     onSuccess: (data) => {
       setPinData(data);
       setState("waiting");
-      // Open Plex auth in new window (keep ref so we can close it after sign-in)
-      const isNarrow = window.innerWidth < 640;
-      const popupFeatures = isNarrow
-        ? `width=${window.innerWidth},height=${window.innerHeight},left=0,top=0`
-        : "width=600,height=700";
-      authPopupRef.current = window.open(
-        data.auth_url,
-        "_blank",
-        popupFeatures
-      );
+      const isNarrow = window.innerWidth < 768;
+      const isTouch =
+        "ontouchstart" in window ||
+        (navigator.maxTouchPoints != null && navigator.maxTouchPoints > 0);
+      // On mobile (touch or narrow) or when popups are blocked, use full-window redirect so Plex sends user back to our callback
+      const useRedirectFlow = isNarrow || isTouch;
+      if (useRedirectFlow) {
+        window.location.href = data.auth_url;
+        return;
+      }
+      const popupFeatures = "width=600,height=700";
+      const popup = window.open(data.auth_url, "_blank", popupFeatures);
+      if (popup == null || popup.closed) {
+        // Popup blocked: fall back to redirect
+        window.location.href = data.auth_url;
+        return;
+      }
+      authPopupRef.current = popup;
     },
     onError: (err) => {
       setError(err instanceof Error ? err.message : "Failed to create PIN");
@@ -109,17 +137,17 @@ function LoginPage() {
 
           setState("success");
 
-          // Invalidate auth query and redirect
-          await queryClient.invalidateQueries({ queryKey: ["auth"] });
+          // Refetch auth so cache is updated before we navigate (avoids root redirecting back to /login)
+          await queryClient.refetchQueries({ queryKey: ["auth"] });
 
           setTimeout(() => {
             // Rewrite /extend?request_id=X to /?extend=X so user lands on home with modal
             const extendMatch = return_url?.match(/^\/extend\?request_id=(\d+)$/);
             if (extendMatch) {
               const requestId = Number(extendMatch[1]);
-              navigate({ to: "/", search: { extend: requestId } });
+              navigate({ to: "/", search: { extend: requestId }, replace: true });
             } else {
-              navigate({ to: return_url || "/" });
+              navigate({ to: return_url || "/", replace: true });
             }
           }, 1000);
         } else if (!result.authenticated && result.error) {
@@ -141,6 +169,36 @@ function LoginPage() {
     }, 1000);
 
     return () => clearInterval(pollInterval);
+  }, [state, pinData, navigate, queryClient, return_url]);
+
+  // When popup closes (e.g. after callback + /auth/close), check auth and redirect if logged in
+  useEffect(() => {
+    if (state !== "waiting" || !pinData || !authPopupRef.current) return;
+
+    const checkClosedInterval = setInterval(async () => {
+      if (authPopupRef.current?.closed) {
+        authPopupRef.current = null;
+        clearInterval(checkClosedInterval);
+        try {
+          const status = await getAuthStatus();
+          if (status.authenticated) {
+            setState("success");
+            await queryClient.refetchQueries({ queryKey: ["auth"] });
+            const extendMatch = return_url?.match(/^\/extend\?request_id=(\d+)$/);
+            if (extendMatch) {
+              const requestId = Number(extendMatch[1]);
+              navigate({ to: "/", search: { extend: requestId }, replace: true });
+            } else {
+              navigate({ to: return_url || "/", replace: true });
+            }
+          }
+        } catch {
+          // Ignore; polling will keep running
+        }
+      }
+    }, 500);
+
+    return () => clearInterval(checkClosedInterval);
   }, [state, pinData, navigate, queryClient, return_url]);
 
   return (

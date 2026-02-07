@@ -27,7 +27,7 @@ services:
       - SMTP_FROM_EMAIL=scruffy@example.com
       - SMTP_SSL_TLS=false
       - SMTP_STARTTLS=false
-      - APP_BASE_URL=http://localhost:3000
+      - APP_BASE_URL=http://192.168.1.40:3000
     volumes:
       - scruffy-test-data:/data
 

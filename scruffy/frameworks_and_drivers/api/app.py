@@ -9,8 +9,11 @@ from typing import Any, cast
 import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.exceptions import HTTPException
+from starlette.responses import Response
+from starlette.staticfiles import StaticFiles
+from starlette.types import Scope
 
 from scruffy.frameworks_and_drivers.api.scheduler import (
     shutdown_scheduler,
@@ -30,6 +33,18 @@ STATIC_DIR = Path(__file__).parent.parent.parent / "templates"
 FRONTEND_DIST = Path("/app/frontend/dist")
 if not FRONTEND_DIST.exists():
     FRONTEND_DIST = Path(__file__).resolve().parents[3] / "frontend" / "dist"
+
+
+class SpaStaticFiles(StaticFiles):
+    """StaticFiles that falls back to index.html for SPA client-side routes."""
+
+    async def get_response(self, path: str, scope: Scope) -> Response:
+        try:
+            return await super().get_response(path, scope)
+        except HTTPException as exc:
+            if exc.status_code == 404 and path != "index.html":
+                return await super().get_response("index.html", scope)
+            raise
 
 
 @asynccontextmanager
@@ -124,7 +139,7 @@ def create_app() -> FastAPI:
     if FRONTEND_DIST.exists():
         app.mount(
             "/",
-            StaticFiles(directory=str(FRONTEND_DIST), html=True),
+            SpaStaticFiles(directory=str(FRONTEND_DIST), html=True),
             name="spa",
         )
         logger.info("Frontend SPA mounted at /", extra={"path": str(FRONTEND_DIST)})

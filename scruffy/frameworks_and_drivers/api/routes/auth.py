@@ -3,7 +3,7 @@
 import logging
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 
 from scruffy.frameworks_and_drivers.api.auth import (
     SESSION_COOKIE_NAME,
@@ -18,6 +18,11 @@ from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+def _cookie_secure(request: Request) -> bool:
+    """Use Secure cookie only over HTTPS so dev (HTTP) works."""
+    return request.url.scheme == "https"
 
 
 @router.get("/login", response_class=HTMLResponse)
@@ -67,7 +72,7 @@ async def create_pin():
 
 
 @router.get("/callback")
-async def auth_callback(pin_id: int, container: ContainerDep):
+async def auth_callback(request: Request, pin_id: int, container: ContainerDep):
     """
     Handle the auth callback after Plex authentication.
 
@@ -81,9 +86,9 @@ async def auth_callback(pin_id: int, container: ContainerDep):
         raise HTTPException(status_code=502, detail="Failed to verify with Plex")
 
     if not user:
-        # PIN not yet claimed - redirect back to login
+        # PIN not yet claimed - redirect to SPA login with error
         logger.debug("PIN not yet claimed", extra={"pin_id": pin_id})
-        return RedirectResponse(url="/auth/login?error=not_claimed", status_code=302)
+        return RedirectResponse(url="/login?error=not_claimed", status_code=302)
 
     # Ensure user is imported in Overseerr (has access to our Plex server)
     try:
@@ -103,21 +108,21 @@ async def auth_callback(pin_id: int, container: ContainerDep):
             extra={"user_id": user.id, "username": user.username},
         )
         return RedirectResponse(
-            url="/auth/login?error=not_imported",
+            url="/login?error=not_imported",
             status_code=302,
         )
 
-    # Create session and redirect to close page (auto-closes popup like Overseerr)
+    # Create session and redirect to SPA completion page (closes popup or redirects to app)
     session_token = create_session_token(user)
 
-    response = RedirectResponse(url="/auth/close", status_code=302)
+    response = RedirectResponse(url="/login/complete", status_code=302)
     response.set_cookie(
         key=SESSION_COOKIE_NAME,
         value=session_token,
         max_age=SESSION_MAX_AGE,
         httponly=True,
         samesite="lax",
-        secure=True,  # Set to False for local development without HTTPS
+        secure=_cookie_secure(request),
     )
 
     logger.info(
@@ -129,7 +134,7 @@ async def auth_callback(pin_id: int, container: ContainerDep):
 
 
 @router.post("/check-pin")
-async def check_pin(pin_id: int, container: ContainerDep):
+async def check_pin(request: Request, pin_id: int, container: ContainerDep):
     """
     API endpoint to check if a PIN has been claimed.
 
@@ -161,10 +166,10 @@ async def check_pin(pin_id: int, container: ContainerDep):
         )
         return {"authenticated": False, "error": "not_imported"}
 
-    # Create session token
+    # Create session token and set cookie so session is established by server (works across origins)
     session_token = create_session_token(user)
 
-    return {
+    content = {
         "authenticated": True,
         "user": {
             "id": user.id,
@@ -176,18 +181,24 @@ async def check_pin(pin_id: int, container: ContainerDep):
         "cookie_name": SESSION_COOKIE_NAME,
         "max_age": SESSION_MAX_AGE,
     }
+    response = JSONResponse(content=content)
+    response.set_cookie(
+        key=SESSION_COOKIE_NAME,
+        value=session_token,
+        max_age=SESSION_MAX_AGE,
+        httponly=True,
+        samesite="lax",
+        secure=_cookie_secure(request),
+    )
+    return response
 
 
-@router.get("/close", response_class=HTMLResponse)
-async def auth_close(request: Request):
+@router.get("/close")
+async def auth_close():
     """
-    Page shown after Plex sign-in in the popup.
-
-    Runs window.close() so the auth popup closes automatically (like Overseerr).
-    If the browser blocks close(), the user sees a message to close the window.
+    Legacy redirect: send to SPA login-complete page so the React app handles close/redirect.
     """
-    templates = request.app.state.templates
-    return templates.TemplateResponse(request, "auth_close.html", {})
+    return RedirectResponse(url="/login/complete", status_code=302)
 
 
 @router.get("/logout")
