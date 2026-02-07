@@ -131,6 +131,21 @@ docker compose up
 
 With `docker-compose.override.yml` (included in the repo), the same command enables hot-reload for backend changes. For frontend dev, run `cd frontend && npm run dev` locally.
 
+**Test stack with Mailpit**
+
+To run a test stack with [Mailpit](https://mailpit.axllent.org/) for catching and inspecting outgoing emails (e.g. reminder and deletion notices):
+
+```bash
+docker compose -f docker-compose.yaml -f docker-compose.test.yml up -d
+```
+
+- **http://localhost:3000** — Scruffy (same as above)
+- **http://localhost:8025** — Mailpit web UI to view captured emails
+
+The test compose sets `SKIP_VALIDATE=true` so the app starts without requiring Overseerr, Sonarr, or Radarr (the default entrypoint runs `scruffy validate`, which would otherwise fail and restart the container).
+
+Use a separate project name to run alongside another stack: `docker-compose -f docker-compose.yaml -f docker-compose.test.yml -p scruffy-test up -d`. To stop and remove the test stack (and its data volume): `docker-compose -f docker-compose.yaml -f docker-compose.test.yml -p scruffy-test down -v`.
+
 **Published images (CI/CD)**
 
 CI builds and pushes one image to GitHub Container Registry on push to `main` and on version tags (`v*`):

@@ -1,0 +1,35 @@
+# Test stack: Scruffy + Mailpit for local email testing.
+# Run: docker-compose -f docker-compose.yaml -f docker-compose.test.yml up -d
+# Optional: -p scruffy-test to avoid clashing with another stack.
+# Mailpit web UI: http://localhost:8025
+
+services:
+  mailpit:
+    image: axllent/mailpit
+    container_name: mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    restart: unless-stopped
+
+  scruffy:
+    depends_on:
+      - mailpit
+    ports:
+      - "3000:3000"
+    environment:
+      - SKIP_VALIDATE=true
+      - EMAIL_ENABLED=true
+      - SMTP_HOST=mailpit
+      - SMTP_PORT=1025
+      - SMTP_USERNAME=scruffy
+      - SMTP_PASSWORD=password
+      - SMTP_FROM_EMAIL=scruffy@example.com
+      - SMTP_SSL_TLS=false
+      - SMTP_STARTTLS=false
+      - APP_BASE_URL=http://localhost:3000
+    volumes:
+      - scruffy-test-data:/data
+
+volumes:
+  scruffy-test-data:
