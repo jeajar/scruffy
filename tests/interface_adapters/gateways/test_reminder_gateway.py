@@ -62,3 +62,32 @@ def test_gateway_initialization_default_engine():
 
     # Should not raise error
     assert gateway.has_reminder(request_id=999) is False
+
+
+def test_get_request_ids_with_reminders_empty_list(gateway):
+    """Test get_request_ids_with_reminders returns empty set for empty input."""
+    assert gateway.get_request_ids_with_reminders([]) == set()
+
+
+def test_get_request_ids_with_reminders_none_exist(gateway):
+    """Test get_request_ids_with_reminders returns empty set when no reminders exist."""
+    result = gateway.get_request_ids_with_reminders([1, 2, 3])
+    assert result == set()
+
+
+def test_get_request_ids_with_reminders_some_exist(gateway):
+    """Test get_request_ids_with_reminders returns only IDs that have reminders."""
+    gateway.add_reminder(request_id=1, user_id=1)
+    gateway.add_reminder(request_id=3, user_id=1)
+
+    result = gateway.get_request_ids_with_reminders([1, 2, 3, 4])
+    assert result == {1, 3}
+
+
+def test_get_request_ids_with_reminders_all_exist(gateway):
+    """Test get_request_ids_with_reminders when all requested IDs have reminders."""
+    gateway.add_reminder(request_id=1, user_id=1)
+    gateway.add_reminder(request_id=2, user_id=1)
+
+    result = gateway.get_request_ids_with_reminders([1, 2])
+    assert result == {1, 2}

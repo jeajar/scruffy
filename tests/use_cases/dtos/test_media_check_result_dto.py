@@ -34,6 +34,20 @@ def test_retention_result_dto_default_days_left():
     assert dto.days_left == 0
 
 
+def test_retention_result_dto_default_reminder_sent():
+    """Test RetentionResultDTO defaults reminder_sent to False."""
+    dto = RetentionResultDTO(remind=True, delete=False, days_left=7)
+
+    assert dto.reminder_sent is False
+
+
+def test_retention_result_dto_reminder_sent_explicit():
+    """Test RetentionResultDTO can have reminder_sent set to True."""
+    dto = RetentionResultDTO(remind=True, delete=False, days_left=7, reminder_sent=True)
+
+    assert dto.reminder_sent is True
+
+
 def test_media_check_result_dto_creation(
     sample_request_dto_movie, sample_media_info_dto
 ):

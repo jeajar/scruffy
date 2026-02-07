@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 
 from scruffy.frameworks_and_drivers.api.auth import AdminUser
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
+from scruffy.frameworks_and_drivers.api.routes.media import invalidate_media_list_cache
 from scruffy.frameworks_and_drivers.database.settings_store import (
     get_app_base_url,
     get_email_config,
@@ -202,6 +203,12 @@ async def update_settings(
             "Settings updated",
             extra={"extension_days": body.extension_days},
         )
+    if (
+        body.retention_days is not None
+        or body.reminder_days is not None
+        or body.extension_days is not None
+    ):
+        invalidate_media_list_cache()
     if body.app_base_url is not None:
         await asyncio.to_thread(set_app_base_url, body.app_base_url)
         logger.info(

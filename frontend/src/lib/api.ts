@@ -56,6 +56,7 @@ export interface MediaItem {
     remind: boolean;
     extended?: boolean;
     deletion_date?: string;
+    reminder_sent?: boolean;
   };
 }
 
@@ -198,6 +199,15 @@ export async function getSchedules(): Promise<Schedule[]> {
   return response.json();
 }
 
+function parseApiDetail(data: { detail?: unknown }, fallback: string): string {
+  const d = data?.detail;
+  if (typeof d === "string") return d;
+  if (Array.isArray(d) && d.length > 0 && d[0] && typeof d[0] === "object" && "msg" in d[0]) {
+    return String((d[0] as { msg?: string }).msg) || fallback;
+  }
+  return fallback;
+}
+
 export async function createSchedule(body: ScheduleCreate): Promise<Schedule> {
   const response = await fetch(`${API_BASE}/api/admin/schedules`, {
     method: "POST",
@@ -209,7 +219,7 @@ export async function createSchedule(body: ScheduleCreate): Promise<Schedule> {
     if (response.status === 401) throw new Error("Unauthorized");
     if (response.status === 403) throw new Error("Forbidden");
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.detail ?? "Failed to create schedule");
+    throw new Error(parseApiDetail(data, "Failed to create schedule"));
   }
   return response.json();
 }
@@ -229,7 +239,7 @@ export async function updateSchedule(
     if (response.status === 403) throw new Error("Forbidden");
     if (response.status === 404) throw new Error("Schedule not found");
     const data = await response.json().catch(() => ({}));
-    throw new Error(data.detail ?? "Failed to update schedule");
+    throw new Error(parseApiDetail(data, "Failed to update schedule"));
   }
   return response.json();
 }

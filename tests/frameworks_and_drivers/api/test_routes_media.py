@@ -43,7 +43,9 @@ def sample_media_check_result():
         poster="http://example.com/poster.jpg",
         seasons=[],
     )
-    retention_dto = RetentionResultDTO(remind=False, delete=False, days_left=5)
+    retention_dto = RetentionResultDTO(
+        remind=False, delete=False, days_left=5, reminder_sent=False
+    )
 
     return MediaCheckResultDTO(
         request=request_dto,
@@ -183,5 +185,37 @@ class TestGetMediaList:
         # Verify sorted by days_left ascending
         days_left_values = [item["retention"]["days_left"] for item in data["media"]]
         assert days_left_values == [2, 5, 10, 15]
+
+        client.app.dependency_overrides.clear()
+
+    def test_media_list_includes_reminder_sent_in_retention(
+        self, client, mock_container, mock_authenticated_user, sample_media_check_result
+    ):
+        """Test that retention in API response includes reminder_sent."""
+        invalidate_media_list_cache()
+        result_with_reminder = MediaCheckResultDTO(
+            request=sample_media_check_result.request,
+            media=sample_media_check_result.media,
+            retention=RetentionResultDTO(
+                remind=True, delete=False, days_left=5, reminder_sent=True
+            ),
+        )
+        mock_container.check_media_requests_use_case.execute_with_retention = AsyncMock(
+            return_value=[result_with_reminder]
+        )
+
+        async def override_get_current_user():
+            return mock_authenticated_user
+
+        client.app.dependency_overrides[get_current_user] = override_get_current_user
+
+        response = client.get("/api/media")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert "media" in data
+        assert len(data["media"]) == 1
+        assert "reminder_sent" in data["media"][0]["retention"]
+        assert data["media"][0]["retention"]["reminder_sent"] is True
 
         client.app.dependency_overrides.clear()
