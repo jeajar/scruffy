@@ -45,3 +45,7 @@ class ISettingsProvider(Protocol):
     def get_email_config(self) -> EmailConfig:
         """Get current email config."""
         ...
+
+    def get_app_base_url(self) -> str:
+        """Get app base URL for email links (instance address)."""
+        ...

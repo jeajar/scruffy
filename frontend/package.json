@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-client": "openapi-ts --input http://localhost:8080/openapi.json --output ./src/client --client @tanstack/react-query"
+    "generate-client": "openapi-ts --input http://localhost:3000/openapi.json --output ./src/client --client @tanstack/react-query"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.2",

@@ -52,6 +52,7 @@ async def create_pin():
 
     Returns JSON with pin_id, code, and auth_url for the React frontend.
     """
+    logger.info("POST /auth/pin received")
     try:
         pin_data = await create_plex_pin()
     except Exception as e:

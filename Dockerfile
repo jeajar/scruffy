@@ -1,3 +1,14 @@
+# Frontend build stage
+FROM node:20-alpine AS frontend
+
+WORKDIR /app/frontend
+
+COPY frontend/package*.json ./
+RUN npm ci
+
+COPY frontend/ ./
+RUN npm run build
+
 # Build stage: install dependencies and application
 FROM python:3.13-slim AS builder
 
@@ -36,6 +47,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Copy venv from builder (no uv, no build tools)
 COPY --from=builder /app/.venv /app/.venv
 ENV PATH="/app/.venv/bin:$PATH"
+
+# Copy frontend build from frontend stage
+COPY --from=frontend /app/frontend/dist /app/frontend/dist
 
 # Copy scripts
 COPY scripts/healthcheck.sh /healthcheck.sh

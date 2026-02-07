@@ -18,6 +18,8 @@ export const Route = createFileRoute("/admin/settings/retention")({
 
 const inputClass =
   "block w-24 rounded-md border border-gray-600 bg-scruffy-darker px-3 py-2 text-white placeholder-gray-500 focus:border-scruffy-teal focus:ring-1 focus:ring-scruffy-teal";
+const inputClassWide =
+  "block w-full max-w-md rounded-md border border-gray-600 bg-scruffy-darker px-3 py-2 text-white placeholder-gray-500 focus:border-scruffy-teal focus:ring-1 focus:ring-scruffy-teal";
 
 function RetentionPage() {
   const queryClient = useQueryClient();
@@ -35,6 +37,7 @@ function RetentionPage() {
   const [retentionDays, setRetentionDays] = useState<string>("");
   const [reminderDays, setReminderDays] = useState<string>("");
   const [extensionDays, setExtensionDays] = useState<string>("");
+  const [appBaseUrl, setAppBaseUrl] = useState<string>("");
 
   useEffect(() => {
     if (settings?.retention_days != null) {
@@ -54,6 +57,12 @@ function RetentionPage() {
     }
   }, [settings?.extension_days]);
 
+  useEffect(() => {
+    if (settings?.app_base_url != null) {
+      setAppBaseUrl(settings.app_base_url);
+    }
+  }, [settings?.app_base_url]);
+
   const handleSave = async () => {
     const retention = parseInt(retentionDays, 10);
     const reminder = parseInt(reminderDays, 10);
@@ -67,6 +76,7 @@ function RetentionPage() {
         retention_days: retention,
         reminder_days: reminder,
         extension_days: extension,
+        app_base_url: appBaseUrl.trim(),
       });
     } catch {
       // Error handled by mutation
@@ -90,7 +100,8 @@ function RetentionPage() {
   const hasChanges =
     parseInt(retentionDays, 10) !== settings?.retention_days ||
     parseInt(reminderDays, 10) !== settings?.reminder_days ||
-    parseInt(extensionDays, 10) !== settings?.extension_days;
+    parseInt(extensionDays, 10) !== settings?.extension_days ||
+    appBaseUrl.trim() !== (settings?.app_base_url ?? "");
 
   return (
     <div className="w-full">
@@ -101,8 +112,9 @@ function RetentionPage() {
             Retention
           </CardTitle>
           <CardDescription>
-            How long to keep media before deletion, when to send reminders, and
-            how many days to add when a user requests an extension.
+            How long to keep media before deletion, when to send reminders, how
+            many days to add when a user requests an extension, and the instance
+            URL used for links in reminder emails.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -169,6 +181,27 @@ function RetentionPage() {
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Days to add when a user requests an extension (1–365)
+                </p>
+              </div>
+              <div>
+                <label
+                  htmlFor="app-base-url"
+                  className="block text-sm font-medium text-gray-300 mb-1"
+                >
+                  Instance URL
+                </label>
+                <input
+                  id="app-base-url"
+                  type="url"
+                  value={appBaseUrl}
+                  onChange={(e) => setAppBaseUrl(e.target.value)}
+                  placeholder="https://scruffy.example.com"
+                  className={inputClassWide}
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Public URL of this app. Used for the &quot;I need more
+                  time!&quot; link in reminder emails. Leave empty to use the
+                  value from environment (APP_BASE_URL).
                 </p>
               </div>
               {updateMutation.isError && (

@@ -76,13 +76,14 @@ def app_with_settings_db(mock_container):
                         mock_obj.smtp_ssl_tls = True
                         mock_obj.smtp_starttls = False
                         mock_obj.extension_days = 7
+                        mock_obj.app_base_url = "http://localhost:5173"
                         mock_obj.log_level = "INFO"
                         mock_obj.log_file = None
                         mock_obj.loki_enabled = False
                         mock_obj.loki_url = None
                         mock_obj.loki_labels = None
                         mock_obj.api_host = "0.0.0.0"
-                        mock_obj.api_port = 8000
+                        mock_obj.api_port = 3000
                         mock_obj.api_enabled = True
                         mock_obj.cors_origins = None
                     app = create_app()
@@ -107,7 +108,7 @@ class TestSettingsGet:
     """Tests for GET /api/admin/settings."""
 
     def test_get_settings_returns_full_shape(self, client):
-        """Test GET returns retention_days, reminder_days, extension_days, services, and notifications."""
+        """Test GET returns retention_days, reminder_days, extension_days, app_base_url, services, and notifications."""
         response = client.get("/api/admin/settings")
 
         assert response.status_code == 200
@@ -115,6 +116,7 @@ class TestSettingsGet:
         assert "retention_days" in data
         assert "reminder_days" in data
         assert "extension_days" in data
+        assert "app_base_url" in data
         assert "services" in data
         assert "notifications" in data
         assert "overseerr" in data["services"]
@@ -139,6 +141,17 @@ class TestSettingsPatch:
         assert response.status_code == 200
         data = response.json()
         assert data["extension_days"] == 14
+
+    def test_patch_app_base_url(self, client):
+        """Test PATCH updates app_base_url."""
+        response = client.patch(
+            "/api/admin/settings",
+            json={"app_base_url": "https://scruffy.example.com"},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["app_base_url"] == "https://scruffy.example.com"
 
     def test_patch_retention_days(self, client):
         """Test PATCH updates retention_days and reminder_days."""

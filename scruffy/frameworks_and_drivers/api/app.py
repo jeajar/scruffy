@@ -26,6 +26,11 @@ logger = logging.getLogger(__name__)
 TEMPLATES_DIR = Path(__file__).parent.parent.parent / "templates"
 STATIC_DIR = Path(__file__).parent.parent.parent / "templates"
 
+# Frontend SPA dist: Docker uses /app/frontend/dist; local dev uses repo/frontend/dist
+FRONTEND_DIST = Path("/app/frontend/dist")
+if not FRONTEND_DIST.exists():
+    FRONTEND_DIST = Path(__file__).resolve().parents[3] / "frontend" / "dist"
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -114,6 +119,15 @@ def create_app() -> FastAPI:
     app.include_router(schedules_router)
     app.include_router(settings_router)
     app.include_router(tasks_router, prefix="/api/tasks")
+
+    # Mount frontend SPA at / (last so API/static take precedence)
+    if FRONTEND_DIST.exists():
+        app.mount(
+            "/",
+            StaticFiles(directory=str(FRONTEND_DIST), html=True),
+            name="spa",
+        )
+        logger.info("Frontend SPA mounted at /", extra={"path": str(FRONTEND_DIST)})
 
     logger.info(
         "FastAPI application configured",

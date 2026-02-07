@@ -95,10 +95,10 @@ From the project root, with a `.env` file in place:
 uv run scruffy-api
 ```
 
-The API runs at **http://localhost:8080**. For hot-reload during development:
+The API runs at **http://localhost:3000**. For hot-reload during development:
 
 ```bash
-uv run uvicorn scruffy.frameworks_and_drivers.api.app:create_app --factory --host 0.0.0.0 --port 8080 --reload
+uv run uvicorn scruffy.frameworks_and_drivers.api.app:create_app --factory --host 0.0.0.0 --port 3000 --reload
 ```
 
 **Frontend**
@@ -111,7 +111,7 @@ npm install   # first time only
 npm run dev
 ```
 
-The frontend runs at **http://localhost:5173** and proxies `/api`, `/auth`, and `/static` to the backend at port 8080. Start the backend first so the frontend can reach it.
+The frontend runs at **http://localhost:5173** and proxies `/api`, `/auth`, and `/static` to the backend at port 3000. Start the backend first so the frontend can reach it.
 
 **Admin & scheduled jobs**
 
@@ -121,29 +121,26 @@ If you upgraded from a version before job run summaries and use an existing SQLi
 
 **Using Docker Compose**
 
-To run both backend and frontend in containers:
+To run Scruffy (single image: frontend SPA + API):
 
 ```bash
 docker compose up
 ```
 
-- Frontend: **http://localhost:3000** (production build via nginx)
-- Backend: **http://localhost:8080**
+- **http://localhost:3000** — Web UI and API (single origin)
 
-With `docker-compose.override.yml` (included in the repo), the same command uses dev images with hot-reload and frontend on **http://localhost:5173**.
+With `docker-compose.override.yml` (included in the repo), the same command enables hot-reload for backend changes. For frontend dev, run `cd frontend && npm run dev` locally.
 
 **Published images (CI/CD)**
 
-CI builds and pushes two images to GitHub Container Registry on push to `main` and on version tags (`v*`):
+CI builds and pushes one image to GitHub Container Registry on push to `main` and on version tags (`v*`):
 
-- **Backend:** `ghcr.io/<owner>/<repo>/backend` — run on your local infra; intended for private network access only (e.g. Tailscale). The frontend (on the VPS) calls the API at the backend URL you configure.
-- **Frontend:** `ghcr.io/<owner>/<repo>/frontend` — run on a VPS; serves the web UI and proxies `/api`, `/auth`, and `/static` to the backend. Point the frontend container at your backend URL (e.g. over Tailscale).
+- **Scruffy:** `ghcr.io/<owner>/<repo>/scruffy` — single image serving the web UI and API on port 3000. Set `APP_BASE_URL` for production (email links).
 
 Example (replace `<owner>/<repo>` with your GitHub org/repo, e.g. `jeajar/scruffy`):
 
 ```bash
-docker pull ghcr.io/<owner>/<repo>/frontend:latest
-docker pull ghcr.io/<owner>/<repo>/backend:latest
+docker pull ghcr.io/<owner>/<repo>/scruffy:latest
 ```
 
 ## Configuration
@@ -161,7 +158,7 @@ docker pull ghcr.io/<owner>/<repo>/backend:latest
 | `RETENTION_DAYS` | `30` | Number of days to keep media before deletion | No |
 | `REMINDER_DAYS` | `7` | Days before deletion to send reminder | No |
 | `EXTENSION_DAYS` | `7` | Extra days granted when user requests an extension | No |
-| `APP_BASE_URL` | `http://localhost:5173` | Base URL for email links (e.g. extension link) | No |
+| `APP_BASE_URL` | `http://localhost:3000` | Public URL of this app (e.g. `https://scruffy.example.com`). Used for reminder email links; set in production so "I need more time!" links point to your instance. Can also be set in Admin Settings → Retention. | No |
 | `DATA_DIR` | `None` | Optional data directory (e.g. for SQLite, logs in Docker) | No |
 | `EMAIL_ENABLED` | `False` | Enable email notifications (fallback) | No |
 | `SMTP_HOST` | `localhost` | SMTP server hostname (fallback) | If email enabled |
@@ -271,7 +268,7 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3000:3000"
+      - "3001:3000"
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin
     restart: unless-stopped

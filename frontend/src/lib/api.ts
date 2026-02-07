@@ -1,4 +1,5 @@
-const API_BASE = "";
+/** Base URL for API requests. Use VITE_API_BASE (or VITE_API_URL) when frontend and API are on different origins. */
+const API_BASE = (import.meta.env.VITE_API_BASE ?? import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
 
 export interface User {
   id: number;
@@ -82,12 +83,18 @@ export async function getAuthStatus(): Promise<AuthStatusResponse> {
  * Create a new Plex PIN for authentication
  */
 export async function createPin(): Promise<PinResponse> {
-  const response = await fetch(`${API_BASE}/auth/pin`, {
+  const url = `${API_BASE}/auth/pin`;
+  const response = await fetch(url, {
     method: "POST",
     credentials: "include",
   });
   if (!response.ok) {
-    throw new Error("Failed to create Plex PIN");
+    const body = await response.json().catch(() => ({}));
+    const detail = typeof body?.detail === "string" ? body.detail : body?.detail;
+    const message = detail
+      ? `Failed to create Plex PIN: ${detail}`
+      : `Failed to create Plex PIN (${response.status})`;
+    throw new Error(message);
   }
   return response.json();
 }
@@ -323,6 +330,7 @@ export interface AdminSettings {
   retention_days: number;
   reminder_days: number;
   extension_days: number;
+  app_base_url: string;
   services: ServicesConfig;
   notifications: {
     email: EmailConfig;
@@ -355,6 +363,7 @@ export interface AdminSettingsUpdate {
   retention_days?: number;
   reminder_days?: number;
   extension_days?: number;
+  app_base_url?: string;
   services?: ServicesUpdate;
   notifications?: {
     email?: EmailConfigUpdate;

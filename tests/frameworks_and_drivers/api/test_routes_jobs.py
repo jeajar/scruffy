@@ -68,7 +68,7 @@ def app_with_jobs_db(mock_container):
                     mock_settings.loki_url = None
                     mock_settings.loki_labels = None
                     mock_settings.api_host = "0.0.0.0"
-                    mock_settings.api_port = 8000
+                    mock_settings.api_port = 3000
                     mock_settings.api_enabled = True
                     mock_settings.cors_origins = None
                     app = create_app()
