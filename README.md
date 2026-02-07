@@ -132,6 +132,20 @@ docker compose up
 
 With `docker-compose.override.yml` (included in the repo), the same command uses dev images with hot-reload and frontend on **http://localhost:5173**.
 
+**Published images (CI/CD)**
+
+CI builds and pushes two images to GitHub Container Registry on push to `main` and on version tags (`v*`):
+
+- **Backend:** `ghcr.io/<owner>/<repo>/backend` — run on your local infra; intended for private network access only (e.g. Tailscale). The frontend (on the VPS) calls the API at the backend URL you configure.
+- **Frontend:** `ghcr.io/<owner>/<repo>/frontend` — run on a VPS; serves the web UI and proxies `/api`, `/auth`, and `/static` to the backend. Point the frontend container at your backend URL (e.g. over Tailscale).
+
+Example (replace `<owner>/<repo>` with your GitHub org/repo, e.g. `jeajar/scruffy`):
+
+```bash
+docker pull ghcr.io/<owner>/<repo>/frontend:latest
+docker pull ghcr.io/<owner>/<repo>/backend:latest
+```
+
 ## Configuration
 
 **Services and Notifications** (Overseerr, Radarr, Sonarr, email) are configured in **Admin Settings** (database). Environment variables below are used as fallbacks when the database has no value (e.g. first run, CLI, Docker). Prefer configuring via the Admin UI for normal operation.

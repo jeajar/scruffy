@@ -1,0 +1,25 @@
+# Backend build context: exclude frontend, tests, and dev artifacts
+frontend/
+tests/
+.git/
+.github/
+.cursor/
+.vscode/
+*.md
+.env
+.env.*
+!.env.example
+docker-compose*.yml
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+.venv/
+venv/
+*.db
+.scruffy_data/

@@ -1,6 +1,8 @@
 """CLI controller for Scruffy application."""
 
 import asyncio
+import sys
+import warnings
 
 import typer
 from rich.console import Console
@@ -24,6 +26,20 @@ configure_logging(
 logger = get_logger(__name__)
 
 app = typer.Typer()
+
+CLI_DEPRECATION_MSG = (
+    "The scruffy CLI is deprecated in this release. "
+    "Use the web UI and built-in scheduler instead."
+)
+
+
+@app.callback(invoke_without_command=True)
+def _cli_deprecation_warning(ctx: typer.Context) -> None:
+    """Emit deprecation warning when CLI is used."""
+    warnings.warn(CLI_DEPRECATION_MSG, DeprecationWarning, stacklevel=2)
+    print(CLI_DEPRECATION_MSG, file=sys.stderr)
+
+
 console = Console(record=True)
 _container: Container | None = None
 

@@ -282,8 +282,8 @@ async def verify_api_key(
 
 
 async def require_admin(
+    container: ContainerDep,
     user: PlexUser = Depends(get_current_user),
-    container: ContainerDep = Depends(get_container),
 ) -> PlexUser:
     """
     Require the current user to be an admin in Overseerr.

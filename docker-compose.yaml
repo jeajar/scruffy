@@ -57,7 +57,6 @@ services:
       - DATA_DIR=/data
     volumes:
       - ../scruffy_data:/data
-      # ../scruffy_data/crontab:/etc/cron.d/crontab  # Custom crontab if you need a custom schedule
     profiles:
       - cli  # Only start when explicitly requested
     restart: unless-stopped
