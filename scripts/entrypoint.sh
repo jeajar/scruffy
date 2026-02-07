@@ -1,3 +1,7 @@
 #!/bin/bash
 /healthcheck.sh
-exec scruffy-api
+if [ $# -gt 0 ]; then
+  exec "$@"
+else
+  exec scruffy-api
+fi
