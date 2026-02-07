@@ -120,10 +120,10 @@ function HomePage() {
               <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                 <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
                   <div className="overflow-hidden shadow ring-1 ring-gray-700 sm:rounded-lg">
-                    <Table>
+                    <Table className="min-w-[600px]">
                       <TableHeader className="bg-scruffy-dark">
                         <TableRow className="border-gray-700 hover:bg-scruffy-dark">
-                          <TableHead className="text-white font-semibold pl-6">
+                          <TableHead className="sticky left-0 z-10 bg-scruffy-dark text-white font-semibold pl-6">
                             Media
                           </TableHead>
                           <TableHead className="text-white font-semibold">
@@ -242,7 +242,7 @@ function MediaRowActions({
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-gray-400 hover:text-white"
+          className="h-10 w-10 text-gray-400 hover:text-white"
         >
           <MoreVertical className="h-4 w-4" />
         </Button>
@@ -312,7 +312,7 @@ function MediaRow({
 
   return (
     <TableRow className="border-gray-700 hover:bg-scruffy-dark transition-colors">
-      <TableCell className="pl-6">
+      <TableCell className="sticky left-0 z-10 bg-scruffy-darker pl-6">
         <div className="flex items-center">
           <div className="h-16 w-11 flex-shrink-0">
             {media.poster ? (

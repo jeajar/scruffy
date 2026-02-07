@@ -40,10 +40,14 @@ function LoginPage() {
       setPinData(data);
       setState("waiting");
       // Open Plex auth in new window (keep ref so we can close it after sign-in)
+      const isNarrow = window.innerWidth < 640;
+      const popupFeatures = isNarrow
+        ? `width=${window.innerWidth},height=${window.innerHeight},left=0,top=0`
+        : "width=600,height=700";
       authPopupRef.current = window.open(
         data.auth_url,
         "_blank",
-        "width=600,height=700"
+        popupFeatures
       );
     },
     onError: (err) => {

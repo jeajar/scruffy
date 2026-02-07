@@ -131,7 +131,7 @@ function JobsPage() {
 
         <div className="mt-8">
           <Card className="bg-scruffy-dark border-gray-700 w-full">
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
+            <CardHeader className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <CardTitle className="text-white">Job Runs</CardTitle>
                 <CardDescription>
@@ -169,10 +169,11 @@ function JobsPage() {
                   to see history.
                 </p>
               ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-gray-700 hover:bg-transparent">
-                      <TableHead className="text-gray-400 w-10"></TableHead>
+                <div className="overflow-x-auto -mx-4 sm:mx-0">
+                  <Table className="min-w-[500px]">
+                    <TableHeader>
+                      <TableRow className="border-gray-700 hover:bg-transparent">
+                        <TableHead className="text-gray-400 w-10 sticky left-0 z-10 bg-scruffy-dark"></TableHead>
                       <TableHead className="text-gray-400">Job Type</TableHead>
                       <TableHead className="text-gray-400">Date</TableHead>
                       <TableHead className="text-gray-400">Status</TableHead>
@@ -185,7 +186,7 @@ function JobsPage() {
                         <TableRow
                           className="border-gray-700 hover:bg-gray-800/50"
                         >
-                          <TableCell className="w-10 py-2">
+                          <TableCell className="w-10 py-2 sticky left-0 z-10 bg-scruffy-darker">
                             {run.summary != null &&
                             (run.summary.reminders?.length ||
                               run.summary.deletions?.length ||
@@ -193,7 +194,7 @@ function JobsPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-gray-400 hover:text-white"
+                                className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
                                 onClick={() =>
                                   setExpandedId((id) =>
                                     id === run.id ? null : run.id
@@ -256,6 +257,7 @@ function JobsPage() {
                     ))}
                   </TableBody>
                 </Table>
+                </div>
               )}
             </CardContent>
           </Card>

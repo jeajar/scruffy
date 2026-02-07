@@ -110,7 +110,7 @@ function SchedulesPage() {
   return (
     <div className="space-y-6 w-full">
       <Card className="bg-scruffy-dark border-gray-700 w-full">
-        <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <CardHeader className="flex flex-col items-stretch gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle className="text-white flex items-center gap-2">
               <CalendarClock className="h-5 w-5" />
@@ -219,13 +219,14 @@ function SchedulesPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-hidden shadow ring-1 ring-gray-700 sm:rounded-lg">
-              <Table>
-                <TableHeader className="bg-scruffy-dark">
-                  <TableRow className="border-gray-700">
-                    <TableHead className="text-white font-semibold pl-6">
-                      Job
-                    </TableHead>
+            <div className="overflow-x-auto -mx-4 sm:mx-0">
+              <div className="overflow-hidden shadow ring-1 ring-gray-700 sm:rounded-lg">
+                <Table className="min-w-[500px]">
+                  <TableHeader className="bg-scruffy-dark">
+                    <TableRow className="border-gray-700">
+                      <TableHead className="text-white font-semibold pl-6 sticky left-0 z-10 bg-scruffy-dark">
+                        Job
+                      </TableHead>
                     <TableHead className="text-white font-semibold">
                       Cron
                     </TableHead>
@@ -240,7 +241,7 @@ function SchedulesPage() {
                 <TableBody className="bg-scruffy-darker">
                   {schedules.map((s) => (
                     <TableRow key={s.id} className="border-gray-700">
-                      <TableCell className="pl-6">
+                      <TableCell className="sticky left-0 z-10 bg-scruffy-darker pl-6">
                         {editingId === s.id ? (
                           <select
                             className="rounded bg-scruffy-dark border border-gray-600 text-white px-2 py-1 text-sm"
@@ -327,7 +328,7 @@ function SchedulesPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-gray-400 hover:text-white"
+                              className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
                               onClick={() => handleRunNow(s.id)}
                               disabled={runningId === s.id}
                               title="Run now"
@@ -341,7 +342,7 @@ function SchedulesPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-gray-400 hover:text-white"
+                              className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
                               onClick={() => setEditingId(s.id)}
                               title="Edit"
                             >
@@ -350,7 +351,7 @@ function SchedulesPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="text-gray-400 hover:text-red-400"
+                              className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-red-400"
                               onClick={() => handleDelete(s.id)}
                               title="Delete"
                             >
@@ -363,6 +364,7 @@ function SchedulesPage() {
                   ))}
                 </TableBody>
               </Table>
+            </div>
             </div>
           )}
 

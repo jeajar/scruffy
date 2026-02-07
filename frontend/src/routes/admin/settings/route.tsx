@@ -57,13 +57,13 @@ function SettingsLayoutPage() {
         </div>
 
         <div className="mt-8 flex flex-col sm:flex-row gap-8">
-          <nav className="flex sm:flex-col gap-1 min-w-[200px]">
+          <nav className="flex flex-row gap-1 overflow-x-auto pb-2 sm:flex-col sm:overflow-visible sm:pb-0 min-w-0 sm:min-w-[200px]">
             {navItems.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
                 className={cn(
-                  "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                  "flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   pathname === to
                     ? "bg-gray-700 text-white"
                     : "text-gray-300 hover:bg-gray-700/50 hover:text-white"

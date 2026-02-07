@@ -173,7 +173,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="md:hidden text-gray-400 hover:text-white hover:bg-gray-700"
+              className="md:hidden min-h-[44px] min-w-[44px] text-gray-400 hover:text-white hover:bg-gray-700"
               aria-label="Open menu"
               onClick={() => setMobileMenuOpen(true)}
             >
@@ -203,7 +203,7 @@ export function Header() {
                 size="icon"
                 aria-label="Close menu"
                 onClick={closeMobileMenu}
-                className="text-gray-400 hover:text-white"
+                className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
               >
                 <X className="h-6 w-6" />
               </Button>
