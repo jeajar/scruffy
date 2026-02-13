@@ -22,16 +22,17 @@ record_job_run_sync(
     {"items_checked": 0, "needing_attention": 0},
 )
 
-# Process job: reminders only
+# Process job: reminders sent only (emails actually sent this run)
 record_job_run_sync(
     "process",
     True,
     None,
     {
-        "reminders": [
+        "reminders_sent": [
             {"email": "alice@example.com", "title": "Inception", "days_left": 5},
             {"email": "bob@example.com", "title": "The Wire S1", "days_left": 2},
         ],
+        "needs_attention": [],
         "deletions": [],
     },
 )
@@ -42,7 +43,8 @@ record_job_run_sync(
     True,
     None,
     {
-        "reminders": [],
+        "reminders_sent": [],
+        "needs_attention": [],
         "deletions": [
             {"email": "charlie@example.com", "title": "Old Documentary"},
             {"email": "dana@example.com", "title": "Expired Movie (2020)"},
@@ -50,14 +52,21 @@ record_job_run_sync(
     },
 )
 
-# Process job: both reminders and deletions
+# Process job: both reminders sent and deletions
 record_job_run_sync(
     "process",
     True,
     None,
     {
-        "reminders": [
+        "reminders_sent": [
             {"email": "eve@example.com", "title": "Breaking Bad S1", "days_left": 1},
+        ],
+        "needs_attention": [
+            {
+                "email": "eve2@example.com",
+                "title": "Approaching Deletion",
+                "days_left": 2,
+            },
         ],
         "deletions": [
             {"email": "frank@example.com", "title": "Retention Expired Show"},

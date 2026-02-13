@@ -285,8 +285,13 @@ export interface JobRunSummaryDeletion {
 }
 
 export interface JobRunSummary {
-  reminders?: JobRunSummaryReminder[];
+  /** Items for which an email was actually sent this run (new format) */
+  reminders_sent?: JobRunSummaryReminder[];
+  /** Items below threshold but already reminded - no email this run (new format) */
+  needs_attention?: JobRunSummaryReminder[];
   deletions?: JobRunSummaryDeletion[];
+  /** Legacy: combined reminders (before we distinguished sent vs attention) */
+  reminders?: JobRunSummaryReminder[];
   items_checked?: number;
   needing_attention?: number;
 }

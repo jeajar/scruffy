@@ -31,7 +31,8 @@ def _temp_db():
 def test_record_job_run_sync_persists_summary(_temp_db):
     """Test that record_job_run_sync stores summary JSON."""
     summary = {
-        "reminders": [{"email": "a@b.com", "title": "X", "days_left": 3}],
+        "reminders_sent": [{"email": "a@b.com", "title": "X", "days_left": 3}],
+        "needs_attention": [],
         "deletions": [],
     }
     record_job_run_sync("process", True, None, summary)
@@ -44,7 +45,7 @@ def test_record_job_run_sync_persists_summary(_temp_db):
     assert rows[0].success is True
     assert rows[0].summary is not None
     parsed = json.loads(rows[0].summary)
-    assert parsed["reminders"] == summary["reminders"]
+    assert parsed["reminders_sent"] == summary["reminders_sent"]
     assert parsed["deletions"] == summary["deletions"]
 
 
