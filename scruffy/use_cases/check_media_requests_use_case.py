@@ -46,7 +46,11 @@ class CheckMediaRequestsUseCase:
         logger.debug("Initialized CheckMediaRequestsUseCase")
 
     async def execute(self) -> list[tuple[MediaRequest, Media]]:
-        """Check all media requests and return those needing attention."""
+        """Check all media requests and return those needing attention.
+
+        Note: This method does not apply extension-aware retention. For processing
+        (remind/delete) or display, use execute_with_retention instead.
+        """
         logger.info("Checking media requests")
         request_dtos = await self.request_repository.get_requests()
         logger.debug(

@@ -103,9 +103,10 @@ class TestListJobRuns:
     def test_list_job_runs_returns_summary_when_present(self, client):
         """Test GET returns job runs with summary when stored."""
         summary = {
-            "reminders": [
+            "reminders_sent": [
                 {"email": "u@example.com", "title": "Some Movie", "days_left": 5}
             ],
+            "needs_attention": [],
             "deletions": [{"email": "u@example.com", "title": "Old Movie"}],
         }
         record_job_run_sync("process", True, None, summary)
@@ -119,7 +120,7 @@ class TestListJobRuns:
         assert run["job_type"] == "process"
         assert run["success"] is True
         assert run["summary"] is not None
-        assert run["summary"]["reminders"] == summary["reminders"]
+        assert run["summary"]["reminders_sent"] == summary["reminders_sent"]
         assert run["summary"]["deletions"] == summary["deletions"]
 
     def test_list_job_runs_returns_null_summary_when_not_stored(self, client):

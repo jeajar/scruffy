@@ -41,11 +41,25 @@ function jobTypeLabel(jobType: string): string {
 }
 
 function JobRunSummaryContent({ summary }: { summary: JobRunSummary }) {
-  const hasReminders = summary.reminders && summary.reminders.length > 0;
+  const remindersSent = summary.reminders_sent ?? [];
+  const needsAttention = summary.needs_attention ?? [];
+  const hasRemindersSent = remindersSent.length > 0;
+  const hasNeedsAttention = needsAttention.length > 0;
+  const hasLegacyReminders =
+    !hasRemindersSent &&
+    !hasNeedsAttention &&
+    summary.reminders &&
+    summary.reminders.length > 0;
   const hasDeletions = summary.deletions && summary.deletions.length > 0;
   const hasCheck = summary.items_checked !== undefined;
 
-  if (!hasReminders && !hasDeletions && !hasCheck) {
+  if (
+    !hasRemindersSent &&
+    !hasNeedsAttention &&
+    !hasLegacyReminders &&
+    !hasDeletions &&
+    !hasCheck
+  ) {
     return <span className="text-gray-500 text-sm">No details</span>;
   }
 
@@ -55,14 +69,39 @@ function JobRunSummaryContent({ summary }: { summary: JobRunSummary }) {
         <div>
           <span className="font-medium text-gray-400">Items checked: </span>
           {summary.items_checked}
-          {summary.needing_attention !== undefined && summary.needing_attention > 0 && (
-            <span className="ml-2 text-gray-400">
-              ({summary.needing_attention} needing attention)
-            </span>
-          )}
+          {summary.needing_attention !== undefined &&
+            summary.needing_attention > 0 && (
+              <span className="ml-2 text-gray-400">
+                ({summary.needing_attention} needing attention)
+              </span>
+            )}
         </div>
       )}
-      {hasReminders && (
+      {hasRemindersSent && (
+        <div>
+          <span className="font-medium text-gray-400">Reminders Sent: </span>
+          <ul className="list-disc list-inside mt-1 space-y-0.5">
+            {remindersSent.map((r, i) => (
+              <li key={i}>
+                {r.title} → {r.email} ({r.days_left} days left)
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {hasNeedsAttention && (
+        <div>
+          <span className="font-medium text-gray-400">Needs Attention: </span>
+          <ul className="list-disc list-inside mt-1 space-y-0.5">
+            {needsAttention.map((r, i) => (
+              <li key={i}>
+                {r.title} → {r.email} ({r.days_left} days left)
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {hasLegacyReminders && (
         <div>
           <span className="font-medium text-gray-400">Reminders sent: </span>
           <ul className="list-disc list-inside mt-1 space-y-0.5">
@@ -188,7 +227,9 @@ function JobsPage() {
                         >
                           <TableCell className="w-10 py-2 sticky left-0 z-10 bg-scruffy-darker">
                             {run.summary != null &&
-                            (run.summary.reminders?.length ||
+                            (run.summary.reminders_sent?.length ||
+                              run.summary.needs_attention?.length ||
+                              run.summary.reminders?.length ||
                               run.summary.deletions?.length ||
                               run.summary.items_checked !== undefined) ? (
                               <Button
