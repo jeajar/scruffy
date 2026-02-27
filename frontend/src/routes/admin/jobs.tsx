@@ -43,16 +43,23 @@ function jobTypeLabel(jobType: string): string {
 }
 
 function JobRunSummaryContent({ summary }: { summary: JobRunSummary }) {
-  const remindersSent = summary.reminders_sent ?? [];
-  const needsAttention = summary.needs_attention ?? [];
+  const remindersSent = Array.isArray(summary.reminders_sent)
+    ? summary.reminders_sent
+    : [];
+  const needsAttention = Array.isArray(summary.needs_attention)
+    ? summary.needs_attention
+    : [];
+  const legacyReminders = Array.isArray(summary.reminders)
+    ? summary.reminders
+    : [];
+  const deletions = Array.isArray(summary.deletions)
+    ? summary.deletions
+    : [];
   const hasRemindersSent = remindersSent.length > 0;
   const hasNeedsAttention = needsAttention.length > 0;
   const hasLegacyReminders =
-    !hasRemindersSent &&
-    !hasNeedsAttention &&
-    summary.reminders &&
-    summary.reminders.length > 0;
-  const hasDeletions = summary.deletions && summary.deletions.length > 0;
+    !hasRemindersSent && !hasNeedsAttention && legacyReminders.length > 0;
+  const hasDeletions = deletions.length > 0;
   const hasCheck = summary.items_checked !== undefined;
 
   if (
@@ -107,7 +114,7 @@ function JobRunSummaryContent({ summary }: { summary: JobRunSummary }) {
         <div>
           <span className="font-medium text-gray-400">Reminders sent: </span>
           <ul className="list-disc list-inside mt-1 space-y-0.5">
-            {summary.reminders!.map((r, i) => (
+            {legacyReminders.map((r, i) => (
               <li key={i}>
                 {r.title} → {r.email} ({r.days_left} days left)
               </li>
@@ -119,7 +126,7 @@ function JobRunSummaryContent({ summary }: { summary: JobRunSummary }) {
         <div>
           <span className="font-medium text-gray-400">Deleted: </span>
           <ul className="list-disc list-inside mt-1 space-y-0.5">
-            {summary.deletions!.map((d, i) => (
+            {deletions.map((d, i) => (
               <li key={i}>
                 {d.title} (was requested by {d.email})
               </li>

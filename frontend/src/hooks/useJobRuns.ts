@@ -17,10 +17,12 @@ export function useJobRuns(enabled: boolean, page: number, pageSize: PageSize) {
     staleTime: 1000 * 60, // 1 minute
   });
 
+  const items = query.data?.items;
+
   return {
-    jobRuns: query.data?.items ?? [],
+    jobRuns: Array.isArray(items) ? items : [],
     total: query.data?.total ?? 0,
-    isLoading: query.isLoading,
+    isLoading: query.isLoading || (!query.data && !query.error && enabled),
     error: query.error
       ? query.error instanceof Error
         ? query.error.message
