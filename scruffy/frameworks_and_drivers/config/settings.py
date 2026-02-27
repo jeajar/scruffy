@@ -9,6 +9,7 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=False,
+        extra="ignore",
     )
 
     # Services - DEPRECATED: Prefer database (Admin Settings). Env used as fallback when DB empty.

@@ -305,8 +305,27 @@ export interface JobRun {
   summary?: JobRunSummary | null;
 }
 
-export async function getJobRuns(): Promise<JobRun[]> {
-  const response = await fetch(`${API_BASE}/api/admin/jobs`, {
+export interface PaginatedJobRunResponse {
+  items: JobRun[];
+  total: number;
+  page: number;
+  page_size: number | null;
+}
+
+export async function getJobRuns(params: {
+  page: number;
+  pageSize: number | null;
+}): Promise<PaginatedJobRunResponse> {
+  const searchParams = new URLSearchParams({
+    page: String(params.page),
+  });
+  if (params.pageSize === null) {
+    searchParams.set("page_size", "0");
+  } else {
+    searchParams.set("page_size", String(params.pageSize));
+  }
+
+  const response = await fetch(`${API_BASE}/api/admin/jobs?${searchParams.toString()}`, {
     credentials: "include",
   });
   if (!response.ok) {
