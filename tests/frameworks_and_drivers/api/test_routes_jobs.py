@@ -93,12 +93,15 @@ class TestListJobRuns:
     """Tests for GET /api/admin/jobs."""
 
     def test_list_job_runs_empty(self, client):
-        """Test GET returns empty list when no runs."""
+        """Test GET returns empty paginated payload when no runs."""
         response = client.get("/api/admin/jobs")
 
         assert response.status_code == 200
         data = response.json()
-        assert data == []
+        assert data["items"] == []
+        assert data["total"] == 0
+        assert data["page"] == 1
+        assert data["page_size"] == 25
 
     def test_list_job_runs_returns_summary_when_present(self, client):
         """Test GET returns job runs with summary when stored."""
@@ -115,13 +118,16 @@ class TestListJobRuns:
 
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 1
-        run = data[0]
+        assert len(data["items"]) == 1
+        run = data["items"][0]
         assert run["job_type"] == "process"
         assert run["success"] is True
         assert run["summary"] is not None
         assert run["summary"]["reminders_sent"] == summary["reminders_sent"]
         assert run["summary"]["deletions"] == summary["deletions"]
+        assert data["total"] == 1
+        assert data["page"] == 1
+        assert data["page_size"] == 25
 
     def test_list_job_runs_returns_null_summary_when_not_stored(self, client):
         """Test GET returns summary null for runs recorded without summary."""
@@ -131,5 +137,32 @@ class TestListJobRuns:
 
         assert response.status_code == 200
         data = response.json()
-        assert len(data) == 1
-        assert data[0].get("summary") is None
+        assert len(data["items"]) == 1
+        assert data["items"][0].get("summary") is None
+
+    def test_list_job_runs_honors_page_and_page_size(self, client):
+        """Test GET paginates with page/page_size."""
+        for index in range(3):
+            record_job_run_sync("check" if index % 2 == 0 else "process", True, None)
+
+        response = client.get("/api/admin/jobs?page=2&page_size=1")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 3
+        assert data["page"] == 2
+        assert data["page_size"] == 1
+        assert len(data["items"]) == 1
+
+    def test_list_job_runs_all_when_page_size_zero(self, client):
+        """Test page_size=0 returns all items without limit."""
+        for _ in range(4):
+            record_job_run_sync("check", True, None)
+
+        response = client.get("/api/admin/jobs?page_size=0")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 4
+        assert data["page_size"] is None
+        assert len(data["items"]) == 4

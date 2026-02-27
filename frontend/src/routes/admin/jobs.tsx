@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, ListChecks, RefreshCw } from "lucide-react";
 import { Layout } from "@/components/layout";
 import { useAuth } from "@/hooks/useAuth";
 import { useJobRuns } from "@/hooks/useJobRuns";
+import { usePageSize } from "@/hooks/usePageSize";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import {
   Card,
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import type { JobRun, JobRunSummary } from "@/lib/api";
 
 export const Route = createFileRoute("/admin/jobs")({
@@ -132,7 +134,13 @@ function JobRunSummaryContent({ summary }: { summary: JobRunSummary }) {
 function JobsPage() {
   const navigate = useNavigate();
   const { isAuthenticated, isAdmin, isLoading: authLoading } = useAuth();
-  const { jobRuns, isLoading, error, refetch } = useJobRuns(!!isAdmin);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = usePageSize();
+  const { jobRuns, total, isLoading, error, refetch } = useJobRuns(
+    !!isAdmin,
+    page,
+    pageSize
+  );
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -145,6 +153,17 @@ function JobsPage() {
       return;
     }
   }, [authLoading, isAuthenticated, isAdmin, navigate]);
+
+  useEffect(() => {
+    setExpandedId(null);
+  }, [page, pageSize]);
+
+  useEffect(() => {
+    const totalPages = pageSize === null ? 1 : Math.max(1, Math.ceil(total / pageSize));
+    if (page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [page, pageSize, total]);
 
   if (authLoading || (!isAdmin && isAuthenticated)) {
     return <LoadingScreen />;
@@ -196,7 +215,7 @@ function JobsPage() {
 
               {isLoading ? (
                 <p className="text-gray-400 text-sm">Loading...</p>
-              ) : jobRuns.length === 0 ? (
+              ) : total === 0 ? (
                 <p className="text-gray-400 text-sm">
                   No job runs recorded yet. Run a check or process job from{" "}
                   <Link
@@ -208,97 +227,109 @@ function JobsPage() {
                   to see history.
                 </p>
               ) : (
-                <div className="overflow-x-auto -mx-4 sm:mx-0">
-                  <Table className="min-w-[500px]">
-                    <TableHeader>
-                      <TableRow className="border-gray-700 hover:bg-transparent">
-                        <TableHead className="text-gray-400 w-10 sticky left-0 z-10 bg-scruffy-dark"></TableHead>
-                      <TableHead className="text-gray-400">Job Type</TableHead>
-                      <TableHead className="text-gray-400">Date</TableHead>
-                      <TableHead className="text-gray-400">Status</TableHead>
-                      <TableHead className="text-gray-400">Error</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {jobRuns.map((run: JobRun) => (
-                      <Fragment key={run.id}>
-                        <TableRow
-                          className="border-gray-700 hover:bg-gray-800/50"
-                        >
-                          <TableCell className="w-10 py-2 sticky left-0 z-10 bg-scruffy-darker">
-                            {run.summary != null &&
-                            (run.summary.reminders_sent?.length ||
-                              run.summary.needs_attention?.length ||
-                              run.summary.reminders?.length ||
-                              run.summary.deletions?.length ||
-                              run.summary.items_checked !== undefined) ? (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
-                                onClick={() =>
-                                  setExpandedId((id) =>
-                                    id === run.id ? null : run.id
-                                  )
+                <>
+                  <div className="overflow-x-auto -mx-4 sm:mx-0">
+                    <Table className="min-w-[500px]">
+                      <TableHeader>
+                        <TableRow className="border-gray-700 hover:bg-transparent">
+                          <TableHead className="text-gray-400 w-10 sticky left-0 z-10 bg-scruffy-dark"></TableHead>
+                        <TableHead className="text-gray-400">Job Type</TableHead>
+                        <TableHead className="text-gray-400">Date</TableHead>
+                        <TableHead className="text-gray-400">Status</TableHead>
+                        <TableHead className="text-gray-400">Error</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {jobRuns.map((run: JobRun) => (
+                        <Fragment key={run.id}>
+                          <TableRow
+                            className="border-gray-700 hover:bg-gray-800/50"
+                          >
+                            <TableCell className="w-10 py-2 sticky left-0 z-10 bg-scruffy-darker">
+                              {run.summary != null &&
+                              (run.summary.reminders_sent?.length ||
+                                run.summary.needs_attention?.length ||
+                                run.summary.reminders?.length ||
+                                run.summary.deletions?.length ||
+                                run.summary.items_checked !== undefined) ? (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
+                                  onClick={() =>
+                                    setExpandedId((id) =>
+                                      id === run.id ? null : run.id
+                                    )
+                                  }
+                                  aria-label={
+                                    expandedId === run.id
+                                      ? "Collapse details"
+                                      : "Expand details"
+                                  }
+                                >
+                                  {expandedId === run.id ? (
+                                    <ChevronDown className="h-4 w-4" />
+                                  ) : (
+                                    <ChevronRight className="h-4 w-4" />
+                                  )}
+                                </Button>
+                              ) : (
+                                <span className="w-8 inline-block" />
+                              )}
+                            </TableCell>
+                            <TableCell className="text-white font-medium">
+                              {jobTypeLabel(run.job_type)}
+                            </TableCell>
+                            <TableCell className="text-gray-300">
+                              {formatDate(run.finished_at)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  run.success ? "default" : "destructive"
                                 }
-                                aria-label={
-                                  expandedId === run.id
-                                    ? "Collapse details"
-                                    : "Expand details"
+                                className={
+                                  run.success
+                                    ? "bg-green-600/80 hover:bg-green-600/80"
+                                    : ""
                                 }
                               >
-                                {expandedId === run.id ? (
-                                  <ChevronDown className="h-4 w-4" />
-                                ) : (
-                                  <ChevronRight className="h-4 w-4" />
-                                )}
-                              </Button>
-                            ) : (
-                              <span className="w-8 inline-block" />
-                            )}
-                          </TableCell>
-                          <TableCell className="text-white font-medium">
-                            {jobTypeLabel(run.job_type)}
-                          </TableCell>
-                          <TableCell className="text-gray-300">
-                            {formatDate(run.finished_at)}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant={
-                                run.success ? "default" : "destructive"
-                              }
-                              className={
-                                run.success
-                                  ? "bg-green-600/80 hover:bg-green-600/80"
-                                  : ""
-                              }
-                            >
-                              {run.success ? "Success" : "Failed"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-gray-400 text-sm max-w-xs truncate">
-                            {run.error_message ?? "-"}
-                          </TableCell>
-                        </TableRow>
-                        {expandedId === run.id && run.summary && (
-                          <TableRow
-                            key={`${run.id}-detail`}
-                            className="border-gray-700 bg-gray-800/30"
-                          >
-                            <TableCell
-                              colSpan={5}
-                              className="py-3 pl-12 pr-4 align-top"
-                            >
-                              <JobRunSummaryContent summary={run.summary} />
+                                {run.success ? "Success" : "Failed"}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-400 text-sm max-w-xs truncate">
+                              {run.error_message ?? "-"}
                             </TableCell>
                           </TableRow>
-                        )}
-                      </Fragment>
-                    ))}
-                  </TableBody>
-                </Table>
-                </div>
+                          {expandedId === run.id && run.summary && (
+                            <TableRow
+                              key={`${run.id}-detail`}
+                              className="border-gray-700 bg-gray-800/30"
+                            >
+                              <TableCell
+                                colSpan={5}
+                                className="py-3 pl-12 pr-4 align-top"
+                              >
+                                <JobRunSummaryContent summary={run.summary} />
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </Fragment>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  </div>
+                  <Pagination
+                    page={page}
+                    pageSize={pageSize}
+                    total={total}
+                    onPageChange={setPage}
+                    onPageSizeChange={(nextPageSize) => {
+                      setPageSize(nextPageSize);
+                      setPage(1);
+                    }}
+                  />
+                </>
               )}
             </CardContent>
           </Card>
