@@ -14,6 +14,40 @@ def _migrate_job_run_summary(engine: Engine) -> None:
         conn.commit()
 
 
+# Keys must match SERVICES_SEER_URL/SERVICES_SEER_API_KEY in settings_store.py.
+_OVERSEERR_TO_SEER_SETTINGS_KEYS = {
+    "services.overseerr_url": "services.seer_url",
+    "services.overseerr_api_key": "services.seer_api_key",
+}
+
+
+def _migrate_rename_overseerr_settings_keys(engine: Engine) -> None:
+    """Rename services.overseerr_* settings rows to services.seer_* (one-off migration for existing DBs).
+
+    Overseerr was renamed to Seer; admin-configured URL/API key were stored under the old
+    key names. Without this, existing DBs would silently lose that config on upgrade.
+    """
+    with engine.connect() as conn:
+        for old_key, new_key in _OVERSEERR_TO_SEER_SETTINGS_KEYS.items():
+            new_exists = conn.execute(
+                text("SELECT 1 FROM settingsmodel WHERE key = :key"), {"key": new_key}
+            ).first()
+            if new_exists is None:
+                conn.execute(
+                    text(
+                        "UPDATE settingsmodel SET key = :new_key WHERE key = :old_key"
+                    ),
+                    {"new_key": new_key, "old_key": old_key},
+                )
+            else:
+                # New key already has a value (e.g. re-saved via Admin UI); drop the stale row.
+                conn.execute(
+                    text("DELETE FROM settingsmodel WHERE key = :old_key"),
+                    {"old_key": old_key},
+                )
+        conn.commit()
+
+
 def _migrate_schedule_job_type_unique(engine: Engine) -> None:
     """Add unique constraint on schedulejobmodel.job_type (one-off migration for existing DBs)."""
     with engine.connect() as conn:
@@ -55,6 +89,7 @@ def get_engine() -> Engine:
         _migrate_schedule_job_type_unique(engine)
     except OperationalError:
         pass  # Fresh installs: create_all already created unique index
+    _migrate_rename_overseerr_settings_keys(engine)
     return engine
 
 
