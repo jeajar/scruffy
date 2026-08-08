@@ -58,7 +58,7 @@ def _get_many(db_keys: list[str]) -> dict[str, str | None]:
         key_col = cast(ColumnElement[str], SettingsModel.key)
         statement = select(SettingsModel).where(key_col.in_(db_keys))
         rows = session.exec(statement).all()
-        result = {k: None for k in db_keys}
+        result: dict[str, str | None] = dict.fromkeys(db_keys)
         for row in rows:
             result[row.key] = row.value
         return result

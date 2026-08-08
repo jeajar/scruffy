@@ -28,6 +28,9 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
     set_retention_days,
     set_services_config,
 )
+from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
+from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
+from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 
 logger = logging.getLogger(__name__)
 
@@ -264,6 +267,7 @@ async def test_service_connection(
     Service must be one of: overseerr, radarr, sonarr.
     """
     service = service.lower()
+    gateway: OverseerGateway | RadarrGateway | SonarrGateway
     if service == "overseerr":
         gateway = container.overseer_gateway
     elif service == "radarr":

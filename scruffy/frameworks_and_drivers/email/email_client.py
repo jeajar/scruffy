@@ -74,7 +74,7 @@ class EmailClient:
 
         message = MessageSchema(
             subject=f"Gone!: {title}",
-            recipients=[to_email],
+            recipients=[to_email],  # type: ignore[list-item]
             body=html,
             subtype=MessageType.html,
         )
@@ -112,7 +112,7 @@ class EmailClient:
 
         message = MessageSchema(
             subject=f"Reminder: {title}",
-            recipients=[to_email],
+            recipients=[to_email],  # type: ignore[list-item]
             body=html,
             subtype=MessageType.html,
         )

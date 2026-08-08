@@ -189,15 +189,13 @@ class SonarrGateway(MediaRepositoryInterface):
 
     async def delete_season_files(self, series_id: int, season_list: list[int]) -> None:
         """Delete specific seasons from a series and their files."""
-        episode_file_ids = []
+        episode_file_ids: list[int] = []
         for season in season_list:
             episode_data = await self.get_episodes(series_id, season)
             episode_file_ids.extend(
-                [
-                    ep.get("episodeFileId")
-                    for ep in episode_data
-                    if ep.get("episodeFileId")
-                ]
+                episode_file_id
+                for ep in episode_data
+                if (episode_file_id := ep.get("episodeFileId"))
             )
 
         # Delete episode files if any exist

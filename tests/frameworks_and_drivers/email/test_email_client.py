@@ -113,7 +113,7 @@ class TestEmailClientSendMethods:
         mock_fastmail.send_message.assert_called_once()
         call_args = mock_fastmail.send_message.call_args[0][0]
         assert call_args.subject == "Gone!: Test Movie"
-        assert call_args.recipients == ["test@test.com"]
+        assert [str(r.email) for r in call_args.recipients] == ["test@test.com"]
 
     @pytest.mark.asyncio
     async def test_send_reminder_notice(
@@ -129,7 +129,7 @@ class TestEmailClientSendMethods:
         mock_fastmail.send_message.assert_called_once()
         call_args = mock_fastmail.send_message.call_args[0][0]
         assert call_args.subject == "Reminder: Test Movie"
-        assert call_args.recipients == ["test@test.com"]
+        assert [str(r.email) for r in call_args.recipients] == ["test@test.com"]
 
     @pytest.mark.asyncio
     async def test_send_deletion_notice_when_disabled(self):

@@ -94,9 +94,9 @@ class RequestDTO:
             request_id=response["id"],
             updated_at=datetime.fromisoformat(media["updatedAt"]),
             request_status=request_status,
-            media_id=media.get("id"),
+            media_id=media["id"],
             media_status=media_status,
-            external_service_id=media.get("externalServiceId"),
+            external_service_id=media["externalServiceId"],
             seasons=[season["seasonNumber"] for season in response.get("seasons", [])],
             tmdb_id=tmdb_id,
         )

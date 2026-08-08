@@ -86,7 +86,7 @@ class CheckMediaRequestsUseCase:
 
         result = []
         for req, outcome in zip(to_check, gathered, strict=False):
-            if isinstance(outcome, Exception):
+            if isinstance(outcome, BaseException):
                 logger.error(
                     "Failed to fetch media info",
                     extra={
@@ -156,7 +156,7 @@ class CheckMediaRequestsUseCase:
 
         result = []
         for req, outcome in zip(to_check, gathered, strict=False):
-            if isinstance(outcome, Exception):
+            if isinstance(outcome, BaseException):
                 logger.error(
                     "Failed to process media for retention",
                     extra={

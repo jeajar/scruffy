@@ -76,7 +76,7 @@ def test_media_check_result_dto_is_immutable(
     )
 
     with pytest.raises(dataclasses.FrozenInstanceError):
-        result.retention = RetentionResultDTO(  # type: ignore[assignment]
+        result.retention = RetentionResultDTO(  # type: ignore[assignment]  # ty: ignore[invalid-assignment]
             remind=False, delete=True
         )
 
