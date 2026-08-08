@@ -55,8 +55,8 @@ def test_request_dto_is_immutable():
         dto.user_email = "changed@example.com"  # ty: ignore[invalid-assignment]
 
 
-def test_from_overseer_response_movie():
-    """Test from_overseer_response parses movie request correctly."""
+def test_from_seer_response_movie():
+    """Test from_seer_response parses movie request correctly."""
     response = {
         "requestedBy": {"id": 1, "email": "test@example.com"},
         "type": "movie",
@@ -70,7 +70,7 @@ def test_from_overseer_response_movie():
         },
     }
 
-    dto = RequestDTO.from_overseer_response(response)
+    dto = RequestDTO.from_seer_response(response)
 
     assert dto.user_id == 1
     assert dto.user_email == "test@example.com"
@@ -84,8 +84,8 @@ def test_from_overseer_response_movie():
     assert dto.media_id == 99
 
 
-def test_from_overseer_response_tv():
-    """Test from_overseer_response parses TV request correctly."""
+def test_from_seer_response_tv():
+    """Test from_seer_response parses TV request correctly."""
     response = {
         "requestedBy": {"id": 2, "email": "tv@example.com"},
         "type": "tv",
@@ -100,7 +100,7 @@ def test_from_overseer_response_tv():
         "seasons": [{"seasonNumber": 1}, {"seasonNumber": 2}],
     }
 
-    dto = RequestDTO.from_overseer_response(response)
+    dto = RequestDTO.from_seer_response(response)
 
     assert dto.user_id == 2
     assert dto.type == "tv"
@@ -108,8 +108,8 @@ def test_from_overseer_response_tv():
     assert dto.media_status == MediaStatus.PROCESSING
 
 
-def test_from_overseer_response_status_mapping():
-    """Test from_overseer_response maps statuses correctly."""
+def test_from_seer_response_status_mapping():
+    """Test from_seer_response maps statuses correctly."""
     # Test pendingApproval
     response_pending = {
         "requestedBy": {"id": 1, "email": "test@example.com"},
@@ -123,7 +123,7 @@ def test_from_overseer_response_status_mapping():
             "id": 99,
         },
     }
-    dto = RequestDTO.from_overseer_response(response_pending)
+    dto = RequestDTO.from_seer_response(response_pending)
     assert dto.request_status == RequestStatus.PENDING_APPROVAL
     assert dto.media_status == MediaStatus.PENDING
 
@@ -140,13 +140,13 @@ def test_from_overseer_response_status_mapping():
             "id": 99,
         },
     }
-    dto = RequestDTO.from_overseer_response(response_declined)
+    dto = RequestDTO.from_seer_response(response_declined)
     assert dto.request_status == RequestStatus.DECLINED
     assert dto.media_status == MediaStatus.UNKNOWN
 
 
-def test_from_overseer_response_partially_available():
-    """Test from_overseer_response handles partiallyAvailable status."""
+def test_from_seer_response_partially_available():
+    """Test from_seer_response handles partiallyAvailable status."""
     response = {
         "requestedBy": {"id": 1, "email": "test@example.com"},
         "type": "tv",
@@ -161,7 +161,7 @@ def test_from_overseer_response_partially_available():
         "seasons": [{"seasonNumber": 1}],
     }
 
-    dto = RequestDTO.from_overseer_response(response)
+    dto = RequestDTO.from_seer_response(response)
     assert dto.media_status == MediaStatus.PARTIALLY_AVAILABLE
 
 

@@ -29,8 +29,8 @@ def mock_admin_user():
 def mock_container():
     """Create mock container for jobs tests."""
     container = Mock()
-    container.overseer_gateway = Mock()
-    container.overseer_gateway.status = AsyncMock(return_value=True)
+    container.seer_gateway = Mock()
+    container.seer_gateway.status = AsyncMock(return_value=True)
     container.radarr_gateway = Mock()
     container.radarr_gateway.status = AsyncMock(return_value=True)
     container.sonarr_gateway = Mock()
@@ -54,8 +54,8 @@ def app_with_jobs_db(mock_container):
                 ) as mock_settings:
                     mock_settings.data_dir = data_dir
                     mock_settings.api_secret_key = "test-secret"
-                    mock_settings.overseerr_url = "http://test"
-                    mock_settings.overseerr_api_key = "test-key"
+                    mock_settings.seer_url = "http://test"
+                    mock_settings.seer_api_key = "test-key"
                     mock_settings.radarr_url = "http://test"
                     mock_settings.radarr_api_key = "test-key"
                     mock_settings.sonarr_url = "http://test"

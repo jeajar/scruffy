@@ -13,12 +13,12 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
     get_app_base_url,
     get_email_config,
     get_extension_days,
-    get_overseerr_api_key,
-    get_overseerr_url,
     get_radarr_api_key,
     get_radarr_url,
     get_reminder_days,
     get_retention_days,
+    get_seer_api_key,
+    get_seer_url,
     get_sonarr_api_key,
     get_sonarr_url,
     set_app_base_url,
@@ -28,6 +28,9 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
     set_retention_days,
     set_services_config,
 )
+from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
+from scruffy.interface_adapters.gateways.seer_gateway import SeerGateway
+from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +48,11 @@ class ServiceConfigResponse(BaseModel):
 
 
 class ServicesResponse(BaseModel):
-    """Services section."""
+    """Services section.
+
+    NOTE: field stays "overseerr" for frontend API compatibility (Seer uses
+    the same request-management API as the now-discontinued Overseerr).
+    """
 
     overseerr: ServiceConfigResponse
     radarr: ServiceConfigResponse
@@ -90,7 +97,10 @@ class ServiceConfigUpdate(BaseModel):
 
 
 class ServicesUpdate(BaseModel):
-    """Partial services update."""
+    """Partial services update.
+
+    NOTE: field stays "overseerr" for frontend API compatibility.
+    """
 
     overseerr: ServiceConfigUpdate | None = None
     radarr: ServiceConfigUpdate | None = None
@@ -143,8 +153,8 @@ def _build_settings_response() -> SettingsResponse:
         app_base_url=get_app_base_url(),
         services=ServicesResponse(
             overseerr=ServiceConfigResponse(
-                url=get_overseerr_url(),
-                api_key_set=bool(get_overseerr_api_key()),
+                url=get_seer_url(),
+                api_key_set=bool(get_seer_api_key()),
             ),
             radarr=ServiceConfigResponse(
                 url=get_radarr_url(),
@@ -220,11 +230,11 @@ async def update_settings(
         services = body.services  # Narrow type for closure
 
         def _apply_services() -> None:
-            overseerr = services.overseerr
-            if overseerr is not None:
+            seer = services.overseerr
+            if seer is not None:
                 set_services_config(
-                    overseerr_url=overseerr.url,
-                    overseerr_api_key=overseerr.api_key,
+                    seer_url=seer.url,
+                    seer_api_key=seer.api_key,
                 )
             radarr = services.radarr
             if radarr is not None:
@@ -259,13 +269,15 @@ async def test_service_connection(
     container: ContainerDep,
 ) -> dict:
     """
-    Test connection to Overseerr, Radarr, or Sonarr.
+    Test connection to Seer, Radarr, or Sonarr.
 
-    Service must be one of: overseerr, radarr, sonarr.
+    Service must be one of: overseerr, radarr, sonarr (kept as "overseerr" for
+    frontend API compatibility).
     """
     service = service.lower()
+    gateway: SeerGateway | RadarrGateway | SonarrGateway
     if service == "overseerr":
-        gateway = container.overseer_gateway
+        gateway = container.seer_gateway
     elif service == "radarr":
         gateway = container.radarr_gateway
     elif service == "sonarr":

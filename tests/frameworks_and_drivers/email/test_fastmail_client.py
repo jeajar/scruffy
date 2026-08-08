@@ -1,17 +1,17 @@
-"""Tests for EmailClient."""
+"""Tests for FastMailClient."""
 
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from scruffy.frameworks_and_drivers.email.email_client import EmailClient
+from scruffy.frameworks_and_drivers.email.fastmail_client import FastMailClient
 
 
 @pytest.fixture
 def mock_settings():
     """Mock settings."""
-    with patch("scruffy.frameworks_and_drivers.email.email_client.settings") as mock:
+    with patch("scruffy.frameworks_and_drivers.email.fastmail_client.settings") as mock:
         mock.email_enabled = True
         mock.smtp_username = "test"
         mock.smtp_password = "test"
@@ -27,7 +27,7 @@ def mock_settings():
 @pytest.fixture
 def mock_fastmail():
     """Mock FastMail."""
-    with patch("scruffy.frameworks_and_drivers.email.email_client.FastMail") as mock:
+    with patch("scruffy.frameworks_and_drivers.email.fastmail_client.FastMail") as mock:
         instance = mock.return_value
         instance.send_message = AsyncMock()
         yield instance
@@ -37,7 +37,7 @@ def mock_fastmail():
 def mock_template_env():
     """Mock Jinja2 template environment."""
     with patch(
-        "scruffy.frameworks_and_drivers.email.email_client.Environment"
+        "scruffy.frameworks_and_drivers.email.fastmail_client.Environment"
     ) as mock_env:
         template_mock = MagicMock()
         template_mock.render.return_value = "<html>Test</html>"
@@ -45,16 +45,16 @@ def mock_template_env():
         yield template_mock
 
 
-class TestEmailClientInitialization:
-    """Tests for EmailClient initialization."""
+class TestFastMailClientInitialization:
+    """Tests for FastMailClient initialization."""
 
     def test_initialization_disabled(self):
         """Test _get_fastmail returns None when email is disabled."""
         with patch(
-            "scruffy.frameworks_and_drivers.email.email_client.settings"
+            "scruffy.frameworks_and_drivers.email.fastmail_client.settings"
         ) as mock_settings:
             mock_settings.email_enabled = False
-            client = EmailClient()
+            client = FastMailClient()
 
             assert client._get_fastmail() is None
             assert client.template_env is not None
@@ -63,7 +63,7 @@ class TestEmailClientInitialization:
         self, mock_settings, mock_fastmail, mock_template_env
     ):
         """Test _get_fastmail returns FastMail when email is enabled."""
-        client = EmailClient()
+        client = FastMailClient()
 
         fm = client._get_fastmail()
         assert fm is not None
@@ -72,7 +72,7 @@ class TestEmailClientInitialization:
     def test_initialization_no_credentials(self):
         """Test _get_fastmail uses USE_CREDENTIALS=False when no username/password."""
         with patch(
-            "scruffy.frameworks_and_drivers.email.email_client.settings"
+            "scruffy.frameworks_and_drivers.email.fastmail_client.settings"
         ) as mock_settings:
             mock_settings.email_enabled = True
             mock_settings.smtp_username = None
@@ -84,27 +84,27 @@ class TestEmailClientInitialization:
             mock_settings.smtp_starttls = True
 
             with patch(
-                "scruffy.frameworks_and_drivers.email.email_client.FastMail"
+                "scruffy.frameworks_and_drivers.email.fastmail_client.FastMail"
             ) as mock_fm:
                 with patch(
-                    "scruffy.frameworks_and_drivers.email.email_client.Environment"
+                    "scruffy.frameworks_and_drivers.email.fastmail_client.Environment"
                 ):
-                    client = EmailClient()
+                    client = FastMailClient()
                     client._get_fastmail()
 
                     conn_config = mock_fm.call_args[0][0]
                     assert conn_config.USE_CREDENTIALS is False
 
 
-class TestEmailClientSendMethods:
-    """Tests for EmailClient send methods."""
+class TestFastMailClientSendMethods:
+    """Tests for FastMailClient send methods."""
 
     @pytest.mark.asyncio
     async def test_send_deletion_notice(
         self, mock_settings, mock_fastmail, mock_template_env
     ):
         """Test send_deletion_notice sends email."""
-        client = EmailClient()
+        client = FastMailClient()
 
         await client.send_deletion_notice(
             "test@test.com", "Test Movie", "poster.jpg", days_left=0
@@ -113,14 +113,14 @@ class TestEmailClientSendMethods:
         mock_fastmail.send_message.assert_called_once()
         call_args = mock_fastmail.send_message.call_args[0][0]
         assert call_args.subject == "Gone!: Test Movie"
-        assert call_args.recipients == ["test@test.com"]
+        assert [str(r.email) for r in call_args.recipients] == ["test@test.com"]
 
     @pytest.mark.asyncio
     async def test_send_reminder_notice(
         self, mock_settings, mock_fastmail, mock_template_env
     ):
         """Test send_reminder_notice sends email."""
-        client = EmailClient()
+        client = FastMailClient()
 
         await client.send_reminder_notice(
             "test@test.com", "Test Movie", "poster.jpg", days_left=7, request_id=123
@@ -129,16 +129,16 @@ class TestEmailClientSendMethods:
         mock_fastmail.send_message.assert_called_once()
         call_args = mock_fastmail.send_message.call_args[0][0]
         assert call_args.subject == "Reminder: Test Movie"
-        assert call_args.recipients == ["test@test.com"]
+        assert [str(r.email) for r in call_args.recipients] == ["test@test.com"]
 
     @pytest.mark.asyncio
     async def test_send_deletion_notice_when_disabled(self):
         """Test send_deletion_notice does nothing when email disabled."""
         with patch(
-            "scruffy.frameworks_and_drivers.email.email_client.settings"
+            "scruffy.frameworks_and_drivers.email.fastmail_client.settings"
         ) as mock_settings:
             mock_settings.email_enabled = False
-            client = EmailClient()
+            client = FastMailClient()
 
             # Should not raise
             await client.send_deletion_notice(
@@ -149,10 +149,10 @@ class TestEmailClientSendMethods:
     async def test_send_reminder_notice_when_disabled(self):
         """Test send_reminder_notice does nothing when email disabled."""
         with patch(
-            "scruffy.frameworks_and_drivers.email.email_client.settings"
+            "scruffy.frameworks_and_drivers.email.fastmail_client.settings"
         ) as mock_settings:
             mock_settings.email_enabled = False
-            client = EmailClient()
+            client = FastMailClient()
 
             # Should not raise
             await client.send_reminder_notice(
@@ -160,14 +160,14 @@ class TestEmailClientSendMethods:
             )
 
 
-class TestEmailClientTemplatePath:
-    """Tests for EmailClient template path configuration."""
+class TestFastMailClientTemplatePath:
+    """Tests for FastMailClient template path configuration."""
 
     def test_template_path_exists(
         self, mock_settings, mock_fastmail, mock_template_env
     ):
         """Test template path is correctly set."""
-        EmailClient()
+        FastMailClient()
 
         # Verify template path exists (or at least the directory structure)
         template_path = (

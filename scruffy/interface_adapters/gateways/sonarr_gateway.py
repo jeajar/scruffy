@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, cast
 
 from scruffy.domain.value_objects.media_type import MediaType
+from scruffy.interface_adapters.gateways.poster import extract_poster_url
 from scruffy.interface_adapters.interfaces.http_client_interface import (
     IHttpClient,
 )
@@ -189,15 +190,13 @@ class SonarrGateway(MediaRepositoryInterface):
 
     async def delete_season_files(self, series_id: int, season_list: list[int]) -> None:
         """Delete specific seasons from a series and their files."""
-        episode_file_ids = []
+        episode_file_ids: list[int] = []
         for season in season_list:
             episode_data = await self.get_episodes(series_id, season)
             episode_file_ids.extend(
-                [
-                    ep.get("episodeFileId")
-                    for ep in episode_data
-                    if ep.get("episodeFileId")
-                ]
+                episode_file_id
+                for ep in episode_data
+                if (episode_file_id := ep.get("episodeFileId"))
             )
 
         # Delete episode files if any exist
@@ -261,8 +260,4 @@ class SonarrGateway(MediaRepositoryInterface):
     @staticmethod
     def _get_series_poster(images: list[dict]) -> str | None:
         """Get poster URL from images."""
-        poster = next(
-            (img["remoteUrl"] for img in images if img.get("coverType") == "poster"),
-            None,
-        )
-        return poster
+        return extract_poster_url(images)

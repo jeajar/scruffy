@@ -25,8 +25,8 @@ def mock_container():
             "deletions": [],
         }
     )
-    container.overseer_gateway = Mock()
-    container.overseer_gateway.status = AsyncMock(return_value=True)
+    container.seer_gateway = Mock()
+    container.seer_gateway.status = AsyncMock(return_value=True)
     container.radarr_gateway = Mock()
     container.radarr_gateway.status = AsyncMock(return_value=True)
     container.sonarr_gateway = Mock()
@@ -78,7 +78,7 @@ class TestHealthRoutes:
 
     def test_health_check_healthy(self, client, mock_container):
         """Test health check when all services are healthy."""
-        mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.seer_gateway.status = AsyncMock(return_value=True)
         mock_container.radarr_gateway.status = AsyncMock(return_value=True)
         mock_container.sonarr_gateway.status = AsyncMock(return_value=True)
 
@@ -91,9 +91,9 @@ class TestHealthRoutes:
         assert data["services"]["radarr"] == "healthy"
         assert data["services"]["sonarr"] == "healthy"
 
-    def test_health_check_degraded_overseerr(self, client, mock_container):
-        """Test health check when Overseerr is unhealthy."""
-        mock_container.overseer_gateway.status = AsyncMock(return_value=False)
+    def test_health_check_degraded_seer(self, client, mock_container):
+        """Test health check when Seer is unhealthy."""
+        mock_container.seer_gateway.status = AsyncMock(return_value=False)
         mock_container.radarr_gateway.status = AsyncMock(return_value=True)
         mock_container.sonarr_gateway.status = AsyncMock(return_value=True)
 
@@ -108,7 +108,7 @@ class TestHealthRoutes:
 
     def test_health_check_degraded_radarr(self, client, mock_container):
         """Test health check when Radarr is unhealthy."""
-        mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.seer_gateway.status = AsyncMock(return_value=True)
         mock_container.radarr_gateway.status = AsyncMock(return_value=False)
         mock_container.sonarr_gateway.status = AsyncMock(return_value=True)
 
@@ -121,7 +121,7 @@ class TestHealthRoutes:
 
     def test_health_check_degraded_sonarr(self, client, mock_container):
         """Test health check when Sonarr is unhealthy."""
-        mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.seer_gateway.status = AsyncMock(return_value=True)
         mock_container.radarr_gateway.status = AsyncMock(return_value=True)
         mock_container.sonarr_gateway.status = AsyncMock(return_value=False)
 

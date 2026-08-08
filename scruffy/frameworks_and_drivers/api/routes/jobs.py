@@ -50,7 +50,7 @@ def _list_job_runs_sync(
 
         query = (
             select(JobRunModel)
-            .order_by(desc(JobRunModel.finished_at))  # type: ignore[invalid-argument-type]
+            .order_by(desc(JobRunModel.finished_at))  # type: ignore[arg-type]  # ty: ignore[invalid-argument-type]
             .offset(offset)
         )
         if limit is not None:

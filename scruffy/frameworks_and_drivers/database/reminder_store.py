@@ -1,4 +1,4 @@
-"""Gateway adapter for reminder persistence."""
+"""SQLModel-backed store for reminder persistence."""
 
 import logging
 from typing import cast
@@ -15,14 +15,14 @@ from scruffy.use_cases.interfaces.reminder_repository_interface import (
 logger = logging.getLogger(__name__)
 
 
-class ReminderGateway(ReminderRepositoryInterface):
-    """Adapter for reminder persistence using SQLModel."""
+class ReminderStore(ReminderRepositoryInterface):
+    """Store for reminder persistence using SQLModel."""
 
     def __init__(self, engine: Engine | None = None):
-        """Initialize reminder gateway with database engine."""
+        """Initialize reminder store with database engine."""
         self.engine = engine or get_engine()
         SQLModel.metadata.create_all(self.engine)
-        logger.debug("Initialized ReminderGateway")
+        logger.debug("Initialized ReminderStore")
 
     def has_reminder(self, request_id: int) -> bool:
         """Check if a reminder has been sent for a request."""

@@ -33,9 +33,9 @@ class ProcessMediaUseCase:
         self.delete_media_use_case = delete_media_use_case
         self.retention_calculator = RetentionCalculator(retention_policy_or_provider)
         policy = (
-            retention_policy_or_provider()
-            if callable(retention_policy_or_provider)
-            else retention_policy_or_provider
+            retention_policy_or_provider
+            if isinstance(retention_policy_or_provider, RetentionPolicy)
+            else retention_policy_or_provider()
         )
         logger.debug(
             "Initialized ProcessMediaUseCase",

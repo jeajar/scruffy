@@ -9,8 +9,6 @@ import httpx
 import pytest
 import respx
 
-from scruffy.domain.entities.media import Media
-from scruffy.domain.entities.media_request import MediaRequest
 from scruffy.frameworks_and_drivers.config.settings import settings as app_settings
 from scruffy.frameworks_and_drivers.database.settings_store import (
     ServicesConfig,
@@ -19,7 +17,7 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
 from scruffy.frameworks_and_drivers.di.container import Container
 
 # Test URLs used by respx mocks; must match mock_settings patches
-OVERSEERR_BASE = "http://overseerr.test"
+SEER_BASE = "http://seer.test"
 RADARR_BASE = "http://radarr.test"
 SONARR_BASE = "http://sonarr.test"
 
@@ -32,8 +30,8 @@ def _mock_settings():
     code using it (via settings_store or config) see test URLs.
     """
     mock_values = {
-        "overseerr_url": OVERSEERR_BASE,
-        "overseerr_api_key": "overseerr-key",
+        "seer_url": SEER_BASE,
+        "seer_api_key": "seer-key",
         "sonarr_url": SONARR_BASE,
         "sonarr_api_key": "sonarr-key",
         "radarr_url": RADARR_BASE,
@@ -81,9 +79,9 @@ def in_memory_engine():
 @pytest.mark.asyncio
 async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_engine):
     """Test complete workflow: check → remind → delete."""
-    # Mock Overseerr API
-    overseerr_base = "http://overseerr.test"
-    with respx.mock(base_url=overseerr_base) as respx_mock:
+    # Mock Seer API
+    seer_base = "http://seer.test"
+    with respx.mock(base_url=seer_base) as respx_mock:
         # Count is not called when first page has pageInfo.total
         # Mock get requests
         respx_mock.get("/api/v1/request").mock(
@@ -147,8 +145,8 @@ async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_e
             # Patch get_engine at source so Container and SettingsProvider use test DB
             invalidate_services_config_cache()
             test_config = ServicesConfig()
-            test_config.overseerr_url = overseerr_base
-            test_config.overseerr_api_key = "overseerr-key"
+            test_config.seer_url = seer_base
+            test_config.seer_api_key = "seer-key"
             test_config.radarr_url = radarr_base
             test_config.radarr_api_key = "radarr-key"
             test_config.sonarr_url = SONARR_BASE
@@ -166,14 +164,14 @@ async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_e
                 container = Container()
 
                 # Execute check use case
-                results = await container.check_media_requests_use_case.execute()
+                results = await container.check_media_requests_use_case.execute_with_retention(
+                    container.retention_calculator
+                )
 
                 assert len(results) == 1
-                request, media = results[0]
-                assert isinstance(request, MediaRequest)
-                assert isinstance(media, Media)
-                assert request.request_id == 1
-                assert media.title == "Test Movie"
+                result = results[0]
+                assert result.request.request_id == 1
+                assert result.media.title == "Test Movie"
 
                 # Execute process use case (should delete since past retention)
                 await container.process_media_use_case.execute()
@@ -194,9 +192,9 @@ async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_e
 @pytest.mark.asyncio
 async def test_complete_workflow_remind_only(_mock_settings, in_memory_engine):
     """Test complete workflow: check → remind (no delete)."""
-    # Mock Overseerr API
-    overseerr_base = "http://overseerr.test"
-    with respx.mock(base_url=overseerr_base) as respx_mock:
+    # Mock Seer API
+    seer_base = "http://seer.test"
+    with respx.mock(base_url=seer_base) as respx_mock:
         # Count is not called when first page has pageInfo.total
         respx_mock.get("/api/v1/request").mock(
             return_value=httpx.Response(
@@ -246,8 +244,8 @@ async def test_complete_workflow_remind_only(_mock_settings, in_memory_engine):
 
             invalidate_services_config_cache()
             test_config = ServicesConfig()
-            test_config.overseerr_url = overseerr_base
-            test_config.overseerr_api_key = "overseerr-key"
+            test_config.seer_url = seer_base
+            test_config.seer_api_key = "seer-key"
             test_config.radarr_url = radarr_base
             test_config.radarr_api_key = "radarr-key"
             test_config.sonarr_url = SONARR_BASE
@@ -274,4 +272,4 @@ async def test_complete_workflow_remind_only(_mock_settings, in_memory_engine):
             assert len(delete_calls) == 0
 
             # Verify reminder was added
-            assert container._reminder_gateway.has_reminder(request_id=1) is True
+            assert container._reminder_store.has_reminder(request_id=1) is True

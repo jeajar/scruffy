@@ -21,8 +21,8 @@ RETENTION_DAYS_KEY = "retention.retention_days"
 REMINDER_DAYS_KEY = "retention.reminder_days"
 
 # Services keys
-SERVICES_OVERSEERR_URL = "services.overseerr_url"
-SERVICES_OVERSEERR_API_KEY = "services.overseerr_api_key"
+SERVICES_SEER_URL = "services.seer_url"
+SERVICES_SEER_API_KEY = "services.seer_api_key"
 SERVICES_RADARR_URL = "services.radarr_url"
 SERVICES_RADARR_API_KEY = "services.radarr_api_key"
 SERVICES_SONARR_URL = "services.sonarr_url"
@@ -58,7 +58,7 @@ def _get_many(db_keys: list[str]) -> dict[str, str | None]:
         key_col = cast(ColumnElement[str], SettingsModel.key)
         statement = select(SettingsModel).where(key_col.in_(db_keys))
         rows = session.exec(statement).all()
-        result = {k: None for k in db_keys}
+        result: dict[str, str | None] = dict.fromkeys(db_keys)
         for row in rows:
             result[row.key] = row.value
         return result
@@ -160,16 +160,16 @@ def get_retention_policy() -> RetentionPolicy:
 # --- Services ---
 
 
-def get_overseerr_url() -> str:
-    """Get Overseerr URL. DB first, else env fallback."""
-    val = _get(SERVICES_OVERSEERR_URL)
-    return val if val else str(settings.overseerr_url)
+def get_seer_url() -> str:
+    """Get Seer URL. DB first, else env fallback."""
+    val = _get(SERVICES_SEER_URL)
+    return val if val else str(settings.seer_url)
 
 
-def get_overseerr_api_key() -> str | None:
-    """Get Overseerr API key. DB first, else env fallback."""
-    val = _get(SERVICES_OVERSEERR_API_KEY)
-    return val if val else settings.overseerr_api_key
+def get_seer_api_key() -> str | None:
+    """Get Seer API key. DB first, else env fallback."""
+    val = _get(SERVICES_SEER_API_KEY)
+    return val if val else settings.seer_api_key
 
 
 def get_radarr_url() -> str:
@@ -207,18 +207,18 @@ def invalidate_services_config_cache() -> None:
 
 def set_services_config(
     *,
-    overseerr_url: str | None = None,
-    overseerr_api_key: str | None = None,
+    seer_url: str | None = None,
+    seer_api_key: str | None = None,
     radarr_url: str | None = None,
     radarr_api_key: str | None = None,
     sonarr_url: str | None = None,
     sonarr_api_key: str | None = None,
 ) -> None:
     """Set services config in database. Only provided keys are updated."""
-    if overseerr_url is not None:
-        _set(SERVICES_OVERSEERR_URL, overseerr_url)
-    if overseerr_api_key is not None:
-        _set(SERVICES_OVERSEERR_API_KEY, overseerr_api_key)
+    if seer_url is not None:
+        _set(SERVICES_SEER_URL, seer_url)
+    if seer_api_key is not None:
+        _set(SERVICES_SEER_API_KEY, seer_api_key)
     if radarr_url is not None:
         _set(SERVICES_RADARR_URL, radarr_url)
     if radarr_api_key is not None:
@@ -346,8 +346,8 @@ def set_email_config(
 # --- SettingsProvider (abstraction for gateways) ---
 
 _SERVICES_KEYS = [
-    SERVICES_OVERSEERR_URL,
-    SERVICES_OVERSEERR_API_KEY,
+    SERVICES_SEER_URL,
+    SERVICES_SEER_API_KEY,
     SERVICES_RADARR_URL,
     SERVICES_RADARR_API_KEY,
     SERVICES_SONARR_URL,
@@ -359,12 +359,8 @@ def _build_services_config() -> "ServicesConfig":
     """Build ServicesConfig from DB using batched read. Used when cache is cold."""
     vals = _get_many(_SERVICES_KEYS)
     config = ServicesConfig()
-    config.overseerr_url = vals.get(SERVICES_OVERSEERR_URL) or str(
-        settings.overseerr_url
-    )
-    config.overseerr_api_key = (
-        vals.get(SERVICES_OVERSEERR_API_KEY) or settings.overseerr_api_key
-    )
+    config.seer_url = vals.get(SERVICES_SEER_URL) or str(settings.seer_url)
+    config.seer_api_key = vals.get(SERVICES_SEER_API_KEY) or settings.seer_api_key
     config.radarr_url = vals.get(SERVICES_RADARR_URL) or str(settings.radarr_url)
     config.radarr_api_key = vals.get(SERVICES_RADARR_API_KEY) or settings.radarr_api_key
     config.sonarr_url = vals.get(SERVICES_SONARR_URL) or str(settings.sonarr_url)
@@ -373,11 +369,11 @@ def _build_services_config() -> "ServicesConfig":
 
 
 class ServicesConfig:
-    """Services configuration tuple: (overseerr_url, overseerr_api_key, radarr_url, radarr_api_key, sonarr_url, sonarr_api_key)."""
+    """Services configuration tuple: (seer_url, seer_api_key, radarr_url, radarr_api_key, sonarr_url, sonarr_api_key)."""
 
     def __init__(self) -> None:
-        self.overseerr_url: str = ""
-        self.overseerr_api_key: str | None = None
+        self.seer_url: str = ""
+        self.seer_api_key: str | None = None
         self.radarr_url: str = ""
         self.radarr_api_key: str | None = None
         self.sonarr_url: str = ""
@@ -388,12 +384,12 @@ class SettingsProvider:
     """
     Provides runtime resolution of settings from DB (with env fallback).
 
-    Gateways and EmailClient use this to get config at request time,
+    Gateways and FastMailClient use this to get config at request time,
     supporting live config changes without restart.
     """
 
     def get_services_config(self) -> ServicesConfig:
-        """Get current services config (Overseerr, Radarr, Sonarr). Cached until invalidated."""
+        """Get current services config (Seer, Radarr, Sonarr). Cached until invalidated."""
         global _services_config_cache
         if _services_config_cache is None:
             _services_config_cache = _build_services_config()

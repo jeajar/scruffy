@@ -4,20 +4,20 @@ import logging
 
 from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.frameworks_and_drivers.database.database import get_engine
+from scruffy.frameworks_and_drivers.database.extension_store import ExtensionStore
+from scruffy.frameworks_and_drivers.database.reminder_store import ReminderStore
 from scruffy.frameworks_and_drivers.database.settings_store import (
     SettingsProvider,
     get_extension_days,
     get_retention_policy,
 )
-from scruffy.frameworks_and_drivers.email.email_client import EmailClient
+from scruffy.frameworks_and_drivers.email.fastmail_client import FastMailClient
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
-from scruffy.interface_adapters.gateways.extension_gateway import ExtensionGateway
 from scruffy.interface_adapters.gateways.media_repository_composite import (
     MediaRepositoryComposite,
 )
-from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
 from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
-from scruffy.interface_adapters.gateways.reminder_gateway import ReminderGateway
+from scruffy.interface_adapters.gateways.seer_gateway import SeerGateway
 from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 from scruffy.interface_adapters.notifications.email_notification_service import (
     EmailNotificationService,
@@ -45,21 +45,19 @@ class Container:
         logger.debug("Creating framework dependencies")
         self._http_client = HttpClient()
         self._settings_provider = SettingsProvider()
-        self._email_client = EmailClient(self._settings_provider)
+        self._email_client = FastMailClient(self._settings_provider)
         self._database_engine = get_engine()
 
         # Gateways (interface adapters) - use SettingsProvider for DB-backed config
         logger.debug("Creating gateways")
-        self._overseer_gateway = OverseerGateway(
-            self._settings_provider, self._http_client
-        )
+        self._seer_gateway = SeerGateway(self._settings_provider, self._http_client)
         self._radarr_gateway = RadarrGateway(self._settings_provider, self._http_client)
         self._sonarr_gateway = SonarrGateway(self._settings_provider, self._http_client)
         self._media_repository = MediaRepositoryComposite(
             self._radarr_gateway, self._sonarr_gateway
         )
-        self._reminder_gateway = ReminderGateway(self._database_engine)
-        self._extension_gateway = ExtensionGateway(
+        self._reminder_store = ReminderStore(self._database_engine)
+        self._extension_store = ExtensionStore(
             self._database_engine,
             extension_days_provider=get_extension_days,
         )
@@ -68,22 +66,22 @@ class Container:
         # Use cases
         logger.debug("Creating use cases")
         self._check_use_case = CheckMediaRequestsUseCase(
-            self._overseer_gateway,
+            self._seer_gateway,
             self._media_repository,
-            self._extension_gateway,
-            self._reminder_gateway,
+            self._extension_store,
+            self._reminder_store,
         )
         self._send_reminder_use_case = SendReminderUseCase(
-            self._reminder_gateway, self._notification_service
+            self._reminder_store, self._notification_service
         )
         self._delete_media_use_case = DeleteMediaUseCase(
             self._media_repository,
-            self._overseer_gateway,
+            self._seer_gateway,
             self._notification_service,
         )
         self._request_extension_use_case = RequestExtensionUseCase(
-            self._extension_gateway,
-            self._overseer_gateway,
+            self._extension_store,
+            self._seer_gateway,
         )
 
         self._retention_calculator = RetentionCalculator(get_retention_policy)
@@ -120,9 +118,9 @@ class Container:
         return self._process_use_case
 
     @property
-    def overseer_gateway(self) -> OverseerGateway:
-        """Get Overseerr gateway."""
-        return self._overseer_gateway
+    def seer_gateway(self) -> SeerGateway:
+        """Get Seer gateway."""
+        return self._seer_gateway
 
     @property
     def radarr_gateway(self) -> RadarrGateway:
@@ -143,11 +141,6 @@ class Container:
     def request_extension_use_case(self) -> RequestExtensionUseCase:
         """Get request extension use case."""
         return self._request_extension_use_case
-
-    @property
-    def extension_gateway(self) -> ExtensionGateway:
-        """Get extension gateway."""
-        return self._extension_gateway
 
     @property
     def notification_service(self) -> NotificationServiceInterface:

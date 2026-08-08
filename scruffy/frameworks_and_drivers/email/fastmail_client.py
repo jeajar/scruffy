@@ -6,12 +6,13 @@ from pydantic import SecretStr
 
 from scruffy.domain.value_objects import SCRUFFY_QUOTES
 from scruffy.frameworks_and_drivers.config.settings import settings
+from scruffy.interface_adapters.interfaces.email_client_interface import IEmailClient
 from scruffy.interface_adapters.interfaces.settings_provider_interface import (
     ISettingsProvider,
 )
 
 
-class EmailClient:
+class FastMailClient(IEmailClient):
     """FastMail wrapper for sending emails."""
 
     def __init__(self, settings_provider: "ISettingsProvider | None" = None):
@@ -74,7 +75,7 @@ class EmailClient:
 
         message = MessageSchema(
             subject=f"Gone!: {title}",
-            recipients=[to_email],
+            recipients=[to_email],  # type: ignore[list-item]
             body=html,
             subtype=MessageType.html,
         )
@@ -112,7 +113,7 @@ class EmailClient:
 
         message = MessageSchema(
             subject=f"Reminder: {title}",
-            recipients=[to_email],
+            recipients=[to_email],  # type: ignore[list-item]
             body=html,
             subtype=MessageType.html,
         )

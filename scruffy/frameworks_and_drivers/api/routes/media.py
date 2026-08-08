@@ -10,14 +10,34 @@ from scruffy.frameworks_and_drivers.api.auth import AuthenticatedUser
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 from scruffy.frameworks_and_drivers.database.settings_store import (
     get_extension_days,
-    get_overseerr_url,
+    get_seer_url,
 )
+from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["media"])
 
-# In-memory cache for GET /api/media (short TTL to reduce load on Overseerr/Radarr/Sonarr)
+
+def media_info_to_dict(media: MediaInfoDTO) -> dict:
+    """Convert a MediaInfoDTO to its JSON-serializable representation.
+
+    Shared by the `/api/media` and `/check/sync` routes so both stay in sync.
+    """
+    return {
+        "id": media.id,
+        "title": media.title,
+        "poster": media.poster,
+        "seasons": media.seasons,
+        "size_on_disk": media.size_on_disk,
+        "available_since": (
+            media.available_since.isoformat() if media.available_since else None
+        ),
+        "available": media.available,
+    }
+
+
+# In-memory cache for GET /api/media (short TTL to reduce load on Seer/Radarr/Sonarr)
 _MEDIA_LIST_CACHE_TTL_SECONDS = 60
 _media_list_cache: dict | None = None
 _media_list_cache_expires_at: float = 0
@@ -39,7 +59,7 @@ async def get_media_list(
     Get list of media requests with retention information.
 
     Returns JSON list of all available media with days until deletion.
-    Requires authentication via Overseerr session.
+    Requires authentication via Seer session.
     """
     global _media_list_cache, _media_list_cache_expires_at
 
@@ -70,29 +90,18 @@ async def get_media_list(
             media_list.append(
                 {
                     "request": request_json,
-                    "media": {
-                        "id": result.media.id,
-                        "title": result.media.title,
-                        "poster": result.media.poster,
-                        "seasons": result.media.seasons,
-                        "size_on_disk": result.media.size_on_disk,
-                        "available_since": (
-                            result.media.available_since.isoformat()
-                            if result.media.available_since
-                            else None
-                        ),
-                        "available": result.media.available,
-                    },
+                    "media": media_info_to_dict(result.media),
                     "retention": asdict(result.retention),
                 }
             )
 
-        overseerr_url = get_overseerr_url()
+        seer_url = get_seer_url()
         extension_days = get_extension_days()
         response = {
             "media": media_list,
             "count": len(media_list),
-            "overseerr_url": overseerr_url.rstrip("/") if overseerr_url else None,
+            # NOTE: JSON key stays "overseerr_url" for frontend API compatibility.
+            "overseerr_url": seer_url.rstrip("/") if seer_url else None,
             "extension_days": extension_days,
         }
         _media_list_cache = response

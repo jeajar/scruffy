@@ -77,7 +77,7 @@ async def auth_callback(request: Request, pin_id: int, container: ContainerDep):
     Handle the auth callback after Plex authentication.
 
     Checks if the PIN has been claimed, then verifies the user is imported
-    in Overseerr (has access to our Plex server) before creating a session.
+    in Seer (has access to our Plex server) before creating a session.
     """
     try:
         user = await check_plex_pin(pin_id)
@@ -90,12 +90,12 @@ async def auth_callback(request: Request, pin_id: int, container: ContainerDep):
         logger.debug("PIN not yet claimed", extra={"pin_id": pin_id})
         return RedirectResponse(url="/login?error=not_claimed", status_code=302)
 
-    # Ensure user is imported in Overseerr (has access to our Plex server)
+    # Ensure user is imported in Seer (has access to our Plex server)
     try:
-        imported = await container.overseer_gateway.user_imported_by_plex_id(user.id)
+        imported = await container.seer_gateway.user_imported_by_plex_id(user.id)
     except Exception as e:
         logger.error(
-            "Failed to check Overseerr for user",
+            "Failed to check Seer for user",
             extra={"error": str(e), "user_id": user.id},
         )
         raise HTTPException(
@@ -104,7 +104,7 @@ async def auth_callback(request: Request, pin_id: int, container: ContainerDep):
         )
     if not imported:
         logger.warning(
-            "Plex user not imported in Overseerr - denying login",
+            "Plex user not imported in Seer - denying login",
             extra={"user_id": user.id, "username": user.username},
         )
         return RedirectResponse(
@@ -139,7 +139,7 @@ async def check_pin(request: Request, pin_id: int, container: ContainerDep):
     API endpoint to check if a PIN has been claimed.
 
     Used by the login page to poll for authentication status.
-    Only authorizes if the Plex user is imported in Overseerr (server access).
+    Only authorizes if the Plex user is imported in Seer (server access).
     """
     try:
         user = await check_plex_pin(pin_id)
@@ -150,18 +150,18 @@ async def check_pin(request: Request, pin_id: int, container: ContainerDep):
     if not user:
         return {"authenticated": False}
 
-    # Ensure user is imported in Overseerr (has access to our Plex server)
+    # Ensure user is imported in Seer (has access to our Plex server)
     try:
-        imported = await container.overseer_gateway.user_imported_by_plex_id(user.id)
+        imported = await container.seer_gateway.user_imported_by_plex_id(user.id)
     except Exception as e:
         logger.error(
-            "Failed to check Overseerr for user",
+            "Failed to check Seer for user",
             extra={"error": str(e), "user_id": user.id},
         )
         return {"authenticated": False, "error": "Failed to verify server access"}
     if not imported:
         logger.warning(
-            "Plex user not imported in Overseerr - denying login",
+            "Plex user not imported in Seer - denying login",
             extra={"user_id": user.id, "username": user.username},
         )
         return {"authenticated": False, "error": "not_imported"}
@@ -223,8 +223,8 @@ async def logout_api():
 
 @router.get("/status")
 async def auth_status(request: Request, container: ContainerDep):
-    """Check current authentication status. Includes isAdmin from Overseerr when authenticated."""
-    from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
+    """Check current authentication status. Includes isAdmin from Seer when authenticated."""
+    from scruffy.interface_adapters.gateways.seer_gateway import SeerGateway
 
     session_token = request.cookies.get(SESSION_COOKIE_NAME)
 
@@ -235,8 +235,8 @@ async def auth_status(request: Request, container: ContainerDep):
     if not user:
         return {"authenticated": False}
 
-    overseerr_user = await container.overseer_gateway.get_user_by_plex_id(user.id)
-    is_admin = OverseerGateway.is_overseerr_admin(overseerr_user)
+    seer_user = await container.seer_gateway.get_user_by_plex_id(user.id)
+    is_admin = SeerGateway.is_seer_admin(seer_user)
 
     return {
         "authenticated": True,

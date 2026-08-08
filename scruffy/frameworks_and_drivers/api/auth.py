@@ -18,7 +18,7 @@ from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 from scruffy.frameworks_and_drivers.config.settings import settings
 from scruffy.frameworks_and_drivers.database.settings_store import (
     get_app_base_url,
-    get_overseerr_api_key,
+    get_seer_api_key,
 )
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ api_key_scheme = APIKeyHeader(
     name="X-Api-Key",
     auto_error=False,
     scheme_name="ApiKeyAuth",
-    description="Overseerr API key for task endpoints (cron/automation). Same value as OVERSEERR_API_KEY.",
+    description="Seer API key for task endpoints (cron/automation). Same value as SEER_API_KEY.",
 )
 
 
@@ -243,7 +243,7 @@ async def get_current_user(
 
 
 # Keep the old function name for compatibility
-async def verify_overseerr_session(
+async def verify_seer_session(
     session_token: str | None = Depends(session_cookie_scheme),
 ) -> PlexUser:
     """Verify user session (alias for get_current_user)."""
@@ -262,7 +262,7 @@ def _validate_api_key(api_key: str | None, expected: str | None) -> None:
             detail="API key required",
         )
     if not expected:
-        logger.warning("API key authentication not configured (OVERSEERR_API_KEY)")
+        logger.warning("API key authentication not configured (SEER_API_KEY)")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="API key authentication not configured",
@@ -281,10 +281,10 @@ async def verify_api_key(
     """
     Verify API key for internal/automated requests.
 
-    Checks X-Api-Key header (via OpenAPI scheme) against Overseerr API key.
-    Resolution: DB first, else env (OVERSEERR_API_KEY). Used by task endpoints.
+    Checks X-Api-Key header (via OpenAPI scheme) against Seer API key.
+    Resolution: DB first, else env (SEER_API_KEY). Used by task endpoints.
     """
-    _validate_api_key(api_key, get_overseerr_api_key())
+    _validate_api_key(api_key, get_seer_api_key())
     logger.debug("Request authenticated via API key")
     return True
 
@@ -294,15 +294,15 @@ async def require_admin(
     user: PlexUser = Depends(get_current_user),
 ) -> PlexUser:
     """
-    Require the current user to be an admin in Overseerr.
+    Require the current user to be an admin in Seer.
 
-    Looks up the user in Overseerr by Plex ID and checks permissions (admin bit).
-    Raises HTTP 403 if the user is not an Overseerr admin.
+    Looks up the user in Seer by Plex ID and checks permissions (admin bit).
+    Raises HTTP 403 if the user is not an Seer admin.
     """
-    from scruffy.interface_adapters.gateways.overseer_gateway import OverseerGateway
+    from scruffy.interface_adapters.gateways.seer_gateway import SeerGateway
 
-    overseerr_user = await container.overseer_gateway.get_user_by_plex_id(user.id)
-    if not OverseerGateway.is_overseerr_admin(overseerr_user):
+    seer_user = await container.seer_gateway.get_user_by_plex_id(user.id)
+    if not SeerGateway.is_seer_admin(seer_user):
         logger.warning(
             "Non-admin user attempted admin action",
             extra={"user_id": user.id, "username": user.username},
