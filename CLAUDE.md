@@ -4,7 +4,7 @@ Guidance for Claude Code (and any other agent) working in this repository.
 
 ## Project
 
-Scruffy is a media-retention janitor for Overseerr: it deletes media X days after
+Scruffy is a media-retention janitor for Seer (formerly Overseerr): it deletes media X days after
 it becomes available, reminds users by email first, and lets them request an
 extension. Python 3.13 backend (`scruffy/`), a separate React/TypeScript admin
 frontend (`frontend/`), managed with `uv`.
@@ -43,7 +43,7 @@ scruffy/
     interfaces/             # Ports the use cases depend on (ABCs)
     dtos/                   # Data crossing the use-case boundary
   interface_adapters/      # Interface Adapters layer
-    gateways/                # RadarrGateway, SonarrGateway, OverseerGateway, ...
+    gateways/                # RadarrGateway, SonarrGateway, SeerGateway, ...
     interfaces/              # IHttpClient, ISettingsProvider (ports adapters need)
     notifications/           # EmailNotificationService
     presenters/               # CliPresenter
@@ -71,7 +71,7 @@ Inward, here, means: `frameworks_and_drivers` → `interface_adapters` →
   `NotificationServiceInterface`). It never imports `interface_adapters/` or
   `frameworks_and_drivers/`.
 - `interface_adapters/gateways/` implement those `use_cases/interfaces/` ABCs
-  and translate to/from external systems (Radarr, Sonarr, Overseerr, email).
+  and translate to/from external systems (Radarr, Sonarr, Seer, email).
   They depend inward on `use_cases/` and `domain/`, never on
   `frameworks_and_drivers/`.
 - `frameworks_and_drivers/` is the only layer allowed to know about everything.

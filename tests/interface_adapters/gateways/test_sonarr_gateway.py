@@ -14,8 +14,8 @@ from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 def _make_settings_provider(base_url: str, api_key: str):
     """Create mock SettingsProvider returning given url/api_key for Sonarr."""
     config = SimpleNamespace(
-        overseerr_url="http://test.com",
-        overseerr_api_key="test-key",
+        seer_url="http://test.com",
+        seer_api_key="test-key",
         radarr_url="http://test.com",
         radarr_api_key="test-key",
         sonarr_url=base_url,

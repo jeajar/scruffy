@@ -80,7 +80,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title="Scruffy API",
-        description="Media retention management for Overseerr",
+        description="Media retention management for Seer",
         version=get_version("scruffy"),
         lifespan=lifespan,
     )

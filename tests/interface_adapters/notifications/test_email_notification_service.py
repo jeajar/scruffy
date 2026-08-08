@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from scruffy.frameworks_and_drivers.email.email_client import EmailClient
+from scruffy.interface_adapters.interfaces.email_client_interface import IEmailClient
 from scruffy.interface_adapters.notifications.email_notification_service import (
     EmailNotificationService,
 )
@@ -13,8 +13,8 @@ from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 
 @pytest.fixture
 def mock_email_client():
-    """Mock EmailClient."""
-    return Mock(spec=EmailClient)
+    """Mock IEmailClient."""
+    return Mock(spec=IEmailClient)
 
 
 @pytest.fixture
@@ -68,11 +68,3 @@ async def test_send_deletion_notice(service, mock_email_client, sample_media_dto
         sample_media_dto.poster,
         days_left=0,
     )
-
-
-def test_service_initialization_default():
-    """Test service initialization with default email client."""
-    service = EmailNotificationService()
-
-    # Should not raise error
-    assert service.email_client is not None

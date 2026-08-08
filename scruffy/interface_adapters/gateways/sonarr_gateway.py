@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import Any, cast
 
 from scruffy.domain.value_objects.media_type import MediaType
+from scruffy.interface_adapters.gateways.poster import extract_poster_url
 from scruffy.interface_adapters.interfaces.http_client_interface import (
     IHttpClient,
 )
@@ -259,8 +260,4 @@ class SonarrGateway(MediaRepositoryInterface):
     @staticmethod
     def _get_series_poster(images: list[dict]) -> str | None:
         """Get poster URL from images."""
-        poster = next(
-            (img["remoteUrl"] for img in images if img.get("coverType") == "poster"),
-            None,
-        )
-        return poster
+        return extract_poster_url(images)

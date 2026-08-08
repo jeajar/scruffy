@@ -21,7 +21,7 @@ def mock_container():
     container = Mock()
     container.check_media_requests_use_case = Mock()
     container.process_media_use_case = Mock()
-    container.overseer_gateway = Mock()
+    container.seer_gateway = Mock()
     container.retention_calculator = Mock()
     return container
 
@@ -30,8 +30,8 @@ def mock_container():
 def mock_settings():
     """Mock settings."""
     with patch("scruffy.frameworks_and_drivers.cli.cli_controller.settings") as mock:
-        mock.overseerr_url = "http://test.com"
-        mock.overseerr_api_key = "test-key"
+        mock.seer_url = "http://test.com"
+        mock.seer_api_key = "test-key"
         mock.sonarr_url = "http://test.com"
         mock.sonarr_api_key = "test-key"
         mock.radarr_url = "http://test.com"
@@ -53,7 +53,7 @@ class TestValidateCommand:
     ):
         """Test validate command succeeds."""
         mock_get_container.return_value = mock_container
-        mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.seer_gateway.status = AsyncMock(return_value=True)
 
         result = runner.invoke(app, ["validate"])
 
@@ -67,7 +67,7 @@ class TestValidateCommand:
     ):
         """Test validate command fails when services are not ready."""
         mock_get_container.return_value = mock_container
-        mock_container.overseer_gateway.status = AsyncMock(return_value=False)
+        mock_container.seer_gateway.status = AsyncMock(return_value=False)
 
         result = runner.invoke(app, ["validate"])
 
@@ -99,7 +99,7 @@ class TestCheckCommand:
         from scruffy.use_cases.dtos.request_dto import RequestDTO
 
         mock_get_container.return_value = mock_container
-        mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.seer_gateway.status = AsyncMock(return_value=True)
 
         request_dto = RequestDTO(
             user_id=1,
@@ -151,7 +151,7 @@ class TestCheckCommand:
     ):
         """Test check command with no media results."""
         mock_get_container.return_value = mock_container
-        mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.seer_gateway.status = AsyncMock(return_value=True)
         mock_container.check_media_requests_use_case.execute_with_retention = AsyncMock(
             return_value=[]
         )
@@ -174,7 +174,7 @@ class TestCheckCommand:
     ):
         """Test check command fails when validation fails."""
         mock_get_container.return_value = mock_container
-        mock_container.overseer_gateway.status = AsyncMock(return_value=False)
+        mock_container.seer_gateway.status = AsyncMock(return_value=False)
 
         result = runner.invoke(app, ["check"])
 
@@ -196,7 +196,7 @@ class TestProcessCommand:
     ):
         """Test process command succeeds."""
         mock_get_container.return_value = mock_container
-        mock_container.overseer_gateway.status = AsyncMock(return_value=True)
+        mock_container.seer_gateway.status = AsyncMock(return_value=True)
         mock_container.process_media_use_case.execute = AsyncMock()
 
         result = runner.invoke(app, ["process"])
@@ -216,7 +216,7 @@ class TestProcessCommand:
     ):
         """Test process command fails when validation fails."""
         mock_get_container.return_value = mock_container
-        mock_container.overseer_gateway.status = AsyncMock(return_value=False)
+        mock_container.seer_gateway.status = AsyncMock(return_value=False)
 
         result = runner.invoke(app, ["process"])
 

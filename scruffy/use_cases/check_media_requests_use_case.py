@@ -3,8 +3,6 @@
 import asyncio
 import logging
 
-from scruffy.domain.entities.media import Media
-from scruffy.domain.entities.media_request import MediaRequest
 from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.domain.value_objects.media_status import MediaStatus
 from scruffy.use_cases.dtos.media_check_result_dto import (
@@ -44,76 +42,6 @@ class CheckMediaRequestsUseCase:
         self.extension_repository = extension_repository
         self.reminder_repository = reminder_repository
         logger.debug("Initialized CheckMediaRequestsUseCase")
-
-    async def execute(self) -> list[tuple[MediaRequest, Media]]:
-        """Check all media requests and return those needing attention.
-
-        Note: This method does not apply extension-aware retention. For processing
-        (remind/delete) or display, use execute_with_retention instead.
-        """
-        logger.info("Checking media requests")
-        request_dtos = await self.request_repository.get_requests()
-        logger.debug(
-            "Retrieved requests from repository",
-            extra={"total_requests": len(request_dtos)},
-        )
-
-        # Convert DTOs to entities
-        requests = [map_request_dto_to_entity(dto) for dto in request_dtos]
-
-        # Filter to only available or partially available requests
-        to_check = [
-            req
-            for req in requests
-            if req.media_status
-            in [MediaStatus.PARTIALLY_AVAILABLE, MediaStatus.AVAILABLE]
-        ]
-        logger.info(
-            "Filtered to available requests",
-            extra={
-                "total_requests": len(requests),
-                "available_requests": len(to_check),
-            },
-        )
-
-        coros = [
-            self.media_repository.get_media(
-                req.external_service_id, req.media_type, req.seasons
-            )
-            for req in to_check
-        ]
-        gathered = await asyncio.gather(*coros, return_exceptions=True)
-
-        result = []
-        for req, outcome in zip(to_check, gathered, strict=False):
-            if isinstance(outcome, BaseException):
-                logger.error(
-                    "Failed to fetch media info",
-                    extra={
-                        "request_id": req.request_id,
-                        "external_service_id": req.external_service_id,
-                        "error": str(outcome),
-                    },
-                )
-                continue
-            media_dto = outcome
-            media = map_media_dto_to_entity(media_dto)
-            if media.is_available():
-                result.append((req, media))
-                logger.debug(
-                    "Media is available",
-                    extra={
-                        "request_id": req.request_id,
-                        "title": media.title,
-                        "available_since": str(media.available_since),
-                    },
-                )
-
-        logger.info(
-            "Completed media request check",
-            extra={"requests_needing_attention": len(result)},
-        )
-        return result
 
     async def execute_with_retention(
         self, retention_calculator: RetentionCalculator

@@ -13,8 +13,8 @@ class Settings(BaseSettings):
     )
 
     # Services - DEPRECATED: Prefer database (Admin Settings). Env used as fallback when DB empty.
-    overseerr_url: HttpUrl = HttpUrl("http://localhost:5050")
-    overseerr_api_key: str | None = None
+    seer_url: HttpUrl = HttpUrl("http://localhost:5050")
+    seer_api_key: str | None = None
 
     sonarr_url: HttpUrl = HttpUrl("http://localhost:8989")
     sonarr_api_key: str | None = None

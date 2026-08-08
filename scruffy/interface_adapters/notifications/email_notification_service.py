@@ -1,4 +1,4 @@
-from scruffy.frameworks_and_drivers.email.email_client import EmailClient
+from scruffy.interface_adapters.interfaces.email_client_interface import IEmailClient
 from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 from scruffy.use_cases.interfaces.notification_service_interface import (
     NotificationServiceInterface,
@@ -8,11 +8,9 @@ from scruffy.use_cases.interfaces.notification_service_interface import (
 class EmailNotificationService(NotificationServiceInterface):
     """Email notification service implementing NotificationServiceInterface."""
 
-    def __init__(self, email_client: EmailClient | None = None):
+    def __init__(self, email_client: IEmailClient):
         """Initialize with email client."""
-        # TODO: Fix dependency inversion violation, EmailClient should be
-        # and abstract interface.
-        self.email_client = email_client or EmailClient()
+        self.email_client = email_client
 
     async def send_reminder_notice(
         self,

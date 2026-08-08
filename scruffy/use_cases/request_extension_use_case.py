@@ -34,7 +34,7 @@ class RequestExtensionUseCase:
         Returns True if extension was recorded, False if already extended.
         Raises ValueError if request does not exist or is not available.
         """
-        # Validate request exists in Overseerr
+        # Validate request exists in Seer
         request_dto = await self.request_repository.get_request(request_id)
         if request_dto is None:
             logger.warning(

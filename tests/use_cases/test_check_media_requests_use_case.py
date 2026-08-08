@@ -5,11 +5,8 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from scruffy.domain.entities.media import Media
-from scruffy.domain.entities.media_request import MediaRequest
 from scruffy.domain.services.retention_calculator import RetentionCalculator
 from scruffy.domain.value_objects.media_status import MediaStatus
-from scruffy.domain.value_objects.media_type import MediaType
 from scruffy.domain.value_objects.request_status import RequestStatus
 from scruffy.use_cases.check_media_requests_use_case import CheckMediaRequestsUseCase
 from scruffy.use_cases.dtos.request_dto import RequestDTO
@@ -22,34 +19,14 @@ def use_case(mock_request_repository, mock_media_repository):
 
 
 @pytest.mark.asyncio
-async def test_execute_returns_available_media(
+async def test_execute_with_retention_filters_by_media_status(
     use_case,
     mock_request_repository,
     mock_media_repository,
-    sample_request_dto_movie,
     sample_media_info_dto,
+    retention_policy,
 ):
-    """Test execute returns available media requests."""
-    mock_request_repository.get_requests = AsyncMock(
-        return_value=[sample_request_dto_movie]
-    )
-    mock_media_repository.get_media = AsyncMock(return_value=sample_media_info_dto)
-
-    results = await use_case.execute()
-
-    assert len(results) == 1
-    assert isinstance(results[0], tuple)
-    assert isinstance(results[0][0], MediaRequest)
-    assert isinstance(results[0][1], Media)
-    assert results[0][0].request_id == sample_request_dto_movie.request_id
-    assert results[0][1].id == sample_media_info_dto.id
-
-
-@pytest.mark.asyncio
-async def test_execute_filters_by_media_status(
-    use_case, mock_request_repository, mock_media_repository, sample_media_info_dto
-):
-    """Test execute filters to only AVAILABLE and PARTIALLY_AVAILABLE requests."""
+    """Test execute_with_retention filters to only AVAILABLE and PARTIALLY_AVAILABLE requests."""
     available_request = RequestDTO(
         user_id=1,
         user_email="test@example.com",
@@ -91,46 +68,51 @@ async def test_execute_filters_by_media_status(
         return_value=[available_request, partially_available_request, pending_request]
     )
     mock_media_repository.get_media = AsyncMock(return_value=sample_media_info_dto)
+    calculator = RetentionCalculator(retention_policy)
 
-    results = await use_case.execute()
+    results = await use_case.execute_with_retention(calculator)
 
     # Should only return available and partially available
     assert len(results) == 2
     assert all(
-        req.media_status in [MediaStatus.AVAILABLE, MediaStatus.PARTIALLY_AVAILABLE]
-        for req, _ in results
+        result.request.media_status
+        in [MediaStatus.AVAILABLE, MediaStatus.PARTIALLY_AVAILABLE]
+        for result in results
     )
 
 
 @pytest.mark.asyncio
-async def test_execute_filters_unavailable_media(
+async def test_execute_with_retention_filters_unavailable_media(
     use_case,
     mock_request_repository,
     mock_media_repository,
     sample_request_dto_movie,
     sample_media_info_dto_unavailable,
+    retention_policy,
 ):
-    """Test execute filters out unavailable media."""
+    """Test execute_with_retention filters out unavailable media."""
     mock_request_repository.get_requests = AsyncMock(
         return_value=[sample_request_dto_movie]
     )
     mock_media_repository.get_media = AsyncMock(
         return_value=sample_media_info_dto_unavailable
     )
+    calculator = RetentionCalculator(retention_policy)
 
-    results = await use_case.execute()
+    results = await use_case.execute_with_retention(calculator)
 
     assert len(results) == 0
 
 
 @pytest.mark.asyncio
-async def test_execute_returns_empty_list_when_no_requests(
-    use_case, mock_request_repository
+async def test_execute_with_retention_returns_empty_list_when_no_requests(
+    use_case, mock_request_repository, retention_policy
 ):
-    """Test execute returns empty list when no requests."""
+    """Test execute_with_retention returns empty list when no requests."""
     mock_request_repository.get_requests = AsyncMock(return_value=[])
+    calculator = RetentionCalculator(retention_policy)
 
-    results = await use_case.execute()
+    results = await use_case.execute_with_retention(calculator)
 
     assert results == []
 
@@ -246,23 +228,25 @@ async def test_execute_with_retention_reminder_sent_false_when_no_reminder(
 
 
 @pytest.mark.asyncio
-async def test_execute_handles_tv_requests(
+async def test_execute_with_retention_handles_tv_requests(
     use_case,
     mock_request_repository,
     mock_media_repository,
     sample_request_dto_tv,
     sample_media_info_dto_tv,
+    retention_policy,
 ):
-    """Test execute handles TV requests with seasons."""
+    """Test execute_with_retention handles TV requests with seasons."""
     mock_request_repository.get_requests = AsyncMock(
         return_value=[sample_request_dto_tv]
     )
     mock_media_repository.get_media = AsyncMock(return_value=sample_media_info_dto_tv)
+    calculator = RetentionCalculator(retention_policy)
 
-    results = await use_case.execute()
+    results = await use_case.execute_with_retention(calculator)
 
     assert len(results) == 1
-    request, media = results[0]
-    assert request.media_type == MediaType.TV
-    assert request.seasons == [1, 2]
-    assert media.seasons == [1, 2]
+    result = results[0]
+    assert result.request.type == "tv"
+    assert result.request.seasons == [1, 2]
+    assert result.media.seasons == [1, 2]

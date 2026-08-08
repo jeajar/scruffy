@@ -1,6 +1,6 @@
 """Abstract settings provider interface for dependency inversion.
 
-Implementations live in frameworks_and_drivers. Gateways and EmailClient depend on
+Implementations live in frameworks_and_drivers. Gateways and FastMailClient depend on
 this interface only, not on concrete database-backed implementations.
 """
 
@@ -8,10 +8,10 @@ from typing import Protocol, TypedDict
 
 
 class IServicesConfig(Protocol):
-    """Protocol for services configuration (Overseerr, Radarr, Sonarr)."""
+    """Protocol for services configuration (Seer, Radarr, Sonarr)."""
 
-    overseerr_url: str
-    overseerr_api_key: str | None
+    seer_url: str
+    seer_api_key: str | None
     radarr_url: str
     radarr_api_key: str | None
     sonarr_url: str
@@ -34,12 +34,12 @@ class EmailConfig(TypedDict):
 class ISettingsProvider(Protocol):
     """Abstract interface for runtime resolution of settings (DB + env fallback).
 
-    Gateways and EmailClient use this to get config at request time,
+    Gateways and FastMailClient use this to get config at request time,
     supporting live config changes without restart.
     """
 
     def get_services_config(self) -> IServicesConfig:
-        """Get current services config (Overseerr, Radarr, Sonarr)."""
+        """Get current services config (Seer, Radarr, Sonarr)."""
         ...
 
     def get_email_config(self) -> EmailConfig:

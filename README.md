@@ -12,13 +12,13 @@
 
 
 
-Scruffy, the janitor is responsible to delete media requested by users with Overseerr.
+Scruffy, the janitor is responsible to delete media requested by users with Seer.
 For when your friends and family members are out of control.
 
 **Note** Current project status: Very experimental and in proof of concept.
 
 ## The Problem
-Overseerr is an amazing request application but the project has decided, at least for the time being, that it is not responsible for deleting media even if it has API access to Plex, Radarr and Sonarr. We need a process to handle this externally.
+Seer (the request-management app Scruffy talks to; it picked up the same API after Overseerr was discontinued) is an amazing request application but has decided, at least for the time being, that it is not responsible for deleting media even if it has API access to Plex, Radarr and Sonarr. We need a process to handle this externally.
 
 ## Proposed Features:
 * Scruffy handles media requests like a library loan. Media on disk is deleted X days after they have been added (made available).
@@ -115,7 +115,7 @@ The frontend runs at **http://localhost:5173** and proxies `/api`, `/auth`, and 
 
 **Admin & scheduled jobs**
 
-When the API is running, scheduled jobs (check/process) are stored in the same SQLite DB and run in the background via APScheduler. Admin access is determined by **Overseerr**: any user with admin permission in Overseerr can open **Admin** in the header and manage **Scheduled Jobs** (add/edit/delete cron-style schedules and run jobs on demand). The **Jobs** page shows run history with an expandable summary of what was sent (reminders) or deleted per run. No env var is required.
+When the API is running, scheduled jobs (check/process) are stored in the same SQLite DB and run in the background via APScheduler. Admin access is determined by **Seer**: any user with admin permission in Seer can open **Admin** in the header and manage **Scheduled Jobs** (add/edit/delete cron-style schedules and run jobs on demand). The **Jobs** page shows run history with an expandable summary of what was sent (reminders) or deleted per run. No env var is required.
 
 If you upgraded from a version before job run summaries and use an existing SQLite DB, add the column so new runs can store summaries: `sqlite3 scruffy.db "ALTER TABLE jobrunmodel ADD COLUMN summary TEXT;"`
 
@@ -142,7 +142,7 @@ docker compose -f docker-compose.yaml -f docker-compose.test.yml up -d
 - **http://localhost:3000** — Scruffy (same as above)
 - **http://localhost:8025** — Mailpit web UI to view captured emails
 
-The test compose sets `SKIP_VALIDATE=true` so the app starts without requiring Overseerr, Sonarr, or Radarr (the default entrypoint runs `scruffy validate`, which would otherwise fail and restart the container).
+The test compose sets `SKIP_VALIDATE=true` so the app starts without requiring Seer, Sonarr, or Radarr (the default entrypoint runs `scruffy validate`, which would otherwise fail and restart the container).
 
 Use a separate project name to run alongside another stack: `docker-compose -f docker-compose.yaml -f docker-compose.test.yml -p scruffy-test up -d`. To stop and remove the test stack (and its data volume): `docker-compose -f docker-compose.yaml -f docker-compose.test.yml -p scruffy-test down -v`.
 
@@ -160,12 +160,12 @@ docker pull ghcr.io/<owner>/<repo>/scruffy:latest
 
 ## Configuration
 
-**Services and Notifications** (Overseerr, Radarr, Sonarr, email) are configured in **Admin Settings** (database). Environment variables below are used as fallbacks when the database has no value (e.g. first run, CLI, Docker). Prefer configuring via the Admin UI for normal operation.
+**Services and Notifications** (Seer, Radarr, Sonarr, email) are configured in **Admin Settings** (database). Environment variables below are used as fallbacks when the database has no value (e.g. first run, CLI, Docker). Prefer configuring via the Admin UI for normal operation.
 
 | Environment Variable | Default Value | Description | Required |
 |---------------------|---------------|-------------|-----------|
-| `OVERSEERR_URL` | `http://localhost:5050` | Overseerr server URL (fallback) | No |
-| `OVERSEERR_API_KEY` | `None` | API key for Overseerr (fallback) | Yes |
+| `SEER_URL` | `http://localhost:5050` | Seer server URL (fallback) | No |
+| `SEER_API_KEY` | `None` | API key for Seer (fallback) | Yes |
 | `SONARR_URL` | `http://localhost:8989` | Sonarr server URL (fallback) | No |
 | `SONARR_API_KEY` | `None` | API key for Sonarr (fallback) | Yes |
 | `RADARR_URL` | `http://localhost:7878` | Radarr server URL (fallback) | No |
@@ -207,8 +207,8 @@ services:
   scruffy:
     build: .
     environment:
-      - OVERSEERR_URL=${OVERSEERR_URL}
-      - OVERSEERR_API_KEY=${OVERSEERR_API_KEY}
+      - SEER_URL=${SEER_URL}
+      - SEER_API_KEY=${SEER_API_KEY}
       - SONARR_URL=${SONARR_URL}
       - SONARR_API_KEY=${SONARR_API_KEY}
       - RADARR_URL=${RADARR_URL}
@@ -258,8 +258,8 @@ services:
   scruffy:
     build: .
     environment:
-      - OVERSEERR_URL=${OVERSEERR_URL}
-      - OVERSEERR_API_KEY=${OVERSEERR_API_KEY}
+      - SEER_URL=${SEER_URL}
+      - SEER_API_KEY=${SEER_API_KEY}
       - SONARR_URL=${SONARR_URL}
       - SONARR_API_KEY=${SONARR_API_KEY}
       - RADARR_URL=${RADARR_URL}

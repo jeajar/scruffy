@@ -1,4 +1,4 @@
-"""Gateway adapter for request extension persistence."""
+"""SQLModel-backed store for request extension persistence."""
 
 import logging
 from collections.abc import Callable
@@ -17,19 +17,19 @@ from scruffy.use_cases.interfaces.extension_repository_interface import (
 logger = logging.getLogger(__name__)
 
 
-class ExtensionGateway(ExtensionRepositoryInterface):
-    """Adapter for request extension persistence using SQLModel."""
+class ExtensionStore(ExtensionRepositoryInterface):
+    """Store for request extension persistence using SQLModel."""
 
     def __init__(
         self,
         engine: Engine | None = None,
         extension_days_provider: Callable[[], int] | None = None,
     ):
-        """Initialize extension gateway with database engine and optional extension_days provider."""
+        """Initialize extension store with database engine and optional extension_days provider."""
         self.engine = engine or get_engine()
         self._extension_days_provider = extension_days_provider or (lambda: 0)
         SQLModel.metadata.create_all(self.engine)
-        logger.debug("Initialized ExtensionGateway")
+        logger.debug("Initialized ExtensionStore")
 
     def is_extended(self, request_id: int) -> bool:
         """Check if a request has been extended."""

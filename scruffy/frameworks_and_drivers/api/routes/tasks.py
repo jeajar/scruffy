@@ -8,6 +8,7 @@ from fastapi import APIRouter, BackgroundTasks
 
 from scruffy.frameworks_and_drivers.api.auth import ApiKeyAuth
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
+from scruffy.frameworks_and_drivers.api.routes.media import media_info_to_dict
 from scruffy.frameworks_and_drivers.database.job_run_store import record_job_run_sync
 
 logger = logging.getLogger(__name__)
@@ -120,19 +121,7 @@ async def trigger_check_sync(
             media_list.append(
                 {
                     "request": result.request.json(),
-                    "media": {
-                        "id": result.media.id,
-                        "title": result.media.title,
-                        "poster": result.media.poster,
-                        "seasons": result.media.seasons,
-                        "size_on_disk": result.media.size_on_disk,
-                        "available_since": (
-                            result.media.available_since.isoformat()
-                            if result.media.available_since
-                            else None
-                        ),
-                        "available": result.media.available,
-                    },
+                    "media": media_info_to_dict(result.media),
                     "retention": asdict(result.retention),
                 }
             )
