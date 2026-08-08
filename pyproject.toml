@@ -1,7 +1,7 @@
 [project]
 name = "scruffy"
-version = "0.6.1"
-description = "An opiniated Media cleaner for Overseerr"
+version = "0.6.2"
+description = "An opiniated Media cleaner for Seer"
 readme = "README.md"
 requires-python = "==3.13.*"
 dependencies = [
