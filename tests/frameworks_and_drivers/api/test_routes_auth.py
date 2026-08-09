@@ -23,11 +23,11 @@ def plex_user():
 
 @pytest.fixture
 def mock_container(plex_user):  # noqa: ARG001
-    """Mock container with seer_gateway.user_imported_by_plex_id and get_user_by_plex_id."""
+    """Mock container with seerr_gateway.user_imported_by_plex_id and get_user_by_plex_id."""
     container = Mock()
-    container.seer_gateway = Mock()
-    container.seer_gateway.user_imported_by_plex_id = AsyncMock(return_value=True)
-    container.seer_gateway.get_user_by_plex_id = AsyncMock(
+    container.seerr_gateway = Mock()
+    container.seerr_gateway.user_imported_by_plex_id = AsyncMock(return_value=True)
+    container.seerr_gateway.get_user_by_plex_id = AsyncMock(
         return_value={"plexId": 42, "permissions": 2}
     )
     return container
@@ -65,13 +65,13 @@ class TestAuthCallback:
             response = client.get("/auth/callback?pin_id=123", follow_redirects=False)
         assert response.status_code == 302
         assert "not_claimed" in response.headers["location"]
-        mock_container.seer_gateway.user_imported_by_plex_id.assert_not_called()
+        mock_container.seerr_gateway.user_imported_by_plex_id.assert_not_called()
 
-    def test_callback_redirects_when_user_not_imported_in_seer(
+    def test_callback_redirects_when_user_not_imported_in_seerr(
         self, client, mock_container, plex_user
     ):
-        """When user is not imported in Seer, redirect with error=not_imported."""
-        mock_container.seer_gateway.user_imported_by_plex_id = AsyncMock(
+        """When user is not imported in Seerr, redirect with error=not_imported."""
+        mock_container.seerr_gateway.user_imported_by_plex_id = AsyncMock(
             return_value=False
         )
         with patch(
@@ -82,12 +82,14 @@ class TestAuthCallback:
             response = client.get("/auth/callback?pin_id=123", follow_redirects=False)
         assert response.status_code == 302
         assert "not_imported" in response.headers["location"]
-        mock_container.seer_gateway.user_imported_by_plex_id.assert_called_once_with(42)
+        mock_container.seerr_gateway.user_imported_by_plex_id.assert_called_once_with(
+            42
+        )
 
     def test_callback_creates_session_when_user_imported(
         self, client, mock_container, plex_user
     ):
-        """When user is imported in Seer, create session and redirect to SPA completion page."""
+        """When user is imported in Seerr, create session and redirect to SPA completion page."""
         with patch(
             "scruffy.frameworks_and_drivers.api.routes.auth.check_plex_pin",
             new_callable=AsyncMock,
@@ -97,14 +99,16 @@ class TestAuthCallback:
         assert response.status_code == 302
         assert response.headers["location"] == "/login/complete"
         assert "scruffy_session" in response.headers.get("set-cookie", "")
-        mock_container.seer_gateway.user_imported_by_plex_id.assert_called_once_with(42)
+        mock_container.seerr_gateway.user_imported_by_plex_id.assert_called_once_with(
+            42
+        )
 
-    def test_callback_502_when_seer_check_fails(
+    def test_callback_502_when_seerr_check_fails(
         self, client, mock_container, plex_user
     ):
-        """When Seer user check raises, return 502."""
-        mock_container.seer_gateway.user_imported_by_plex_id = AsyncMock(
-            side_effect=Exception("Seer unreachable")
+        """When Seerr user check raises, return 502."""
+        mock_container.seerr_gateway.user_imported_by_plex_id = AsyncMock(
+            side_effect=Exception("Seerr unreachable")
         )
         with patch(
             "scruffy.frameworks_and_drivers.api.routes.auth.check_plex_pin",
@@ -145,8 +149,8 @@ class TestCheckPin:
     def test_check_pin_not_authenticated_when_user_not_imported(
         self, client, mock_container, plex_user
     ):
-        """When user not imported in Seer, return authenticated False and error."""
-        mock_container.seer_gateway.user_imported_by_plex_id = AsyncMock(
+        """When user not imported in Seerr, return authenticated False and error."""
+        mock_container.seerr_gateway.user_imported_by_plex_id = AsyncMock(
             return_value=False
         )
         with patch(
@@ -163,7 +167,7 @@ class TestCheckPin:
     def test_check_pin_authenticated_when_user_imported(
         self, client, mock_container, plex_user
     ):
-        """When user is imported in Seer, return authenticated True and session."""
+        """When user is imported in Seerr, return authenticated True and session."""
         with patch(
             "scruffy.frameworks_and_drivers.api.routes.auth.check_plex_pin",
             new_callable=AsyncMock,
@@ -176,14 +180,16 @@ class TestCheckPin:
         assert data["user"]["id"] == 42
         assert data["user"]["username"] == "testuser"
         assert "session_token" in data
-        mock_container.seer_gateway.user_imported_by_plex_id.assert_called_once_with(42)
+        mock_container.seerr_gateway.user_imported_by_plex_id.assert_called_once_with(
+            42
+        )
 
-    def test_check_pin_error_when_seer_check_fails(
+    def test_check_pin_error_when_seerr_check_fails(
         self, client, mock_container, plex_user
     ):
-        """When Seer user check raises, return authenticated False and error."""
-        mock_container.seer_gateway.user_imported_by_plex_id = AsyncMock(
-            side_effect=Exception("Seer unreachable")
+        """When Seerr user check raises, return authenticated False and error."""
+        mock_container.seerr_gateway.user_imported_by_plex_id = AsyncMock(
+            side_effect=Exception("Seerr unreachable")
         )
         with patch(
             "scruffy.frameworks_and_drivers.api.routes.auth.check_plex_pin",
@@ -328,9 +334,9 @@ class TestAuthStatus:
         assert response.json() == {"authenticated": False}
 
     def test_status_authenticated_with_admin(self, client, mock_container, plex_user):
-        """When valid session and user is Seer admin, return isAdmin True."""
+        """When valid session and user is Seerr admin, return isAdmin True."""
         session_token = create_session_token(plex_user)
-        mock_container.seer_gateway.get_user_by_plex_id = AsyncMock(
+        mock_container.seerr_gateway.get_user_by_plex_id = AsyncMock(
             return_value={"plexId": 42, "permissions": 2}
         )
         response = client.get(
@@ -347,9 +353,9 @@ class TestAuthStatus:
     def test_status_authenticated_with_non_admin(
         self, client, mock_container, plex_user
     ):
-        """When valid session and user is not Seer admin, return isAdmin False."""
+        """When valid session and user is not Seerr admin, return isAdmin False."""
         session_token = create_session_token(plex_user)
-        mock_container.seer_gateway.get_user_by_plex_id = AsyncMock(
+        mock_container.seerr_gateway.get_user_by_plex_id = AsyncMock(
             return_value={"plexId": 42, "permissions": 0}
         )
         response = client.get(
@@ -362,12 +368,12 @@ class TestAuthStatus:
         assert data["isAdmin"] is False
         assert data["user"]["username"] == "testuser"
 
-    def test_status_authenticated_when_seer_user_not_found(
+    def test_status_authenticated_when_seerr_user_not_found(
         self, client, mock_container, plex_user
     ):
-        """When valid session but Seer returns None, isAdmin is False."""
+        """When valid session but Seerr returns None, isAdmin is False."""
         session_token = create_session_token(plex_user)
-        mock_container.seer_gateway.get_user_by_plex_id = AsyncMock(return_value=None)
+        mock_container.seerr_gateway.get_user_by_plex_id = AsyncMock(return_value=None)
         response = client.get(
             "/auth/status",
             cookies={"scruffy_session": session_token},

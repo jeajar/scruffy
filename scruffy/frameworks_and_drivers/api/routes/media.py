@@ -10,7 +10,7 @@ from scruffy.frameworks_and_drivers.api.auth import AuthenticatedUser
 from scruffy.frameworks_and_drivers.api.dependencies import ContainerDep
 from scruffy.frameworks_and_drivers.database.settings_store import (
     get_extension_days,
-    get_seer_url,
+    get_seerr_url,
 )
 from scruffy.use_cases.dtos.media_info_dto import MediaInfoDTO
 
@@ -37,7 +37,7 @@ def media_info_to_dict(media: MediaInfoDTO) -> dict:
     }
 
 
-# In-memory cache for GET /api/media (short TTL to reduce load on Seer/Radarr/Sonarr)
+# In-memory cache for GET /api/media (short TTL to reduce load on Seerr/Radarr/Sonarr)
 _MEDIA_LIST_CACHE_TTL_SECONDS = 60
 _media_list_cache: dict | None = None
 _media_list_cache_expires_at: float = 0
@@ -59,7 +59,7 @@ async def get_media_list(
     Get list of media requests with retention information.
 
     Returns JSON list of all available media with days until deletion.
-    Requires authentication via Seer session.
+    Requires authentication via Seerr session.
     """
     global _media_list_cache, _media_list_cache_expires_at
 
@@ -95,13 +95,13 @@ async def get_media_list(
                 }
             )
 
-        seer_url = get_seer_url()
+        seerr_url = get_seerr_url()
         extension_days = get_extension_days()
         response = {
             "media": media_list,
             "count": len(media_list),
             # NOTE: JSON key stays "overseerr_url" for frontend API compatibility.
-            "overseerr_url": seer_url.rstrip("/") if seer_url else None,
+            "overseerr_url": seerr_url.rstrip("/") if seerr_url else None,
             "extension_days": extension_days,
         }
         _media_list_cache = response

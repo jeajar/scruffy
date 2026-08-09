@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- Corrected the "Seer" rename from 0.6.2 to "Seerr" (the actual name of Overseerr's successor). `SEER_URL`/`SEER_API_KEY` environment variables are now `SEERR_URL`/`SEERR_API_KEY`; existing `services.seer_*` admin settings are migrated to `services.seerr_*` on upgrade.
+- Console and file logs now include the fields passed via `extra=` on log calls (e.g. the underlying error on a failed request), instead of silently dropping them. Previously only the optional Loki handler surfaced this context, so failures were hard to diagnose without it enabled.
+
 ## [0.6.2] - 2026-08-08
 
 ### Changed

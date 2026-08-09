@@ -17,7 +17,7 @@ from scruffy.interface_adapters.gateways.media_repository_composite import (
     MediaRepositoryComposite,
 )
 from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
-from scruffy.interface_adapters.gateways.seer_gateway import SeerGateway
+from scruffy.interface_adapters.gateways.seerr_gateway import SeerrGateway
 from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 from scruffy.interface_adapters.notifications.email_notification_service import (
     EmailNotificationService,
@@ -50,7 +50,7 @@ class Container:
 
         # Gateways (interface adapters) - use SettingsProvider for DB-backed config
         logger.debug("Creating gateways")
-        self._seer_gateway = SeerGateway(self._settings_provider, self._http_client)
+        self._seerr_gateway = SeerrGateway(self._settings_provider, self._http_client)
         self._radarr_gateway = RadarrGateway(self._settings_provider, self._http_client)
         self._sonarr_gateway = SonarrGateway(self._settings_provider, self._http_client)
         self._media_repository = MediaRepositoryComposite(
@@ -66,7 +66,7 @@ class Container:
         # Use cases
         logger.debug("Creating use cases")
         self._check_use_case = CheckMediaRequestsUseCase(
-            self._seer_gateway,
+            self._seerr_gateway,
             self._media_repository,
             self._extension_store,
             self._reminder_store,
@@ -76,12 +76,12 @@ class Container:
         )
         self._delete_media_use_case = DeleteMediaUseCase(
             self._media_repository,
-            self._seer_gateway,
+            self._seerr_gateway,
             self._notification_service,
         )
         self._request_extension_use_case = RequestExtensionUseCase(
             self._extension_store,
-            self._seer_gateway,
+            self._seerr_gateway,
         )
 
         self._retention_calculator = RetentionCalculator(get_retention_policy)
@@ -118,9 +118,9 @@ class Container:
         return self._process_use_case
 
     @property
-    def seer_gateway(self) -> SeerGateway:
-        """Get Seer gateway."""
-        return self._seer_gateway
+    def seerr_gateway(self) -> SeerrGateway:
+        """Get Seerr gateway."""
+        return self._seerr_gateway
 
     @property
     def radarr_gateway(self) -> RadarrGateway:

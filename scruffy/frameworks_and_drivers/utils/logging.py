@@ -6,13 +6,35 @@ from pathlib import Path
 
 from rich.logging import RichHandler
 
-from scruffy.frameworks_and_drivers.utils.loki_handler import LokiHandler
+from scruffy.frameworks_and_drivers.utils.loki_handler import JsonFormatter, LokiHandler
 
 # Track if logging has been configured globally
 _logging_configured = False
 
 # Default format for human-readable logs
 DEFAULT_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+
+class ExtraFieldsFormatter(logging.Formatter):
+    """Formatter that appends logger.*(..., extra={...}) fields to the message.
+
+    Without this, RichHandler/logging.Formatter render only %(message)s and
+    silently drop everything passed via `extra=`, which is how call sites
+    throughout this codebase attach the actual error/context (e.g. the
+    underlying connection error behind "Failed to fetch media list").
+    """
+
+    def format(self, record: logging.LogRecord) -> str:
+        message = super().format(record)
+        extras = {
+            key: value
+            for key, value in record.__dict__.items()
+            if key not in JsonFormatter.RESERVED_ATTRS and not key.startswith("_")
+        }
+        if extras:
+            extras_str = " ".join(f"{key}={value!r}" for key, value in extras.items())
+            message = f"{message} ({extras_str})"
+        return message
 
 
 def configure_logging(
@@ -52,6 +74,7 @@ def configure_logging(
         show_path=False,
         rich_tracebacks=True,
     )
+    console_handler.setFormatter(ExtraFieldsFormatter("%(message)s"))
     console_handler.setLevel(level.upper())
     root_logger.addHandler(console_handler)
 
@@ -63,7 +86,7 @@ def configure_logging(
             maxBytes=10_000_000,  # 10MB
             backupCount=5,
         )
-        file_handler.setFormatter(logging.Formatter(DEFAULT_FORMAT))
+        file_handler.setFormatter(ExtraFieldsFormatter(DEFAULT_FORMAT))
         file_handler.setLevel(level.upper())
         root_logger.addHandler(file_handler)
 

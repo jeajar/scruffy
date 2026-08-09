@@ -66,8 +66,8 @@ def mock_container(sample_media_check_result):
             "deletions": [],
         }
     )
-    container.seer_gateway = Mock()
-    container.seer_gateway.status = AsyncMock(return_value=True)
+    container.seerr_gateway = Mock()
+    container.seerr_gateway.status = AsyncMock(return_value=True)
     container.retention_calculator = Mock()
     return container
 
@@ -106,7 +106,7 @@ class TestCheckTask:
     def test_invalid_api_key_returns_401(self, client):
         """Test that invalid API key returns 401."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="valid-key",
         ):
             response = client.post(
@@ -118,7 +118,7 @@ class TestCheckTask:
     def test_valid_api_key_starts_task(self, client, mock_container):
         """Test that valid API key starts background task."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="valid-key",
         ):
             response = client.post(
@@ -143,7 +143,7 @@ class TestCheckSyncTask:
     def test_valid_api_key_runs_check_and_returns_results(self, client, mock_container):
         """Test that valid API key runs check and returns results."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="valid-key",
         ):
             response = client.post(
@@ -165,7 +165,7 @@ class TestCheckSyncTask:
         )
 
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="valid-key",
         ):
             response = client.post(
@@ -190,7 +190,7 @@ class TestProcessTask:
     def test_valid_api_key_starts_task(self, client, mock_container):
         """Test that valid API key starts background task."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="valid-key",
         ):
             response = client.post(
@@ -215,7 +215,7 @@ class TestProcessSyncTask:
     def test_valid_api_key_runs_process(self, client, mock_container):
         """Test that valid API key runs process and returns success."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="valid-key",
         ):
             response = client.post(
@@ -236,7 +236,7 @@ class TestProcessSyncTask:
         )
 
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="valid-key",
         ):
             response = client.post(
