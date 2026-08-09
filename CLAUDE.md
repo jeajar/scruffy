@@ -24,6 +24,21 @@ uv run mypy scruffy                 # type check (mypy is also in dev deps)
 CI (`.github/workflows/lint.yml`, `tests.yml`) runs `scripts/lint.sh` and
 `pytest --cov=scruffy` on every push/PR to `main`. Run both before opening a PR.
 
+`frontend/` has its own equivalent commands (run from `frontend/`):
+
+```bash
+npm run dev                         # start the Vite dev server
+npm run build                       # tsc -b && vite build
+npm run lint                        # eslint
+npm run format                      # prettier --write
+npm run format:check                # prettier --check
+npm run typecheck                   # tsc -b --noEmit
+bash scripts/lint.sh                # eslint, prettier --check, tsc --noEmit (mirrors the backend's lint.sh)
+```
+
+CI's `frontend-lint` job (also in `.github/workflows/lint.yml`) runs
+`frontend/scripts/lint.sh` on every push/PR to `main`.
+
 ---
 
 ## Architecture: Clean Architecture

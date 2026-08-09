@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Server } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -10,9 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useAdminSettings } from "@/hooks/useAdminSettings";
 import {
-  getAdminSettings,
-  updateAdminSettings,
   testServiceConnection,
   type AdminSettings,
   type AdminSettingsUpdate,
@@ -22,21 +21,15 @@ export const Route = createFileRoute("/admin/settings/services")({
   component: ServicesPage,
 });
 
-const inputClass =
-  "block w-full rounded-md border border-gray-600 bg-scruffy-darker px-3 py-2 text-white placeholder-gray-500 focus:border-scruffy-teal focus:ring-1 focus:ring-scruffy-teal";
+const SERVICE_LABELS = {
+  overseerr: "Seerr",
+  radarr: "Radarr",
+  sonarr: "Sonarr",
+} as const;
 
 function ServicesPage() {
-  const queryClient = useQueryClient();
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ["admin-settings"],
-    queryFn: getAdminSettings,
-  });
-  const updateMutation = useMutation({
-    mutationFn: updateAdminSettings,
-    onSuccess: (data) => {
-      queryClient.setQueryData(["admin-settings"], data);
-    },
-  });
+  const { settings, isLoading, update, isUpdating, updateError } =
+    useAdminSettings();
 
   const [services, setServices] = useState<AdminSettings["services"] | null>(
     null
@@ -75,13 +68,15 @@ function ServicesPage() {
       },
     };
     try {
-      await updateMutation.mutateAsync(body);
+      await update(body);
     } catch {
       // Error handled by mutation
     }
   };
 
-  const handleTestService = async (service: "overseerr" | "radarr" | "sonarr") => {
+  const handleTestService = async (
+    service: "overseerr" | "radarr" | "sonarr"
+  ) => {
     setTestStatus((s) => ({ ...s, [service]: null }));
     try {
       const result = await testServiceConnection(service);
@@ -108,7 +103,7 @@ function ServicesPage() {
           Services
         </CardTitle>
         <CardDescription>
-          Configure Overseerr, Radarr, and Sonarr URLs and API keys.
+          Configure Seerr, Radarr, and Sonarr URLs and API keys.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -118,11 +113,11 @@ function ServicesPage() {
           <>
             {(["overseerr", "radarr", "sonarr"] as const).map((svc) => (
               <div key={svc} className="space-y-2">
-                <label className="block text-sm font-medium text-gray-300 capitalize">
-                  {svc}
+                <label className="block text-sm font-medium text-gray-300">
+                  {SERVICE_LABELS[svc]}
                 </label>
                 <div className="flex gap-2">
-                  <input
+                  <Input
                     type="url"
                     value={services[svc].url}
                     onChange={(e) =>
@@ -138,10 +133,9 @@ function ServicesPage() {
                           : null
                       )
                     }
-                    placeholder={`${svc} URL`}
-                    className={inputClass}
+                    placeholder={`${SERVICE_LABELS[svc]} URL`}
                   />
-                  <input
+                  <Input
                     id={`${svc}-api-key`}
                     type="password"
                     value={apiKeys[svc]}
@@ -149,11 +143,8 @@ function ServicesPage() {
                       setApiKeys((k) => ({ ...k, [svc]: e.target.value }))
                     }
                     placeholder={
-                      services[svc].api_key_set
-                        ? "••••••••"
-                        : "API key"
+                      services[svc].api_key_set ? "••••••••" : "API key"
                     }
-                    className={inputClass}
                     autoComplete="off"
                   />
                   <Button
@@ -178,19 +169,19 @@ function ServicesPage() {
                 )}
               </div>
             ))}
-            {updateMutation.isError && (
+            {updateError && (
               <p className="text-sm text-red-400">
-                {updateMutation.error instanceof Error
-                  ? updateMutation.error.message
+                {updateError instanceof Error
+                  ? updateError.message
                   : "Failed to save"}
               </p>
             )}
             <Button
               onClick={handleSaveServices}
-              disabled={updateMutation.isPending}
+              disabled={isUpdating}
               className="bg-scruffy-teal hover:bg-scruffy-teal/90"
             >
-              {updateMutation.isPending ? "Saving..." : "Save Services"}
+              {isUpdating ? "Saving..." : "Save Services"}
             </Button>
           </>
         )}

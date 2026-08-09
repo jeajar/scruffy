@@ -162,7 +162,9 @@ export function Header() {
                       className="cursor-pointer text-gray-300 focus:bg-gray-700 focus:text-white"
                     >
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>{isLoggingOut ? "Signing out..." : "Sign out"}</span>
+                      <span>
+                        {isLoggingOut ? "Signing out..." : "Sign out"}
+                      </span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -216,7 +218,9 @@ export function Header() {
                     <p className="text-sm font-medium text-white truncate">
                       {user.username}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">{user.email}</p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {user.email}
+                    </p>
                   </div>
                   {isAdmin && (
                     <div className="flex flex-col gap-0.5">
@@ -227,7 +231,8 @@ export function Header() {
                         to="/admin/settings/schedules"
                         className={cn(
                           navLink,
-                          pathname === "/admin/settings/schedules" && "bg-gray-700 text-white"
+                          pathname === "/admin/settings/schedules" &&
+                            "bg-gray-700 text-white"
                         )}
                         onClick={closeMobileMenu}
                       >
@@ -238,7 +243,8 @@ export function Header() {
                         to="/admin/settings/services"
                         className={cn(
                           navLink,
-                          pathname === "/admin/settings/services" && "bg-gray-700 text-white"
+                          pathname === "/admin/settings/services" &&
+                            "bg-gray-700 text-white"
                         )}
                         onClick={closeMobileMenu}
                       >
@@ -249,7 +255,8 @@ export function Header() {
                         to="/admin/settings/notifications"
                         className={cn(
                           navLink,
-                          pathname === "/admin/settings/notifications" && "bg-gray-700 text-white"
+                          pathname === "/admin/settings/notifications" &&
+                            "bg-gray-700 text-white"
                         )}
                         onClick={closeMobileMenu}
                       >
@@ -260,7 +267,8 @@ export function Header() {
                         to="/admin/settings/retention"
                         className={cn(
                           navLink,
-                          pathname === "/admin/settings/retention" && "bg-gray-700 text-white"
+                          pathname === "/admin/settings/retention" &&
+                            "bg-gray-700 text-white"
                         )}
                         onClick={closeMobileMenu}
                       >

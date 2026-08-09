@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Film, Tv } from "lucide-react";
 import {
   Dialog,
@@ -30,26 +30,20 @@ export function RequestExtensionModal({
   extensionDays = 7,
   onSuccess,
 }: RequestExtensionModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const handleConfirm = async () => {
-    setIsLoading(true);
-    setError(null);
-    try {
-      await requestExtend(requestId);
+  const extendMutation = useMutation({
+    mutationFn: () => requestExtend(requestId),
+    onSuccess: () => {
       onSuccess?.();
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to request extension");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    },
+  });
+  const isLoading = extendMutation.isPending;
+  const error =
+    extendMutation.error instanceof Error ? extendMutation.error.message : null;
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen && !isLoading) {
-      setError(null);
+      extendMutation.reset();
     }
     onOpenChange(nextOpen);
   };
@@ -107,7 +101,9 @@ export function RequestExtensionModal({
                 >
                   {item.request.type === "movie" ? "Movie" : "TV Show"}
                 </Badge>
-                <Badge variant={item.retention.days_left <= 0 ? "danger" : "warning"}>
+                <Badge
+                  variant={item.retention.days_left <= 0 ? "danger" : "warning"}
+                >
                   {item.retention.days_left <= 0
                     ? "Due for deletion"
                     : `${item.retention.days_left} days left`}
@@ -119,7 +115,9 @@ export function RequestExtensionModal({
                   {formatDate(
                     (() => {
                       const d = new Date();
-                      d.setDate(d.getDate() + item.retention.days_left + extensionDays);
+                      d.setDate(
+                        d.getDate() + item.retention.days_left + extensionDays
+                      );
                       return d.toISOString();
                     })()
                   )}
@@ -146,7 +144,7 @@ export function RequestExtensionModal({
           </Button>
           <Button
             variant="plex"
-            onClick={handleConfirm}
+            onClick={() => extendMutation.mutate()}
             disabled={isLoading}
             className="min-w-[100px]"
           >

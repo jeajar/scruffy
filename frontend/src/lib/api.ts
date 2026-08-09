@@ -1,5 +1,9 @@
 /** Base URL for API requests. Use VITE_API_BASE (or VITE_API_URL) when frontend and API are on different origins. */
-const API_BASE = (import.meta.env.VITE_API_BASE ?? import.meta.env.VITE_API_URL ?? "").replace(/\/$/, "");
+const API_BASE = (
+  import.meta.env.VITE_API_BASE ??
+  import.meta.env.VITE_API_URL ??
+  ""
+).replace(/\/$/, "");
 
 export interface User {
   id: number;
@@ -91,7 +95,8 @@ export async function createPin(): Promise<PinResponse> {
   });
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    const detail = typeof body?.detail === "string" ? body.detail : body?.detail;
+    const detail =
+      typeof body?.detail === "string" ? body.detail : body?.detail;
     const message = detail
       ? `Failed to create Plex PIN: ${detail}`
       : `Failed to create Plex PIN (${response.status})`;
@@ -141,7 +146,8 @@ export async function requestExtend(requestId: number): Promise<{
   if (!response.ok) {
     if (response.status === 401) throw new Error("Unauthorized");
     if (response.status === 404) throw new Error("Request not found");
-    if (response.status === 409) throw new Error("Request has already been extended");
+    if (response.status === 409)
+      throw new Error("Request has already been extended");
     const data = await response.json().catch(() => ({}));
     throw new Error(data.detail ?? "Failed to request extension");
   }
@@ -202,7 +208,13 @@ export async function getSchedules(): Promise<Schedule[]> {
 function parseApiDetail(data: { detail?: unknown }, fallback: string): string {
   const d = data?.detail;
   if (typeof d === "string") return d;
-  if (Array.isArray(d) && d.length > 0 && d[0] && typeof d[0] === "object" && "msg" in d[0]) {
+  if (
+    Array.isArray(d) &&
+    d.length > 0 &&
+    d[0] &&
+    typeof d[0] === "object" &&
+    "msg" in d[0]
+  ) {
     return String((d[0] as { msg?: string }).msg) || fallback;
   }
   return fallback;
@@ -257,7 +269,9 @@ export async function deleteSchedule(id: number): Promise<void> {
   }
 }
 
-export async function runScheduleNow(id: number): Promise<{ status: string; job_type: string }> {
+export async function runScheduleNow(
+  id: number
+): Promise<{ status: string; job_type: string }> {
   const response = await fetch(`${API_BASE}/api/admin/schedules/${id}/run`, {
     method: "POST",
     credentials: "include",
@@ -325,9 +339,12 @@ export async function getJobRuns(params: {
     searchParams.set("page_size", String(params.pageSize));
   }
 
-  const response = await fetch(`${API_BASE}/api/admin/jobs?${searchParams.toString()}`, {
-    credentials: "include",
-  });
+  const response = await fetch(
+    `${API_BASE}/api/admin/jobs?${searchParams.toString()}`,
+    {
+      credentials: "include",
+    }
+  );
   if (!response.ok) {
     if (response.status === 401) throw new Error("Unauthorized");
     if (response.status === 403) throw new Error("Forbidden");

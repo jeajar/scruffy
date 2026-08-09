@@ -1,4 +1,10 @@
-import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Settings, Server, Mail, Clock, CalendarClock } from "lucide-react";
 import { Layout } from "@/components/layout";

@@ -72,9 +72,7 @@ function LoginCompletePage() {
             <CheckCircle2 className="w-12 h-12 text-green-500" />
           </div>
           <p className="mt-4 text-gray-300">
-            {isPopup
-              ? "You can close this window."
-              : "Redirecting..."}
+            {isPopup ? "You can close this window." : "Redirecting..."}
           </p>
           {showFallbackLink && !isPopup ? (
             <Button variant="plex" onClick={handleContinue}>

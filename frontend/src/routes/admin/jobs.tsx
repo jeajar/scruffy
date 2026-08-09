@@ -52,9 +52,7 @@ function JobRunSummaryContent({ summary }: { summary: JobRunSummary }) {
   const legacyReminders = Array.isArray(summary.reminders)
     ? summary.reminders
     : [];
-  const deletions = Array.isArray(summary.deletions)
-    ? summary.deletions
-    : [];
+  const deletions = Array.isArray(summary.deletions) ? summary.deletions : [];
   const hasRemindersSent = remindersSent.length > 0;
   const hasNeedsAttention = needsAttention.length > 0;
   const hasLegacyReminders =
@@ -166,7 +164,8 @@ function JobsPage() {
   }, [page, pageSize]);
 
   useEffect(() => {
-    const totalPages = pageSize === null ? 1 : Math.max(1, Math.ceil(total / pageSize));
+    const totalPages =
+      pageSize === null ? 1 : Math.max(1, Math.ceil(total / pageSize));
     if (page > totalPages) {
       setPage(totalPages);
     }
@@ -240,91 +239,93 @@ function JobsPage() {
                       <TableHeader>
                         <TableRow className="border-gray-700 hover:bg-transparent">
                           <TableHead className="text-gray-400 w-10 sticky left-0 z-10 bg-scruffy-dark"></TableHead>
-                        <TableHead className="text-gray-400">Job Type</TableHead>
-                        <TableHead className="text-gray-400">Date</TableHead>
-                        <TableHead className="text-gray-400">Status</TableHead>
-                        <TableHead className="text-gray-400">Error</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {jobRuns.map((run: JobRun) => (
-                        <Fragment key={run.id}>
-                          <TableRow
-                            className="border-gray-700 hover:bg-gray-800/50"
-                          >
-                            <TableCell className="w-10 py-2 sticky left-0 z-10 bg-scruffy-darker">
-                              {run.summary != null &&
-                              (run.summary.reminders_sent?.length ||
-                                run.summary.needs_attention?.length ||
-                                run.summary.reminders?.length ||
-                                run.summary.deletions?.length ||
-                                run.summary.items_checked !== undefined) ? (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
-                                  onClick={() =>
-                                    setExpandedId((id) =>
-                                      id === run.id ? null : run.id
-                                    )
+                          <TableHead className="text-gray-400">
+                            Job Type
+                          </TableHead>
+                          <TableHead className="text-gray-400">Date</TableHead>
+                          <TableHead className="text-gray-400">
+                            Status
+                          </TableHead>
+                          <TableHead className="text-gray-400">Error</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {jobRuns.map((run: JobRun) => (
+                          <Fragment key={run.id}>
+                            <TableRow className="border-gray-700 hover:bg-gray-800/50">
+                              <TableCell className="w-10 py-2 sticky left-0 z-10 bg-scruffy-darker">
+                                {run.summary != null &&
+                                (run.summary.reminders_sent?.length ||
+                                  run.summary.needs_attention?.length ||
+                                  run.summary.reminders?.length ||
+                                  run.summary.deletions?.length ||
+                                  run.summary.items_checked !== undefined) ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
+                                    onClick={() =>
+                                      setExpandedId((id) =>
+                                        id === run.id ? null : run.id
+                                      )
+                                    }
+                                    aria-label={
+                                      expandedId === run.id
+                                        ? "Collapse details"
+                                        : "Expand details"
+                                    }
+                                  >
+                                    {expandedId === run.id ? (
+                                      <ChevronDown className="h-4 w-4" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4" />
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <span className="w-8 inline-block" />
+                                )}
+                              </TableCell>
+                              <TableCell className="text-white font-medium">
+                                {jobTypeLabel(run.job_type)}
+                              </TableCell>
+                              <TableCell className="text-gray-300">
+                                {formatDate(run.finished_at)}
+                              </TableCell>
+                              <TableCell>
+                                <Badge
+                                  variant={
+                                    run.success ? "default" : "destructive"
                                   }
-                                  aria-label={
-                                    expandedId === run.id
-                                      ? "Collapse details"
-                                      : "Expand details"
+                                  className={
+                                    run.success
+                                      ? "bg-green-600/80 hover:bg-green-600/80"
+                                      : ""
                                   }
                                 >
-                                  {expandedId === run.id ? (
-                                    <ChevronDown className="h-4 w-4" />
-                                  ) : (
-                                    <ChevronRight className="h-4 w-4" />
-                                  )}
-                                </Button>
-                              ) : (
-                                <span className="w-8 inline-block" />
-                              )}
-                            </TableCell>
-                            <TableCell className="text-white font-medium">
-                              {jobTypeLabel(run.job_type)}
-                            </TableCell>
-                            <TableCell className="text-gray-300">
-                              {formatDate(run.finished_at)}
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant={
-                                  run.success ? "default" : "destructive"
-                                }
-                                className={
-                                  run.success
-                                    ? "bg-green-600/80 hover:bg-green-600/80"
-                                    : ""
-                                }
-                              >
-                                {run.success ? "Success" : "Failed"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-gray-400 text-sm max-w-xs truncate">
-                              {run.error_message ?? "-"}
-                            </TableCell>
-                          </TableRow>
-                          {expandedId === run.id && run.summary && (
-                            <TableRow
-                              key={`${run.id}-detail`}
-                              className="border-gray-700 bg-gray-800/30"
-                            >
-                              <TableCell
-                                colSpan={5}
-                                className="py-3 pl-12 pr-4 align-top"
-                              >
-                                <JobRunSummaryContent summary={run.summary} />
+                                  {run.success ? "Success" : "Failed"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-gray-400 text-sm max-w-xs truncate">
+                                {run.error_message ?? "-"}
                               </TableCell>
                             </TableRow>
-                          )}
-                        </Fragment>
-                      ))}
-                    </TableBody>
-                  </Table>
+                            {expandedId === run.id && run.summary && (
+                              <TableRow
+                                key={`${run.id}-detail`}
+                                className="border-gray-700 bg-gray-800/30"
+                              >
+                                <TableCell
+                                  colSpan={5}
+                                  className="py-3 pl-12 pr-4 align-top"
+                                >
+                                  <JobRunSummaryContent summary={run.summary} />
+                                </TableCell>
+                              </TableRow>
+                            )}
+                          </Fragment>
+                        ))}
+                      </TableBody>
+                    </Table>
                   </div>
                   <Pagination
                     page={page}
