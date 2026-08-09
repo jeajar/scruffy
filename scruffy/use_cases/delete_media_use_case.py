@@ -48,12 +48,12 @@ class DeleteMediaUseCase:
             },
         )
 
-        # Delete from media service (Radarr/Sonarr) and Seer in parallel
+        # Delete from media service (Radarr/Sonarr) and Seerr in parallel
         await asyncio.gather(
             self.media_repository.delete_media(
                 request.external_service_id, request.media_type, request.seasons
             ),
-            self._delete_from_seer(request),
+            self._delete_from_seerr(request),
         )
 
         # Send notification after both deletions complete
@@ -75,10 +75,10 @@ class DeleteMediaUseCase:
             },
         )
 
-    async def _delete_from_seer(self, request: MediaRequest) -> None:
-        """Remove request and media from Seer (request_repository)."""
+    async def _delete_from_seerr(self, request: MediaRequest) -> None:
+        """Remove request and media from Seerr (request_repository)."""
         logger.debug(
-            "Deleting from Seer",
+            "Deleting from Seerr",
             extra={"request_id": request.request_id, "media_id": request.media_id},
         )
         await self.request_repository.delete_request(request.request_id)

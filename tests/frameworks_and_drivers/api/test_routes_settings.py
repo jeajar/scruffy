@@ -28,8 +28,8 @@ def mock_admin_user():
 def mock_container():
     """Create mock container for settings tests."""
     container = Mock()
-    container.seer_gateway = Mock()
-    container.seer_gateway.status = AsyncMock(return_value=True)
+    container.seerr_gateway = Mock()
+    container.seerr_gateway.status = AsyncMock(return_value=True)
     container.radarr_gateway = Mock()
     container.radarr_gateway.status = AsyncMock(return_value=True)
     container.sonarr_gateway = Mock()
@@ -59,8 +59,8 @@ def app_with_settings_db(mock_container):
                     for mock_obj in (mock_settings, store_mock):
                         mock_obj.data_dir = str(data_dir)
                         mock_obj.api_secret_key = "test-secret"
-                        mock_obj.seer_url = "http://test"
-                        mock_obj.seer_api_key = "test-key"
+                        mock_obj.seerr_url = "http://test"
+                        mock_obj.seerr_api_key = "test-key"
                         mock_obj.radarr_url = "http://test"
                         mock_obj.radarr_api_key = "test-key"
                         mock_obj.sonarr_url = "http://test"
@@ -171,7 +171,7 @@ class TestSettingsTestService:
 
     def test_test_overseerr_success(self, client, mock_container):
         """Test service test endpoint returns ok when gateway succeeds."""
-        mock_container.seer_gateway.status = AsyncMock(return_value=True)
+        mock_container.seerr_gateway.status = AsyncMock(return_value=True)
 
         response = client.post(
             "/api/admin/settings/services/test/overseerr",
@@ -184,7 +184,7 @@ class TestSettingsTestService:
 
     def test_test_overseerr_failure(self, client, mock_container):
         """Test service test endpoint returns failed when gateway fails."""
-        mock_container.seer_gateway.status = AsyncMock(return_value=False)
+        mock_container.seerr_gateway.status = AsyncMock(return_value=False)
 
         response = client.post(
             "/api/admin/settings/services/test/overseerr",

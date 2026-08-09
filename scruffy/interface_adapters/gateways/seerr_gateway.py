@@ -1,4 +1,4 @@
-"""Gateway adapter for Seer API."""
+"""Gateway adapter for Seerr API."""
 
 import logging
 
@@ -17,43 +17,43 @@ from scruffy.use_cases.interfaces.request_repository_interface import (
 logger = logging.getLogger(__name__)
 
 
-class SeerGateway(RequestRepositoryInterface):
-    """Adapter for Seer API."""
+class SeerrGateway(RequestRepositoryInterface):
+    """Adapter for Seerr API."""
 
     def __init__(
         self,
         settings_provider: ISettingsProvider,
         http_client: IHttpClient,
     ):
-        """Initialize Seer gateway with settings provider for runtime config."""
+        """Initialize Seerr gateway with settings provider for runtime config."""
         self._settings_provider = settings_provider
         self.http_client = http_client
-        logger.debug("Initialized SeerGateway")
+        logger.debug("Initialized SeerrGateway")
 
     def _get_config(self) -> tuple[str, dict]:
         """Get base_url and headers from settings (DB + env fallback)."""
         config = self._settings_provider.get_services_config()
-        base_url = config.seer_url.rstrip("/")
-        api_key = config.seer_api_key or ""
+        base_url = config.seerr_url.rstrip("/")
+        api_key = config.seerr_api_key or ""
         headers = {"X-Api-Key": api_key, "Accept": "application/json"}
         return base_url, headers
 
     async def status(self) -> bool:
-        """Test Seer connection status."""
+        """Test Seerr connection status."""
         base_url, headers = self._get_config()
         try:
             await self.http_client.get(f"{base_url}/api/v1/status", headers=headers)
-            logger.info("Seer connection successful", extra={"base_url": base_url})
+            logger.info("Seerr connection successful", extra={"base_url": base_url})
             return True
         except Exception as e:
             logger.warning(
-                "Seer connection failed",
+                "Seerr connection failed",
                 extra={"base_url": base_url, "error": str(e)},
             )
             return False
 
     async def get_requests(self) -> list[RequestDTO]:
-        """Fetch all media requests from Seer using pagination."""
+        """Fetch all media requests from Seerr using pagination."""
         base_url, headers = self._get_config()
         take = 100
         skip = 0
@@ -65,7 +65,7 @@ class SeerGateway(RequestRepositoryInterface):
             params={"take": take, "skip": skip},
         )
         page_results = [
-            RequestDTO.from_seer_response(req) for req in response.get("results", [])
+            RequestDTO.from_seerr_response(req) for req in response.get("results", [])
         ]
         all_requests = list(page_results)
 
@@ -80,7 +80,7 @@ class SeerGateway(RequestRepositoryInterface):
             total_requests = await self.get_request_count()
 
         logger.info(
-            "Fetching media requests from Seer",
+            "Fetching media requests from Seerr",
             extra={"total_requests": total_requests},
         )
         logger.debug(
@@ -96,7 +96,7 @@ class SeerGateway(RequestRepositoryInterface):
                 params={"take": take, "skip": skip},
             )
             page_results = [
-                RequestDTO.from_seer_response(req)
+                RequestDTO.from_seerr_response(req)
                 for req in response.get("results", [])
             ]
             all_requests.extend(page_results)
@@ -120,7 +120,7 @@ class SeerGateway(RequestRepositoryInterface):
                 f"{base_url}/api/v1/request/{request_id}",
                 headers=headers,
             )
-            return RequestDTO.from_seer_response(response)
+            return RequestDTO.from_seerr_response(response)
         except Exception as e:
             logger.debug(
                 "Request not found or error fetching",
@@ -131,7 +131,7 @@ class SeerGateway(RequestRepositoryInterface):
     async def delete_request(self, request_id: int) -> None:
         """Delete a request by its ID."""
         base_url, headers = self._get_config()
-        logger.info("Deleting request from Seer", extra={"request_id": request_id})
+        logger.info("Deleting request from Seerr", extra={"request_id": request_id})
         await self.http_client.delete(
             f"{base_url}/api/v1/request/{request_id}", headers=headers
         )
@@ -140,7 +140,7 @@ class SeerGateway(RequestRepositoryInterface):
     async def delete_media(self, media_id: int) -> None:
         """Delete media by its ID."""
         base_url, headers = self._get_config()
-        logger.info("Deleting media from Seer", extra={"media_id": media_id})
+        logger.info("Deleting media from Seerr", extra={"media_id": media_id})
         await self.http_client.delete(
             f"{base_url}/api/v1/media/{media_id}", headers=headers
         )
@@ -159,10 +159,10 @@ class SeerGateway(RequestRepositoryInterface):
 
     async def user_imported_by_plex_id(self, plex_user_id: int) -> bool:
         """
-        Check if a Plex user is imported in Seer (has access to our server).
+        Check if a Plex user is imported in Seerr (has access to our server).
 
-        Returns True if a user with the given plexId exists in Seer, False otherwise.
-        Raises on Seer API/connection errors so callers can fail closed.
+        Returns True if a user with the given plexId exists in Seerr, False otherwise.
+        Raises on Seerr API/connection errors so callers can fail closed.
         """
         base_url, headers = self._get_config()
         take = 100
@@ -173,7 +173,7 @@ class SeerGateway(RequestRepositoryInterface):
                 headers=headers,
                 params={"take": take, "skip": skip},
             )
-            # Seer may return {"results": [...], "pageInfo": {...}} or a list
+            # Seerr may return {"results": [...], "pageInfo": {...}} or a list
             if isinstance(response, list):
                 results = response
             else:
@@ -181,7 +181,7 @@ class SeerGateway(RequestRepositoryInterface):
             for user in results:
                 if user.get("plexId") == plex_user_id:
                     logger.debug(
-                        "Plex user found in Seer",
+                        "Plex user found in Seerr",
                         extra={"plex_user_id": plex_user_id},
                     )
                     return True
@@ -195,18 +195,18 @@ class SeerGateway(RequestRepositoryInterface):
             if skip >= page_info.get("total", skip + result_count):
                 break
         logger.debug(
-            "Plex user not found in Seer",
+            "Plex user not found in Seerr",
             extra={"plex_user_id": plex_user_id},
         )
         return False
 
     async def get_user_by_plex_id(self, plex_user_id: int) -> dict | None:
         """
-        Get the Seer user object for a Plex user ID.
+        Get the Seerr user object for a Plex user ID.
 
         Returns the user dict (with id, permissions, etc.) or None if not found.
-        Used to check admin/role from Seer (e.g. permissions & ADMIN).
-        Returns None when Seer is unreachable (connection/timeout errors).
+        Used to check admin/role from Seerr (e.g. permissions & ADMIN).
+        Returns None when Seerr is unreachable (connection/timeout errors).
         """
         base_url, headers = self._get_config()
         take = 100
@@ -225,7 +225,7 @@ class SeerGateway(RequestRepositoryInterface):
                 for user in results:
                     if user.get("plexId") == plex_user_id:
                         logger.debug(
-                            "Seer user found by Plex ID",
+                            "Seerr user found by Plex ID",
                             extra={"plex_user_id": plex_user_id},
                         )
                         return user
@@ -241,7 +241,7 @@ class SeerGateway(RequestRepositoryInterface):
             return None
         except HttpRequestError as e:
             logger.warning(
-                "Seer unreachable when resolving user by Plex ID",
+                "Seerr unreachable when resolving user by Plex ID",
                 extra={
                     "plex_user_id": plex_user_id,
                     "base_url": base_url,
@@ -250,20 +250,20 @@ class SeerGateway(RequestRepositoryInterface):
             )
             return None
 
-    # Seer Permission.ADMIN = 2 (from server/lib/permissions.ts)
+    # Seerr Permission.ADMIN = 2 (from server/lib/permissions.ts)
     ADMIN_PERMISSION = 2
 
     @staticmethod
-    def is_seer_admin(user: dict | None) -> bool:
+    def is_seerr_admin(user: dict | None) -> bool:
         """
-        Return True if the Seer user has admin permission.
+        Return True if the Seerr user has admin permission.
 
-        Seer uses a permissions bitmask (see server/lib/permissions in Seer).
-        ADMIN = 2 in Seer's Permission enum.
+        Seerr uses a permissions bitmask (see server/lib/permissions in Seerr).
+        ADMIN = 2 in Seerr's Permission enum.
         """
         if not user:
             return False
         perms = user.get("permissions", 0)
         if isinstance(perms, int):
-            return (perms & SeerGateway.ADMIN_PERMISSION) != 0
+            return (perms & SeerrGateway.ADMIN_PERMISSION) != 0
         return False

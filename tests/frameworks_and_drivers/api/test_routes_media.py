@@ -63,8 +63,8 @@ def mock_container(sample_media_check_result):
         return_value=[sample_media_check_result]
     )
     container.process_media_use_case = Mock()
-    container.seer_gateway = Mock()
-    container.seer_gateway.status = AsyncMock(return_value=True)
+    container.seerr_gateway = Mock()
+    container.seerr_gateway.status = AsyncMock(return_value=True)
     container.retention_calculator = Mock()
     return container
 

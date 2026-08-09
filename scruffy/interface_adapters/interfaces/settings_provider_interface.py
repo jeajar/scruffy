@@ -8,10 +8,10 @@ from typing import Protocol, TypedDict
 
 
 class IServicesConfig(Protocol):
-    """Protocol for services configuration (Seer, Radarr, Sonarr)."""
+    """Protocol for services configuration (Seerr, Radarr, Sonarr)."""
 
-    seer_url: str
-    seer_api_key: str | None
+    seerr_url: str
+    seerr_api_key: str | None
     radarr_url: str
     radarr_api_key: str | None
     sonarr_url: str
@@ -39,7 +39,7 @@ class ISettingsProvider(Protocol):
     """
 
     def get_services_config(self) -> IServicesConfig:
-        """Get current services config (Seer, Radarr, Sonarr)."""
+        """Get current services config (Seerr, Radarr, Sonarr)."""
         ...
 
     def get_email_config(self) -> EmailConfig:

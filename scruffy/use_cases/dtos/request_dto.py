@@ -7,8 +7,8 @@ from scruffy.domain.value_objects.request_status import RequestStatus
 
 
 def _extract_tmdb_id(media: dict, media_type: str) -> int | None:
-    """Extract TMDB ID from Seer media object for media page URLs."""
-    # Seer: media.movie.tmdbId or media.tv.tmdbId
+    """Extract TMDB ID from Seerr media object for media page URLs."""
+    # Seerr: media.movie.tmdbId or media.tv.tmdbId
     sub = media.get("movie") if media_type == "movie" else media.get("tv")
     if isinstance(sub, dict) and "tmdbId" in sub:
         return int(sub["tmdbId"])
@@ -35,11 +35,11 @@ class RequestDTO:
     tmdb_id: int | None = None
 
     @classmethod
-    def from_seer_response(cls, response: dict) -> "RequestDTO":
-        """Create DTO from Seer API response."""
+    def from_seerr_response(cls, response: dict) -> "RequestDTO":
+        """Create DTO from Seerr API response."""
         media: dict = response.get("media", {})
 
-        # Handle request status - Seer can return either integer or string
+        # Handle request status - Seerr can return either integer or string
         raw_status = response.get("status")
         if raw_status is None:
             request_status = RequestStatus.PENDING_APPROVAL
@@ -50,7 +50,7 @@ class RequestDTO:
             except (ValueError, TypeError):
                 request_status = RequestStatus.PENDING_APPROVAL
         else:
-            # Map Seer status strings to RequestStatus enum
+            # Map Seerr status strings to RequestStatus enum
             status_map = {
                 "pendingApproval": RequestStatus.PENDING_APPROVAL,
                 "pendingapproval": RequestStatus.PENDING_APPROVAL,
@@ -61,7 +61,7 @@ class RequestDTO:
                 str(raw_status).lower(), RequestStatus.PENDING_APPROVAL
             )
 
-        # Handle media status - Seer can return either integer or string
+        # Handle media status - Seerr can return either integer or string
         raw_media_status = media.get("status")
         if raw_media_status is None:
             media_status = MediaStatus.UNKNOWN
@@ -72,7 +72,7 @@ class RequestDTO:
             except (ValueError, TypeError):
                 media_status = MediaStatus.UNKNOWN
         else:
-            # Map Seer media status strings to MediaStatus enum
+            # Map Seerr media status strings to MediaStatus enum
             media_status_map = {
                 "unknown": MediaStatus.UNKNOWN,
                 "pending": MediaStatus.PENDING,

@@ -105,7 +105,7 @@ async def async_process_media() -> None:
 async def async_validate() -> bool:
     """Async validate configuration and connections."""
     container = get_container()
-    return await container.seer_gateway.status()
+    return await container.seerr_gateway.status()
 
 
 @app.command()
@@ -119,7 +119,7 @@ def validate():
 
     # Add settings, mask sensitive values
     settings_to_show = {
-        "Seer URL": str(settings.seer_url),
+        "Seerr URL": str(settings.seerr_url),
         "Sonarr URL": str(settings.sonarr_url),
         "Radarr URL": str(settings.radarr_url),
         "Email Enabled": str(settings.email_enabled),

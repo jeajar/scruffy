@@ -17,7 +17,7 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
 from scruffy.frameworks_and_drivers.di.container import Container
 
 # Test URLs used by respx mocks; must match mock_settings patches
-SEER_BASE = "http://seer.test"
+SEERR_BASE = "http://seerr.test"
 RADARR_BASE = "http://radarr.test"
 SONARR_BASE = "http://sonarr.test"
 
@@ -30,8 +30,8 @@ def _mock_settings():
     code using it (via settings_store or config) see test URLs.
     """
     mock_values = {
-        "seer_url": SEER_BASE,
-        "seer_api_key": "seer-key",
+        "seerr_url": SEERR_BASE,
+        "seerr_api_key": "seerr-key",
         "sonarr_url": SONARR_BASE,
         "sonarr_api_key": "sonarr-key",
         "radarr_url": RADARR_BASE,
@@ -79,9 +79,9 @@ def in_memory_engine():
 @pytest.mark.asyncio
 async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_engine):
     """Test complete workflow: check → remind → delete."""
-    # Mock Seer API
-    seer_base = "http://seer.test"
-    with respx.mock(base_url=seer_base) as respx_mock:
+    # Mock Seerr API
+    seerr_base = "http://seerr.test"
+    with respx.mock(base_url=seerr_base) as respx_mock:
         # Count is not called when first page has pageInfo.total
         # Mock get requests
         respx_mock.get("/api/v1/request").mock(
@@ -145,8 +145,8 @@ async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_e
             # Patch get_engine at source so Container and SettingsProvider use test DB
             invalidate_services_config_cache()
             test_config = ServicesConfig()
-            test_config.seer_url = seer_base
-            test_config.seer_api_key = "seer-key"
+            test_config.seerr_url = seerr_base
+            test_config.seerr_api_key = "seerr-key"
             test_config.radarr_url = radarr_base
             test_config.radarr_api_key = "radarr-key"
             test_config.sonarr_url = SONARR_BASE
@@ -192,9 +192,9 @@ async def test_complete_workflow_check_remind_delete(_mock_settings, in_memory_e
 @pytest.mark.asyncio
 async def test_complete_workflow_remind_only(_mock_settings, in_memory_engine):
     """Test complete workflow: check → remind (no delete)."""
-    # Mock Seer API
-    seer_base = "http://seer.test"
-    with respx.mock(base_url=seer_base) as respx_mock:
+    # Mock Seerr API
+    seerr_base = "http://seerr.test"
+    with respx.mock(base_url=seerr_base) as respx_mock:
         # Count is not called when first page has pageInfo.total
         respx_mock.get("/api/v1/request").mock(
             return_value=httpx.Response(
@@ -244,8 +244,8 @@ async def test_complete_workflow_remind_only(_mock_settings, in_memory_engine):
 
             invalidate_services_config_cache()
             test_config = ServicesConfig()
-            test_config.seer_url = seer_base
-            test_config.seer_api_key = "seer-key"
+            test_config.seerr_url = seerr_base
+            test_config.seerr_api_key = "seerr-key"
             test_config.radarr_url = radarr_base
             test_config.radarr_api_key = "radarr-key"
             test_config.sonarr_url = SONARR_BASE

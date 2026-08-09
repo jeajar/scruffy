@@ -17,8 +17,8 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
     get_radarr_url,
     get_reminder_days,
     get_retention_days,
-    get_seer_api_key,
-    get_seer_url,
+    get_seerr_api_key,
+    get_seerr_url,
     get_sonarr_api_key,
     get_sonarr_url,
     set_app_base_url,
@@ -29,7 +29,7 @@ from scruffy.frameworks_and_drivers.database.settings_store import (
     set_services_config,
 )
 from scruffy.interface_adapters.gateways.radarr_gateway import RadarrGateway
-from scruffy.interface_adapters.gateways.seer_gateway import SeerGateway
+from scruffy.interface_adapters.gateways.seerr_gateway import SeerrGateway
 from scruffy.interface_adapters.gateways.sonarr_gateway import SonarrGateway
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class ServiceConfigResponse(BaseModel):
 class ServicesResponse(BaseModel):
     """Services section.
 
-    NOTE: field stays "overseerr" for frontend API compatibility (Seer uses
+    NOTE: field stays "overseerr" for frontend API compatibility (Seerr uses
     the same request-management API as the now-discontinued Overseerr).
     """
 
@@ -153,8 +153,8 @@ def _build_settings_response() -> SettingsResponse:
         app_base_url=get_app_base_url(),
         services=ServicesResponse(
             overseerr=ServiceConfigResponse(
-                url=get_seer_url(),
-                api_key_set=bool(get_seer_api_key()),
+                url=get_seerr_url(),
+                api_key_set=bool(get_seerr_api_key()),
             ),
             radarr=ServiceConfigResponse(
                 url=get_radarr_url(),
@@ -230,11 +230,11 @@ async def update_settings(
         services = body.services  # Narrow type for closure
 
         def _apply_services() -> None:
-            seer = services.overseerr
-            if seer is not None:
+            seerr = services.overseerr
+            if seerr is not None:
                 set_services_config(
-                    seer_url=seer.url,
-                    seer_api_key=seer.api_key,
+                    seerr_url=seerr.url,
+                    seerr_api_key=seerr.api_key,
                 )
             radarr = services.radarr
             if radarr is not None:
@@ -269,15 +269,15 @@ async def test_service_connection(
     container: ContainerDep,
 ) -> dict:
     """
-    Test connection to Seer, Radarr, or Sonarr.
+    Test connection to Seerr, Radarr, or Sonarr.
 
     Service must be one of: overseerr, radarr, sonarr (kept as "overseerr" for
     frontend API compatibility).
     """
     service = service.lower()
-    gateway: SeerGateway | RadarrGateway | SonarrGateway
+    gateway: SeerrGateway | RadarrGateway | SonarrGateway
     if service == "overseerr":
-        gateway = container.seer_gateway
+        gateway = container.seerr_gateway
     elif service == "radarr":
         gateway = container.radarr_gateway
     elif service == "sonarr":

@@ -1,4 +1,4 @@
-"""Tests for SeerGateway."""
+"""Tests for SeerrGateway."""
 
 from types import SimpleNamespace
 
@@ -7,17 +7,17 @@ import pytest
 import respx
 
 from scruffy.frameworks_and_drivers.http.http_client import HttpClient
-from scruffy.interface_adapters.gateways.seer_gateway import SeerGateway
+from scruffy.interface_adapters.gateways.seerr_gateway import SeerrGateway
 from scruffy.interface_adapters.interfaces.http_client_interface import (
     HttpRequestError,
 )
 
 
 def _make_settings_provider(base_url: str, api_key: str):
-    """Create mock SettingsProvider returning given url/api_key for Seer."""
+    """Create mock SettingsProvider returning given url/api_key for Seerr."""
     config = SimpleNamespace(
-        seer_url=base_url,
-        seer_api_key=api_key,
+        seerr_url=base_url,
+        seerr_api_key=api_key,
         radarr_url="http://test.com",
         radarr_api_key="test-key",
         sonarr_url="http://test.com",
@@ -42,14 +42,14 @@ def api_key():
 
 @pytest.fixture
 def gateway(base_url, api_key):
-    """Create SeerGateway instance."""
-    return SeerGateway(_make_settings_provider(base_url, api_key), HttpClient())
+    """Create SeerrGateway instance."""
+    return SeerrGateway(_make_settings_provider(base_url, api_key), HttpClient())
 
 
 @pytest.fixture
 def gateway_with_http_client(base_url, api_key, mock_http_client):
-    """Create SeerGateway with mocked HTTP client."""
-    return SeerGateway(_make_settings_provider(base_url, api_key), mock_http_client)
+    """Create SeerrGateway with mocked HTTP client."""
+    return SeerrGateway(_make_settings_provider(base_url, api_key), mock_http_client)
 
 
 @pytest.mark.asyncio
@@ -214,7 +214,7 @@ def test_gateway_initialization(base_url, api_key):
     """Test gateway initialization with settings provider."""
     provider = _make_settings_provider(base_url, api_key)
     http_client = HttpClient()
-    gateway = SeerGateway(provider, http_client)
+    gateway = SeerrGateway(provider, http_client)
 
     assert gateway._settings_provider is provider
     assert gateway.http_client is http_client
@@ -223,14 +223,14 @@ def test_gateway_initialization(base_url, api_key):
 def test_gateway_initialization_with_http_client(base_url, api_key, mock_http_client):
     """Test gateway initialization with custom HTTP client."""
     provider = _make_settings_provider(base_url, api_key)
-    gateway = SeerGateway(provider, mock_http_client)
+    gateway = SeerrGateway(provider, mock_http_client)
 
     assert gateway.http_client == mock_http_client
 
 
 @pytest.mark.asyncio
 async def test_user_imported_by_plex_id_found(gateway, base_url):
-    """Test user_imported_by_plex_id returns True when user is in Seer."""
+    """Test user_imported_by_plex_id returns True when user is in Seerr."""
     mock_response = {
         "pageInfo": {"pages": 1, "pageSize": 100, "results": 2, "total": 2},
         "results": [
@@ -250,7 +250,7 @@ async def test_user_imported_by_plex_id_found(gateway, base_url):
 
 @pytest.mark.asyncio
 async def test_user_imported_by_plex_id_not_found(gateway, base_url):
-    """Test user_imported_by_plex_id returns False when user is not in Seer."""
+    """Test user_imported_by_plex_id returns False when user is not in Seerr."""
     mock_response = {
         "pageInfo": {"pages": 1, "pageSize": 100, "results": 1, "total": 1},
         "results": [{"id": 1, "plexId": 100, "username": "other"}],
@@ -293,7 +293,7 @@ async def test_user_imported_by_plex_id_found_on_second_page(gateway, base_url):
 
 @pytest.mark.asyncio
 async def test_user_imported_by_plex_id_api_error(gateway, base_url):
-    """Test user_imported_by_plex_id raises when Seer API fails."""
+    """Test user_imported_by_plex_id raises when Seerr API fails."""
     with respx.mock(base_url=base_url) as respx_mock:
         respx_mock.get("/api/v1/user").mock(return_value=httpx.Response(502))
 

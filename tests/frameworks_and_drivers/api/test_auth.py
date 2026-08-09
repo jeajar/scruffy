@@ -12,7 +12,7 @@ from scruffy.frameworks_and_drivers.api.auth import (
     create_session_token,
     get_current_user,
     verify_api_key,
-    verify_seer_session,
+    verify_seerr_session,
     verify_session_token,
 )
 
@@ -213,14 +213,14 @@ class TestGetCurrentUser:
             assert user.email == expected_user.email
 
 
-class TestVerifySeerSession:
-    """Tests for verify_seer_session (alias for get_current_user)."""
+class TestVerifySeerrSession:
+    """Tests for verify_seerr_session (alias for get_current_user)."""
 
     @pytest.mark.asyncio
     async def test_no_token_raises_401(self):
         """Test that missing token raises 401."""
         with pytest.raises(HTTPException) as exc_info:
-            await verify_seer_session(session_token=None)
+            await verify_seerr_session(session_token=None)
 
         assert exc_info.value.status_code == 401
 
@@ -237,7 +237,7 @@ class TestVerifySeerSession:
             "scruffy.frameworks_and_drivers.api.auth.verify_session_token"
         ) as mock_verify:
             mock_verify.return_value = expected_user
-            user = await verify_seer_session(session_token="valid-token")
+            user = await verify_seerr_session(session_token="valid-token")
             assert user.id == expected_user.id
 
 
@@ -289,7 +289,7 @@ class TestVerifyApiKey:
     async def test_invalid_api_key_raises_401(self):
         """Test that invalid API key raises 401."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="different-key",
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -302,7 +302,7 @@ class TestVerifyApiKey:
     async def test_valid_api_key_succeeds(self):
         """Test that valid API key succeeds."""
         with patch(
-            "scruffy.frameworks_and_drivers.api.auth.get_seer_api_key",
+            "scruffy.frameworks_and_drivers.api.auth.get_seerr_api_key",
             return_value="valid-api-key",
         ):
             result = await verify_api_key(api_key="valid-api-key")
