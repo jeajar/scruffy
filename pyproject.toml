@@ -1,6 +1,6 @@
 [project]
 name = "scruffy"
-version = "0.6.2"
+version = "0.6.3"
 description = "An opiniated Media cleaner for Seer"
 readme = "README.md"
 requires-python = "==3.13.*"
