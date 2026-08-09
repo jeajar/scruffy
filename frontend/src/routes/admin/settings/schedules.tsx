@@ -60,7 +60,9 @@ function SchedulesPage() {
   const availableJobTypes = (["check", "process"] as const).filter(
     (t) => !configuredJobTypes.includes(t)
   );
-  const bothConfigured = configuredJobTypes.includes("check") && configuredJobTypes.includes("process");
+  const bothConfigured =
+    configuredJobTypes.includes("check") &&
+    configuredJobTypes.includes("process");
 
   const handleCreate = async () => {
     setFormError(null);
@@ -124,7 +126,7 @@ function SchedulesPage() {
             </CardTitle>
             <CardDescription>
               Configure when Scruffy runs reminder and process jobs
-              (Overseerr-style). At most one of each job type can be configured.
+              (Seerr-style). At most one of each job type can be configured.
               {bothConfigured && " Both types are configured."}
             </CardDescription>
           </div>
@@ -232,8 +234,8 @@ function SchedulesPage() {
                 No schedules
               </h3>
               <p className="mt-2 text-sm text-gray-400">
-                Add a schedule to run reminder or process automatically (e.g. every
-                6 hours or daily).
+                Add a schedule to run reminder or process automatically (e.g.
+                every 6 hours or daily).
               </p>
             </div>
           ) : (
@@ -245,165 +247,166 @@ function SchedulesPage() {
                       <TableHead className="text-white font-semibold pl-6 sticky left-0 z-10 bg-scruffy-dark">
                         Job
                       </TableHead>
-                    <TableHead className="text-white font-semibold">
-                      Cron
-                    </TableHead>
-                    <TableHead className="text-white font-semibold">
-                      Status
-                    </TableHead>
-                    <TableHead className="text-white font-semibold text-right pr-6">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody className="bg-scruffy-darker">
-                  {schedules.map((s) => (
-                    <TableRow key={s.id} className="border-gray-700">
-                      <TableCell className="sticky left-0 z-10 bg-scruffy-darker pl-6">
-                        {editingId === s.id ? (
-                          <select
-                            className="rounded bg-scruffy-dark border border-gray-600 text-white px-2 py-1 text-sm"
-                            value={s.job_type}
-                            onChange={(e) =>
-                              handleUpdate(s.id, {
-                                job_type: e.target
-                                  .value as "check" | "process",
-                              })
-                            }
-                          >
-                            <option
-                              value="check"
-                              disabled={schedules.some(
-                                (o) => o.id !== s.id && o.job_type === "check"
-                              )}
-                            >
-                              Send Reminder
-                            </option>
-                            <option
-                              value="process"
-                              disabled={schedules.some(
-                                (o) => o.id !== s.id && o.job_type === "process"
-                              )}
-                            >
-                              Process
-                            </option>
-                          </select>
-                        ) : (
-                          <Badge
-                            variant={
-                              s.job_type === "process" ? "movie" : "tv"
-                            }
-                          >
-                            {s.job_type === "check"
-                              ? "Send Reminder"
-                              : s.job_type}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-gray-300 font-mono text-sm">
-                        {editingId === s.id ? (
-                          <input
-                            type="text"
-                            className="rounded bg-scruffy-dark border border-gray-600 text-white px-2 py-1 font-mono w-36"
-                            defaultValue={s.cron_expression}
-                            onBlur={(e) => {
-                              const v = e.target.value.trim();
-                              if (v && v !== s.cron_expression)
-                                handleUpdate(s.id, {
-                                  cron_expression: v,
-                                });
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter")
-                                handleUpdate(s.id, {
-                                  cron_expression: (
-                                    e.target as HTMLInputElement
-                                  ).value.trim(),
-                                });
-                            }}
-                          />
-                        ) : (
-                          s.cron_expression
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {editingId === s.id ? (
-                          <label className="flex items-center gap-2 text-gray-300 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={s.enabled}
+                      <TableHead className="text-white font-semibold">
+                        Cron
+                      </TableHead>
+                      <TableHead className="text-white font-semibold">
+                        Status
+                      </TableHead>
+                      <TableHead className="text-white font-semibold text-right pr-6">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="bg-scruffy-darker">
+                    {schedules.map((s) => (
+                      <TableRow key={s.id} className="border-gray-700">
+                        <TableCell className="sticky left-0 z-10 bg-scruffy-darker pl-6">
+                          {editingId === s.id ? (
+                            <select
+                              className="rounded bg-scruffy-dark border border-gray-600 text-white px-2 py-1 text-sm"
+                              value={s.job_type}
                               onChange={(e) =>
                                 handleUpdate(s.id, {
-                                  enabled: e.target.checked,
+                                  job_type: e.target.value as
+                                    "check" | "process",
                                 })
                               }
+                            >
+                              <option
+                                value="check"
+                                disabled={schedules.some(
+                                  (o) => o.id !== s.id && o.job_type === "check"
+                                )}
+                              >
+                                Send Reminder
+                              </option>
+                              <option
+                                value="process"
+                                disabled={schedules.some(
+                                  (o) =>
+                                    o.id !== s.id && o.job_type === "process"
+                                )}
+                              >
+                                Process
+                              </option>
+                            </select>
+                          ) : (
+                            <Badge
+                              variant={
+                                s.job_type === "process" ? "movie" : "tv"
+                              }
+                            >
+                              {s.job_type === "check"
+                                ? "Send Reminder"
+                                : s.job_type}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-gray-300 font-mono text-sm">
+                          {editingId === s.id ? (
+                            <input
+                              type="text"
+                              className="rounded bg-scruffy-dark border border-gray-600 text-white px-2 py-1 font-mono w-36"
+                              defaultValue={s.cron_expression}
+                              onBlur={(e) => {
+                                const v = e.target.value.trim();
+                                if (v && v !== s.cron_expression)
+                                  handleUpdate(s.id, {
+                                    cron_expression: v,
+                                  });
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter")
+                                  handleUpdate(s.id, {
+                                    cron_expression: (
+                                      e.target as HTMLInputElement
+                                    ).value.trim(),
+                                  });
+                              }}
                             />
-                            Enabled
-                          </label>
-                        ) : (
-                          <Badge variant={s.enabled ? "safe" : "secondary"}>
-                            {s.enabled ? "Enabled" : "Disabled"}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right pr-6">
-                        {editingId === s.id ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setEditingId(null)}
-                          >
-                            Done
-                          </Button>
-                        ) : (
-                          <span className="inline-flex gap-2">
+                          ) : (
+                            s.cron_expression
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {editingId === s.id ? (
+                            <label className="flex items-center gap-2 text-gray-300 text-sm">
+                              <input
+                                type="checkbox"
+                                checked={s.enabled}
+                                onChange={(e) =>
+                                  handleUpdate(s.id, {
+                                    enabled: e.target.checked,
+                                  })
+                                }
+                              />
+                              Enabled
+                            </label>
+                          ) : (
+                            <Badge variant={s.enabled ? "safe" : "secondary"}>
+                              {s.enabled ? "Enabled" : "Disabled"}
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right pr-6">
+                          {editingId === s.id ? (
                             <Button
                               variant="ghost"
-                              size="icon"
-                              className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
-                              onClick={() => handleRunNow(s.id)}
-                              disabled={runningId === s.id}
-                              title="Run now"
+                              size="sm"
+                              onClick={() => setEditingId(null)}
                             >
-                              {runningId === s.id ? (
-                                <RefreshCw className="h-4 w-4 animate-spin" />
-                              ) : (
-                                <Play className="h-4 w-4" />
-                              )}
+                              Done
                             </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
-                              onClick={() => setEditingId(s.id)}
-                              title="Edit"
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-red-400"
-                              onClick={() => handleDelete(s.id)}
-                              title="Delete"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </span>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                          ) : (
+                            <span className="inline-flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
+                                onClick={() => handleRunNow(s.id)}
+                                disabled={runningId === s.id}
+                                title="Run now"
+                              >
+                                {runningId === s.id ? (
+                                  <RefreshCw className="h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Play className="h-4 w-4" />
+                                )}
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-white"
+                                onClick={() => setEditingId(s.id)}
+                                title="Edit"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="min-h-[44px] min-w-[44px] text-gray-400 hover:text-red-400"
+                                onClick={() => handleDelete(s.id)}
+                                title="Delete"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           )}
 
           <p className="text-xs text-gray-500">
             Send Reminder = scan media and evaluate retention (logs output).
-            Process = send reminders and delete media per policy. Use the same cron format as crontab (e.g. 0 4 * *
-            * = daily at 4:00).
+            Process = send reminders and delete media per policy. Use the same
+            cron format as crontab (e.g. 0 4 * * * = daily at 4:00).
           </p>
         </CardContent>
       </Card>

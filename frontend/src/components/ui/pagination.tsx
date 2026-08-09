@@ -23,10 +23,12 @@ export function Pagination({
   onPageSizeChange,
 }: PaginationProps) {
   const effectivePageSize = pageSize ?? Math.max(total, 1);
-  const totalPages = pageSize === null ? 1 : Math.max(1, Math.ceil(total / effectivePageSize));
+  const totalPages =
+    pageSize === null ? 1 : Math.max(1, Math.ceil(total / effectivePageSize));
   const boundedPage = Math.max(1, Math.min(page, totalPages));
   const start = total === 0 ? 0 : (boundedPage - 1) * effectivePageSize + 1;
-  const end = total === 0 ? 0 : Math.min(total, boundedPage * effectivePageSize);
+  const end =
+    total === 0 ? 0 : Math.min(total, boundedPage * effectivePageSize);
   const isPrevDisabled = boundedPage <= 1;
   const isNextDisabled = boundedPage >= totalPages;
 

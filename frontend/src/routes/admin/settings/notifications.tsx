@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -10,31 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  getAdminSettings,
-  updateAdminSettings,
-  type AdminSettingsUpdate,
-} from "@/lib/api";
+import { useAdminSettings } from "@/hooks/useAdminSettings";
+import type { AdminSettingsUpdate } from "@/lib/api";
 
 export const Route = createFileRoute("/admin/settings/notifications")({
   component: NotificationsPage,
 });
 
-const inputClass =
-  "block w-full rounded-md border border-gray-600 bg-scruffy-darker px-3 py-2 text-white placeholder-gray-500 focus:border-scruffy-teal focus:ring-1 focus:ring-scruffy-teal";
-
 function NotificationsPage() {
-  const queryClient = useQueryClient();
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ["admin-settings"],
-    queryFn: getAdminSettings,
-  });
-  const updateMutation = useMutation({
-    mutationFn: updateAdminSettings,
-    onSuccess: (data) => {
-      queryClient.setQueryData(["admin-settings"], data);
-    },
-  });
+  const { settings, isLoading, update, isUpdating } = useAdminSettings();
 
   const [email, setEmail] = useState<
     NonNullable<typeof settings>["notifications"]["email"] | null
@@ -64,7 +48,7 @@ function NotificationsPage() {
       },
     };
     try {
-      await updateMutation.mutateAsync(body);
+      await update(body);
     } catch {
       // Error handled by mutation
     }
@@ -110,7 +94,7 @@ function NotificationsPage() {
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   SMTP Host
                 </label>
-                <input
+                <Input
                   type="text"
                   value={email.smtp_host}
                   onChange={(ev) =>
@@ -118,24 +102,25 @@ function NotificationsPage() {
                       prev ? { ...prev, smtp_host: ev.target.value } : null
                     )
                   }
-                  className={inputClass}
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-1">
                   SMTP Port
                 </label>
-                <input
+                <Input
                   type="number"
                   value={email.smtp_port}
                   onChange={(ev) =>
                     setEmail((prev) =>
                       prev
-                        ? { ...prev, smtp_port: parseInt(ev.target.value, 10) || 25 }
+                        ? {
+                            ...prev,
+                            smtp_port: parseInt(ev.target.value, 10) || 25,
+                          }
                         : null
                     )
                   }
-                  className={inputClass}
                 />
               </div>
             </div>
@@ -143,15 +128,16 @@ function NotificationsPage() {
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 SMTP Username
               </label>
-              <input
+              <Input
                 type="text"
                 value={email.smtp_username || ""}
                 onChange={(ev) =>
                   setEmail((prev) =>
-                    prev ? { ...prev, smtp_username: ev.target.value || null } : null
+                    prev
+                      ? { ...prev, smtp_username: ev.target.value || null }
+                      : null
                   )
                 }
-                className={inputClass}
                 autoComplete="off"
               />
             </div>
@@ -159,7 +145,7 @@ function NotificationsPage() {
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 SMTP Password
               </label>
-              <input
+              <Input
                 id="smtp-password"
                 type="password"
                 value={smtpPassword}
@@ -167,7 +153,6 @@ function NotificationsPage() {
                 placeholder={
                   email.smtp_password_set ? "••••••••" : "Leave blank to keep"
                 }
-                className={inputClass}
                 autoComplete="new-password"
               />
             </div>
@@ -175,7 +160,7 @@ function NotificationsPage() {
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 From Email
               </label>
-              <input
+              <Input
                 type="email"
                 value={email.smtp_from_email}
                 onChange={(ev) =>
@@ -183,7 +168,6 @@ function NotificationsPage() {
                     prev ? { ...prev, smtp_from_email: ev.target.value } : null
                   )
                 }
-                className={inputClass}
               />
             </div>
             <div className="flex gap-4">
@@ -194,17 +178,12 @@ function NotificationsPage() {
                   checked={email.smtp_ssl_tls}
                   onChange={(ev) =>
                     setEmail((prev) =>
-                      prev
-                        ? { ...prev, smtp_ssl_tls: ev.target.checked }
-                        : null
+                      prev ? { ...prev, smtp_ssl_tls: ev.target.checked } : null
                     )
                   }
                   className="rounded border-gray-600 bg-scruffy-darker"
                 />
-                <label
-                  htmlFor="smtp-ssl"
-                  className="text-sm text-gray-300"
-                >
+                <label htmlFor="smtp-ssl" className="text-sm text-gray-300">
                   SSL/TLS
                 </label>
               </div>
@@ -232,10 +211,10 @@ function NotificationsPage() {
             </div>
             <Button
               onClick={handleSaveEmail}
-              disabled={updateMutation.isPending}
+              disabled={isUpdating}
               className="bg-scruffy-teal hover:bg-scruffy-teal/90"
             >
-              {updateMutation.isPending ? "Saving..." : "Save Email"}
+              {isUpdating ? "Saving..." : "Save Email"}
             </Button>
           </>
         )}

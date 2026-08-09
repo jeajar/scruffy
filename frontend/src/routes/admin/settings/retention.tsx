@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -10,29 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getAdminSettings, updateAdminSettings } from "@/lib/api";
+import { useAdminSettings } from "@/hooks/useAdminSettings";
 
 export const Route = createFileRoute("/admin/settings/retention")({
   component: RetentionPage,
 });
 
-const inputClass =
-  "block w-24 rounded-md border border-gray-600 bg-scruffy-darker px-3 py-2 text-white placeholder-gray-500 focus:border-scruffy-teal focus:ring-1 focus:ring-scruffy-teal";
-const inputClassWide =
-  "block w-full max-w-md rounded-md border border-gray-600 bg-scruffy-darker px-3 py-2 text-white placeholder-gray-500 focus:border-scruffy-teal focus:ring-1 focus:ring-scruffy-teal";
-
 function RetentionPage() {
-  const queryClient = useQueryClient();
-  const { data: settings, isLoading } = useQuery({
-    queryKey: ["admin-settings"],
-    queryFn: getAdminSettings,
-  });
-  const updateMutation = useMutation({
-    mutationFn: updateAdminSettings,
-    onSuccess: (data) => {
-      queryClient.setQueryData(["admin-settings"], data);
-    },
-  });
+  const { settings, isLoading, update, isUpdating, updateError } =
+    useAdminSettings();
 
   const [retentionDays, setRetentionDays] = useState<string>("");
   const [reminderDays, setReminderDays] = useState<string>("");
@@ -72,7 +58,7 @@ function RetentionPage() {
     if (reminder >= retention) return;
     if (isNaN(extension) || extension < 1 || extension > 365) return;
     try {
-      await updateMutation.mutateAsync({
+      await update({
         retention_days: retention,
         reminder_days: reminder,
         extension_days: extension,
@@ -129,14 +115,14 @@ function RetentionPage() {
                 >
                   Retention days
                 </label>
-                <input
+                <Input
                   id="retention-days"
                   type="number"
                   min={1}
                   max={365}
                   value={retentionDays}
                   onChange={(e) => setRetentionDays(e.target.value)}
-                  className={inputClass}
+                  className="w-24"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Days to keep media before deletion (1–365)
@@ -149,14 +135,14 @@ function RetentionPage() {
                 >
                   Reminder days before deletion
                 </label>
-                <input
+                <Input
                   id="reminder-days"
                   type="number"
                   min={1}
                   max={365}
                   value={reminderDays}
                   onChange={(e) => setReminderDays(e.target.value)}
-                  className={inputClass}
+                  className="w-24"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Send reminder when this many days remain (must be less than
@@ -170,14 +156,14 @@ function RetentionPage() {
                 >
                   Extension days
                 </label>
-                <input
+                <Input
                   id="extension-days"
                   type="number"
                   min={1}
                   max={365}
                   value={extensionDays}
                   onChange={(e) => setExtensionDays(e.target.value)}
-                  className={inputClass}
+                  className="w-24"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Days to add when a user requests an extension (1–365)
@@ -190,13 +176,13 @@ function RetentionPage() {
                 >
                   Instance URL
                 </label>
-                <input
+                <Input
                   id="app-base-url"
                   type="url"
                   value={appBaseUrl}
                   onChange={(e) => setAppBaseUrl(e.target.value)}
                   placeholder="https://scruffy.example.com"
-                  className={inputClassWide}
+                  className="max-w-md"
                 />
                 <p className="mt-1 text-xs text-gray-500">
                   Public URL of this app. Used for the &quot;I need more
@@ -204,17 +190,17 @@ function RetentionPage() {
                   value from environment (APP_BASE_URL).
                 </p>
               </div>
-              {updateMutation.isError && (
+              {updateError && (
                 <p className="text-sm text-red-400">
-                  {updateMutation.error instanceof Error
-                    ? updateMutation.error.message
+                  {updateError instanceof Error
+                    ? updateError.message
                     : "Failed to save"}
                 </p>
               )}
               <Button
                 onClick={handleSave}
                 disabled={
-                  updateMutation.isPending ||
+                  isUpdating ||
                   !retentionValid ||
                   !reminderValid ||
                   !extensionValid ||
@@ -222,7 +208,7 @@ function RetentionPage() {
                 }
                 className="bg-scruffy-teal hover:bg-scruffy-teal/90"
               >
-                {updateMutation.isPending ? "Saving..." : "Save"}
+                {isUpdating ? "Saving..." : "Save"}
               </Button>
             </>
           )}

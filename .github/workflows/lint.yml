@@ -40,3 +40,24 @@ jobs:
 
       - name: Run linters
         run: uv run bash scripts/lint.sh
+
+  frontend-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run linters
+        working-directory: frontend
+        run: bash scripts/lint.sh

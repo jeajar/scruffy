@@ -45,9 +45,21 @@ function HomePage() {
   const navigate = useNavigate();
   const { extend } = Route.useSearch();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
-  const { media, count, overseerrUrl, extensionDays, isLoading: mediaLoading, isFetched, refetch } = useMedia();
-  const [extendModalRequestId, setExtendModalRequestId] = useState<number | null>(null);
-  const [extendModalItem, setExtendModalItem] = useState<MediaItem | undefined>(undefined);
+  const {
+    media,
+    count,
+    overseerrUrl,
+    extensionDays,
+    isLoading: mediaLoading,
+    isFetched,
+    refetch,
+  } = useMedia();
+  const [extendModalRequestId, setExtendModalRequestId] = useState<
+    number | null
+  >(null);
+  const [extendModalItem, setExtendModalItem] = useState<MediaItem | undefined>(
+    undefined
+  );
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -100,7 +112,9 @@ function HomePage() {
         {/* Header */}
         <div className="sm:flex sm:items-center">
           <div className="sm:flex-auto">
-            <h1 className="text-2xl font-semibold text-white">Media Requests</h1>
+            <h1 className="text-2xl font-semibold text-white">
+              Media Requests
+            </h1>
             <p className="mt-2 text-sm text-gray-400">
               A list of all available media requests and when Scruffy will clean
               them up.
@@ -203,14 +217,14 @@ function HomePage() {
           </div>
         )}
 
-      <RequestExtensionModal
-        open={extendModalRequestId != null}
-        onOpenChange={handleExtendModalOpenChange}
-        requestId={extendModalRequestId ?? 0}
-        item={extendModalItem}
-        extensionDays={extensionDays}
-        onSuccess={refetch}
-      />
+        <RequestExtensionModal
+          open={extendModalRequestId != null}
+          onOpenChange={handleExtendModalOpenChange}
+          requestId={extendModalRequestId ?? 0}
+          item={extendModalItem}
+          extensionDays={extensionDays}
+          onSuccess={refetch}
+        />
       </div>
     </Layout>
   );
@@ -247,7 +261,10 @@ function MediaRowActions({
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-scruffy-dark border-gray-700">
+      <DropdownMenuContent
+        align="end"
+        className="bg-scruffy-dark border-gray-700"
+      >
         {overseerrUrl && tmdbId && (
           <DropdownMenuItem
             asChild
@@ -259,7 +276,7 @@ function MediaRowActions({
               rel="noopener noreferrer"
             >
               <ExternalLink className="h-4 w-4 mr-2" />
-              Open in Overseerr
+              Open in Seerr
             </a>
           </DropdownMenuItem>
         )}
@@ -307,7 +324,8 @@ function MediaRow({
   const getStatusText = () => {
     if (retention.delete) return "Scheduled for deletion";
     if (retention.remind && retention.reminder_sent) return "Reminder sent";
-    if (retention.remind && !retention.reminder_sent) return "Approaching deletion";
+    if (retention.remind && !retention.reminder_sent)
+      return "Approaching deletion";
     return "Safe";
   };
 
@@ -395,4 +413,3 @@ function MediaRow({
     </TableRow>
   );
 }
-
